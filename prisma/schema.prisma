@@ -1,0 +1,295 @@
+// QR Menü Sistemi — Prisma şeması
+// Bkz. BACKEND_PLAN.md (multi-tenant, businessId ile satır izolasyonu)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+enum Role {
+  SUPER_ADMIN
+  BUSINESS_OWNER
+  STAFF
+}
+
+enum BusinessStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum LayoutPreset {
+  CLASSIC
+  GRID
+  MAGAZINE
+  COMPACT
+  STORY
+}
+
+enum MenuSchedule {
+  ALL_DAY
+  MORNING
+  LUNCH
+  DINNER
+  SEASONAL
+  SPECIAL
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  MODEL_3D
+}
+
+enum SpiceTolerance {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ScanType {
+  SCAN
+  VIEW
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+// ----------------------------------------------------------------------------
+// Tenant & kullanıcılar
+// ----------------------------------------------------------------------------
+
+model Business {
+  id           String         @id @default(cuid())
+  slug         String         @unique
+  name         String
+  status       BusinessStatus @default(PENDING)
+  coverUrl     String? // müşteri menüsü hero kapak görseli (R2)
+  heroOverline String? // hero üst etiket (örn. "BUGÜN")
+  heroTitle    String? // hero serif başlık
+  heroSubtitle String? // hero alt metin
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  users        User[]
+  themeConfig  ThemeConfig?
+  subscription Subscription?
+  menus        Menu[]
+  products     Product[]
+  scanEvents   ScanEvent[]
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  role            Role     @default(BUSINESS_OWNER)
+  twoFactorSecret String? // uygulama katmanında şifrelenir
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+// ----------------------------------------------------------------------------
+// Tema / şablon (DB'de JSON config)
+// ----------------------------------------------------------------------------
+
+model ThemeConfig {
+  id           String       @id @default(cuid())
+  businessId   String       @unique
+  business     Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  layoutPreset LayoutPreset @default(CLASSIC)
+  colors       Json // { primary, secondary, background, surface, text }
+  typography   Json // { headingFont, bodyFont }
+  branding     Json // { logoUrl, coverUrl? }
+  options      Json // { showRatings, showCalories, darkModeDefault }
+  updatedAt    DateTime     @updatedAt
+}
+
+// ----------------------------------------------------------------------------
+// Menü, kategori, ürün
+// ----------------------------------------------------------------------------
+
+model Menu {
+  id         String       @id @default(cuid())
+  businessId String
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  schedule   MenuSchedule @default(ALL_DAY)
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  categories Category[]
+  versions   MenuVersion[]
+  scanEvents ScanEvent[]
+
+  @@index([businessId])
+}
+
+model MenuVersion {
+  id          String   @id @default(cuid())
+  menuId      String
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  versionNo   Int
+  snapshot    Json // menünün o anki tam görüntüsü (geri dönüş için)
+  createdAt   DateTime @default(now())
+  createdById String?
+
+  @@unique([menuId, versionNo])
+  @@index([menuId])
+}
+
+model Category {
+  id        String @id @default(cuid())
+  menuId    String
+  menu      Menu   @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int    @default(0)
+
+  products Product[]
+
+  @@index([menuId])
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  calories    Int?
+  prepMinutes Int? // hazırlık süresi (dk)
+  isSoldOut   Boolean   @default(false)
+  isFeatured  Boolean   @default(false) // Şefin Seçimi / öne çıkan
+  isNew       Boolean   @default(false) // Yeni
+  isPopular   Boolean   @default(false) // Popüler
+  sortOrder   Int       @default(0)
+  mediaType   MediaType @default(IMAGE)
+  imageUrl    String?
+  videoUrl    String? // R2: hazırlanış / tanıtım videosu
+  modelGlbUrl String? // R2: 3D model (web / Android AR)
+  modelUsdzUrl String? // R2: 3D model (iOS AR)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  allergens ProductAllergen[]
+  ratings   Rating[]
+
+  @@index([categoryId, sortOrder])
+  @@index([businessId])
+}
+
+// ----------------------------------------------------------------------------
+// Alerjen (14 AB kategorisi)
+// ----------------------------------------------------------------------------
+
+model Allergen {
+  id    String @id @default(cuid())
+  code  String @unique
+  label String
+
+  products ProductAllergen[]
+}
+
+model ProductAllergen {
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  allergenId String
+  allergen   Allergen @relation(fields: [allergenId], references: [id], onDelete: Cascade)
+
+  @@id([productId, allergenId])
+  @@index([allergenId])
+}
+
+// ----------------------------------------------------------------------------
+// Müşteri profili & geri bildirim
+// ----------------------------------------------------------------------------
+
+model CustomerProfile {
+  id               String         @id @default(cuid())
+  anonId           String?        @unique // oturumsuz anonim kimlik
+  userId           String?        @unique // hesaba bağlandıysa
+  allergens        Json           @default("[]")
+  favoriteCuisines Json           @default("[]")
+  spiceTolerance   SpiceTolerance @default(NONE)
+  languagePref     String         @default("tr")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  ratings Rating[]
+}
+
+model Rating {
+  id         String          @id @default(cuid())
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  stars      Int
+  comment    String?
+  createdAt  DateTime        @default(now())
+
+  @@index([productId])
+}
+
+// ----------------------------------------------------------------------------
+// Analitik, abonelik, denetim
+// ----------------------------------------------------------------------------
+
+model ScanEvent {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  menuId     String?
+  menu       Menu?    @relation(fields: [menuId], references: [id], onDelete: SetNull)
+  tableNo    String?
+  productId  String?
+  type       ScanType @default(SCAN)
+  ts         DateTime @default(now())
+
+  @@index([businessId, ts])
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  businessId       String             @unique
+  business         Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tier             String // fiyat kademeleri TBD
+  status           SubscriptionStatus @default(TRIALING)
+  currentPeriodEnd DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String?
+  meta       Json     @default("{}")
+  ts         DateTime @default(now())
+
+  @@index([actorId])
+  @@index([ts])
+}

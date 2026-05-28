@@ -1,26 +1,60 @@
 @import "tailwindcss";
 
+/* Manuel (class tabanlı) dark mode — müşteri menüsünde toggle için */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-cream: #fbf9f3;
+  --color-ink: #0f1a2a;
+  --color-ink-soft: #1b2a3d;
+  --color-brand: #f5b70c;
+  --color-brand-dark: #e0a400;
+  --color-brand-soft: #fdf3d6;
+
+  /* Müşteri menüsü teması — "Maison Noir" (koyu espresso, bakır vurgu).
+     İleride işletmeye özel override için bu değişkenler menü kök elemanında
+     yeniden tanımlanabilir. */
+  --color-menu-bg: #140d08;
+  --color-menu-surface: #221710;
+  --color-menu-surface-2: #2c2017;
+  --color-menu-text: #f2e8d9;
+  --color-menu-muted: #ab9883;
+  --color-menu-gold: #cda86d;
+  --color-menu-border: #3a2c1f;
+
+  --font-sans: var(--font-sans), Arial, Helvetica, sans-serif;
+  --font-display: var(--font-display), Georgia, serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-cream);
+  --foreground: var(--color-ink);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Sticky navbar (h-16 = 64px) için anchor hedeflerinde üst boşluk */
+[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

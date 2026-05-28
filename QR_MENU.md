@@ -47,7 +47,8 @@ Hedef: Hem restorana hem müşteriye değer katan, rakiplerin ortalamasındaki t
 | Kullanıcı profil sistemi     | Alerjen, dil, favori mutfak, acı toleransı | Hiçbirinde yok    |
 | Çapraz restoran öneri motoru | Kişiye özel öneriler                       | Hiçbirinde yok    |
 | AI menü mühendisliği         | Marj odaklı öneriler                       | Çok azında        |
-| Ürün hazırlanış videosu      | 30 sn kısa clip                            | Hemen hiçbirinde  |
+| Ürün hazırlanış videosu      | 30 sn kısa clip (ürün karta gömülü)        | Hemen hiçbirinde  |
+| Arttırılmış Gerçeklik (AR)   | model-viewer ile 3D/AR ürün önizleme       | Hiçbirinde yok    |
 | Menü versiyonlama            | Tek tıkla geri dönüş                       | Yok               |
 | Eşleşen içecek önerisi       | Yemek–içecek pairing                       | Yok               |
 
@@ -113,8 +114,9 @@ Desteklenen diller:
 ## 5.4 Ürün Detay & Geri Bildirim
 
 - Büyük ürün görselleri
+- Videolu ürün — hazırlanış / tanıtım videosu (30 sn)
+- 3D / AR ile görüntüleme — model-viewer (webde 360°, mobilde “AR’da gör”)
 - Eşleşen içecek önerisi
-- Hazırlanış videosu
 - Yıldız puanı ve yorum
 - “Diğerleri de baktı” alanı
 
@@ -159,11 +161,13 @@ Desteklenen diller:
 
 ## 7.2 Teknoloji Kararları
 
-- PWA mimarisi
-- WebP + CDN
-- Dinamik QR
-- GDPR uyumluluğu
-- 2FA zorunluluğu
+- Next.js fullstack (App Router · Server Actions + Route Handlers), React 19, TypeScript
+- PostgreSQL + Prisma ORM — deploy: Railway
+- Cloudflare R2 (S3 uyumlu, CDN) — görsel / video / 3D model depolama
+- Auth.js (NextAuth v5) + 2FA zorunluluğu, rol tabanlı erişim
+- `<model-viewer>` web component — 3D / AR ürün önizleme (GLB/USDZ)
+- PWA mimarisi · WebP + CDN · dinamik QR
+- GDPR / KVKK uyumluluğu
 
 ---
 
@@ -179,13 +183,14 @@ Desteklenen diller:
 | Alerjen filtreleme  | Kritik  |
 | Temel analitik      | Yüksek  |
 | Kullanıcı profili   | Yüksek  |
+| Videolu ürün        | Yüksek  |
+| AR / 3D ürün (model-viewer) | Yüksek  |
 
 ## 8.2 Faz 2
 
 - Menü versiyonlama
 - Çoklu şube
 - Kampanya sistemi
-- Video desteği
 - WhatsApp entegrasyonu
 
 ## 8.3 Faz 3
@@ -200,12 +205,7 @@ Desteklenen diller:
 
 # 9. Fiyatlandırma
 
-| Plan        | Fiyat |
-| ----------- | ----- |
-| Ücretsiz    | $0    |
-| Başlangıç   | $9    |
-| Profesyonel | $19   |
-| Kurumsal    | $49   |
+> **TBD —** Fiyatlandırma stratejisi (kademeler, fiyatlar, ücretsiz limitler) **uygulama aşamasında ayrıca belirlenecektir.** Bu doküman fiyatlandırmayı bilinçli olarak açık bırakır; ilgili ekran (Landing Page pricing bölümü) "Yakında" durumunda geliştirilecektir.
 
 ---
 
