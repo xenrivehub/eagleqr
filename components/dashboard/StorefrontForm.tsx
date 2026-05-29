@@ -41,7 +41,7 @@ export default function StorefrontForm(initial: Props) {
 
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-5">
-      <ImageUpload value={coverUrl} onChange={setCoverUrl} folder="covers" shape="wide" />
+      <ImageUpload value={coverUrl} onChange={setCoverUrl} folder="covers" shape="wide" label="Kapak görseli" />
 
       <div>
         <label htmlFor="ho" className="mb-1.5 block text-sm font-medium text-ink">

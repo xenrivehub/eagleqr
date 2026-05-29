@@ -12,7 +12,7 @@ async function getBranch(slug: string, branchSlug: string) {
 
   const menu = await prisma.menu.findFirst({
     where: { businessId: business.id, slug: branchSlug, isActive: true },
-    select: { id: true, name: true },
+    select: { id: true, name: true, phone: true, address: true, openingHours: true },
   });
   if (!menu) return null;
 
@@ -37,10 +37,18 @@ export default async function BranchMenuPage({ params }: Params) {
   const { business, menu } = data;
   const { products, categoryList } = await loadMenuProducts(menu.id);
 
+  // Şube iletişim bilgisi varsa onu, yoksa işletme genelini göster
+  const merged = {
+    ...business,
+    phone: menu.phone ?? business.phone,
+    address: menu.address ?? business.address,
+    openingHours: menu.openingHours ?? business.openingHours,
+  };
+
   return (
     <MenuView
       slug={slug}
-      business={business}
+      business={merged}
       menuId={menu.id}
       branchName={menu.name}
       products={products}

@@ -57,8 +57,7 @@ export default function BusinessInfoForm(initial: Props) {
       )}
 
       <div className="max-w-[180px]">
-        <ImageUpload value={logoUrl} onChange={setLogoUrl} folder="logos" />
-        <p className="mt-1 text-xs text-ink/50">Logo (opsiyonel)</p>
+        <ImageUpload value={logoUrl} onChange={setLogoUrl} folder="logos" label="İşletme logosu" />
       </div>
 
       <div>

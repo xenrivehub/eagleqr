@@ -13,7 +13,7 @@ async function getProduct(slug: string, productId: string) {
     include: {
       business: { select: { name: true, type: true } },
       category: {
-        select: { id: true, name: true, menu: { select: { slug: true } } },
+        select: { id: true, name: true, menu: { select: { id: true, slug: true } } },
       },
       allergens: { include: { allergen: true } },
     },
@@ -60,7 +60,7 @@ export default async function ProductDetailPage({ params }: Params) {
 
   return (
     <div className="min-h-dvh bg-menu-bg font-sans text-menu-text">
-      <TrackView businessId={product.businessId} type="VIEW" productId={product.id} />
+      <TrackView businessId={product.businessId} type="VIEW" productId={product.id} menuId={product.category.menu.id} />
       <header className="sticky top-0 z-30 border-b border-menu-border bg-menu-bg/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link

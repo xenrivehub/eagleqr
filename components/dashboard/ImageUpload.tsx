@@ -11,11 +11,13 @@ export default function ImageUpload({
   onChange,
   folder = "products",
   shape = "square",
+  label = "Ürün görseli",
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
   folder?: "products" | "covers" | "logos";
   shape?: "square" | "wide";
+  label?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -75,7 +77,7 @@ export default function ImageUpload({
   return (
     <div>
       <span className="mb-1.5 block text-sm font-medium text-ink">
-        Ürün görseli
+        {label}
       </span>
 
       {value ? (

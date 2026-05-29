@@ -164,6 +164,39 @@ export async function updateBranch(
   }
 }
 
+export type BranchContactInput = {
+  phone: string;
+  address: string;
+  openingHours: string;
+};
+
+export async function updateBranchContact(
+  menuId: string,
+  input: BranchContactInput,
+): Promise<ActionResult> {
+  try {
+    const businessId = await requireBusinessId();
+    const owned = await prisma.menu.findFirst({
+      where: { id: menuId, businessId },
+      select: { id: true },
+    });
+    if (!owned) return { success: false, error: "Şube bulunamadı." };
+
+    await prisma.menu.update({
+      where: { id: menuId },
+      data: {
+        phone: input.phone.trim() || null,
+        address: input.address.trim() || null,
+        openingHours: input.openingHours.trim() || null,
+      },
+    });
+    revalidatePath("/dashboard/settings");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Şube bilgileri kaydedilemedi." };
+  }
+}
+
 export async function deleteBranch(menuId: string): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
