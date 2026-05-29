@@ -20,9 +20,11 @@ type Confirm =
   | { kind: "product"; id: string; name: string };
 
 export default function MenuManager({
+  menuId,
   categories,
   allergens,
 }: {
+  menuId: string;
   categories: CategoryView[];
   allergens: AllergenOption[];
 }) {
@@ -203,9 +205,11 @@ export default function MenuManager({
       )}
 
       <SlideOver open={!!panel} onClose={() => setPanel(null)} title={panelTitle}>
-        {panel?.kind === "category-new" && <CategoryForm onDone={closeAndRefresh} />}
+        {panel?.kind === "category-new" && (
+          <CategoryForm menuId={menuId} onDone={closeAndRefresh} />
+        )}
         {panel?.kind === "category-edit" && (
-          <CategoryForm category={panel.category} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} category={panel.category} onDone={closeAndRefresh} />
         )}
         {panel?.kind === "product-new" && (
           <ProductForm

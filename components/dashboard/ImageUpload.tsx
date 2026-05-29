@@ -14,7 +14,7 @@ export default function ImageUpload({
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
-  folder?: "products" | "covers";
+  folder?: "products" | "covers" | "logos";
   shape?: "square" | "wide";
 }) {
   const inputRef = useRef<HTMLInputElement>(null);

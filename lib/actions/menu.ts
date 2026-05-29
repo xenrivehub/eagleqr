@@ -34,15 +34,24 @@ async function assertCategoryOwned(categoryId: string, businessId: string) {
   if (!category) throw new Error("Kategori bulunamadı");
 }
 
-export async function createCategory(name: string): Promise<ActionResult> {
+export async function createCategory(
+  menuId: string,
+  name: string,
+): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
     const trimmed = name.trim();
     if (trimmed.length < 1) return { success: false, error: "Kategori adı gerekli." };
 
-    const menu = await getOrCreateDefaultMenu(businessId);
+    const menu = await prisma.menu.findFirst({
+      where: { id: menuId, businessId },
+      select: { id: true },
+    });
+    if (!menu) return { success: false, error: "Menü bulunamadı." };
+
     await prisma.category.create({ data: { menuId: menu.id, name: trimmed } });
     revalidatePath("/dashboard/menu");
+    revalidatePath(`/dashboard/menu/${menuId}`);
     return { success: true };
   } catch {
     return { success: false, error: "Kategori oluşturulamadı." };

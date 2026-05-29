@@ -19,6 +19,7 @@ export default async function AdminBusinessesPage() {
     name: b.name,
     slug: b.slug,
     status: b.status,
+    type: b.type,
     ownerEmail: b.users[0]?.email ?? null,
     productCount: b._count.products,
   }));
@@ -27,7 +28,7 @@ export default async function AdminBusinessesPage() {
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
       <h1 className="font-display text-2xl font-bold text-ink">İşletmeler</h1>
       <p className="mt-2 text-ink/60">
-        Tüm işletmeleri yönetin — onaylayın, aktifleştirin veya askıya alın.
+        İşletmeleri yönetin — durum (onay/askı) ve tür (tekil/zincir) ayarlayın.
       </p>
       <div className="mt-8">
         <BusinessTable businesses={rows} />

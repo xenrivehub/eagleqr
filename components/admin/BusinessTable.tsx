@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { BusinessStatus } from "@prisma/client";
-import { setBusinessStatus } from "@/lib/actions/admin";
+import type { BusinessStatus, BusinessType } from "@prisma/client";
+import { setBusinessStatus, setBusinessType } from "@/lib/actions/admin";
 
 export type BusinessRow = {
   id: string;
   name: string;
   slug: string;
   status: BusinessStatus;
+  type: BusinessType;
   ownerEmail: string | null;
   productCount: number;
 };
@@ -38,6 +39,13 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
     if (res.success) router.refresh();
   }
 
+  async function changeType(id: string, type: BusinessType) {
+    setPendingId(id);
+    const res = await setBusinessType(id, type);
+    setPendingId(null);
+    if (res.success) router.refresh();
+  }
+
   if (businesses.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-ink/20 bg-white p-12 text-center">
@@ -54,6 +62,7 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
             <th className="px-5 py-3 font-semibold">İşletme</th>
             <th className="px-5 py-3 font-semibold">Sahip</th>
             <th className="px-5 py-3 font-semibold">Ürün</th>
+            <th className="px-5 py-3 font-semibold">Tür</th>
             <th className="px-5 py-3 font-semibold">Durum</th>
             <th className="px-5 py-3 text-right font-semibold">İşlemler</th>
           </tr>
@@ -75,6 +84,25 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
                 </td>
                 <td className="px-5 py-3.5 text-ink/70">{b.ownerEmail ?? "—"}</td>
                 <td className="px-5 py-3.5 tabular-nums text-ink/70">{b.productCount}</td>
+                <td className="px-5 py-3.5">
+                  <div className="inline-flex overflow-hidden rounded-full border border-ink/15 text-xs">
+                    {(["SINGLE", "CHAIN"] as BusinessType[]).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        disabled={busy || b.type === t}
+                        onClick={() => changeType(b.id, t)}
+                        className={`cursor-pointer px-2.5 py-1 font-semibold transition-colors disabled:cursor-default ${
+                          b.type === t
+                            ? "bg-ink text-cream"
+                            : "text-ink/60 hover:bg-ink/5"
+                        }`}
+                      >
+                        {t === "SINGLE" ? "Tekil" : "Zincir"}
+                      </button>
+                    ))}
+                  </div>
+                </td>
                 <td className="px-5 py-3.5">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass[b.status]}`}>
                     {statusLabel[b.status]}

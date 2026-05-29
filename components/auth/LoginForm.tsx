@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, getSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { TextField, PasswordField } from "./fields";
 import SubmitButton from "./SubmitButton";
 
@@ -29,8 +29,7 @@ export default function LoginForm() {
       return;
     }
 
-    const session = await getSession();
-    router.push(session?.user?.role === "SUPER_ADMIN" ? "/admin" : "/dashboard");
+    router.push("/dashboard");
     router.refresh();
   }
 

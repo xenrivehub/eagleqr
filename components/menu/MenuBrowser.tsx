@@ -139,7 +139,7 @@ export default function MenuBrowser({
           filtered.map((p) => (
             <Link
               key={p.id}
-              href={`/m/${slug}/${p.id}`}
+              href={`/m/${slug}/urun/${p.id}`}
               className="group flex gap-4 rounded-2xl border border-menu-border bg-menu-surface p-3 transition-colors hover:border-menu-gold/40 hover:bg-menu-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-menu-gold/50 sm:p-4"
             >
               {p.imageUrl ? (

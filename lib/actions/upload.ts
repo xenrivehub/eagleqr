@@ -16,7 +16,8 @@ type UploadUrlResult =
   | { success: true; uploadUrl: string; publicUrl: string }
   | { success: false; error: string };
 
-type UploadFolder = "products" | "covers";
+type UploadFolder = "products" | "covers" | "logos";
+const FOLDERS: UploadFolder[] = ["products", "covers", "logos"];
 
 export async function createImageUploadUrl(
   contentType: string,
@@ -39,7 +40,7 @@ export async function createImageUploadUrl(
     return { success: false, error: "Yalnızca JPG, PNG veya WEBP yükleyebilirsiniz." };
   }
 
-  const safeFolder = folder === "covers" ? "covers" : "products";
+  const safeFolder = FOLDERS.includes(folder) ? folder : "products";
   const key = `businesses/${businessId}/${safeFolder}/${randomUUID()}.${ext}`;
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET(),

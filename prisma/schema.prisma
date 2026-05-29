@@ -67,6 +67,11 @@ enum SubscriptionStatus {
   CANCELED
 }
 
+enum BusinessType {
+  SINGLE // tekil işletme — tek menü
+  CHAIN // zincir işletme — şube başına ayrı menü
+}
+
 // ----------------------------------------------------------------------------
 // Tenant & kullanıcılar
 // ----------------------------------------------------------------------------
@@ -76,6 +81,14 @@ model Business {
   slug         String         @unique
   name         String
   status       BusinessStatus @default(PENDING)
+  type         BusinessType   @default(SINGLE)
+  // İşletme iletişim / profil bilgileri (hepsi opsiyonel)
+  logoUrl      String? // işletme logosu (R2)
+  phone        String?
+  contactEmail String?
+  address      String?
+  about        String? // hakkında metni
+  openingHours String? // açık saatler (serbest metin)
   coverUrl     String? // müşteri menüsü hero kapak görseli (R2)
   heroOverline String? // hero üst etiket (örn. "BUGÜN")
   heroTitle    String? // hero serif başlık
@@ -131,6 +144,7 @@ model Menu {
   businessId String
   business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
   name       String
+  slug       String? // zincir şube URL'i için (/m/[isletme]/[sube]); tekil işletmede null
   schedule   MenuSchedule @default(ALL_DAY)
   isActive   Boolean      @default(true)
   createdAt  DateTime     @default(now())
@@ -140,6 +154,7 @@ model Menu {
   versions   MenuVersion[]
   scanEvents ScanEvent[]
 
+  @@unique([businessId, slug])
   @@index([businessId])
 }
 

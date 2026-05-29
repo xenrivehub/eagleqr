@@ -2,18 +2,18 @@ import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import AdminShell from "@/components/admin/AdminShell";
 
-export default async function AdminLayout({
+export default async function AdminPanelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user) redirect("/admin/login");
   if (session.user.role !== "SUPER_ADMIN") redirect("/dashboard");
 
   async function signOutAction() {
     "use server";
-    await signOut({ redirectTo: "/" });
+    await signOut({ redirectTo: "/admin/login" });
   }
 
   return (

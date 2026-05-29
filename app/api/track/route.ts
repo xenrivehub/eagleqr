@@ -7,6 +7,7 @@ type Body = {
   businessId?: string;
   type?: "SCAN" | "VIEW";
   productId?: string;
+  menuId?: string;
 };
 
 export async function POST(req: Request) {
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const { businessId, type, productId } = body;
+  const { businessId, type, productId, menuId } = body;
   if (!businessId || (type !== "SCAN" && type !== "VIEW")) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     data: {
       businessId,
       type,
+      menuId: menuId ?? null,
       productId: type === "VIEW" ? (productId ?? null) : null,
     },
   });

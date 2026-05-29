@@ -11,8 +11,10 @@ async function getProduct(slug: string, productId: string) {
   const product = await prisma.product.findFirst({
     where: { id: productId, business: { slug } },
     include: {
-      business: { select: { name: true } },
-      category: { select: { id: true, name: true } },
+      business: { select: { name: true, type: true } },
+      category: {
+        select: { id: true, name: true, menu: { select: { slug: true } } },
+      },
       allergens: { include: { allergen: true } },
     },
   });
@@ -44,6 +46,12 @@ export default async function ProductDetailPage({ params }: Params) {
   if (!data) notFound();
 
   const { product, related } = data;
+  const branchSlug = product.category.menu.slug;
+  const backHref =
+    product.business.type === "CHAIN" && branchSlug
+      ? `/m/${slug}/${branchSlug}`
+      : `/m/${slug}`;
+
   const badges = [
     product.isFeatured && "Şefin Seçimi",
     product.isPopular && "Popüler",
@@ -53,11 +61,10 @@ export default async function ProductDetailPage({ params }: Params) {
   return (
     <div className="min-h-dvh bg-menu-bg font-sans text-menu-text">
       <TrackView businessId={product.businessId} type="VIEW" productId={product.id} />
-      {/* Üst bar */}
       <header className="sticky top-0 z-30 border-b border-menu-border bg-menu-bg/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link
-            href={`/m/${slug}`}
+            href={backHref}
             className="flex items-center gap-1.5 rounded-full px-2 py-1 text-sm font-medium text-menu-muted transition-colors hover:text-menu-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-menu-gold/50"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -73,7 +80,6 @@ export default async function ProductDetailPage({ params }: Params) {
       </header>
 
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
-        {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl border border-menu-border">
           {product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -105,7 +111,6 @@ export default async function ProductDetailPage({ params }: Params) {
           </div>
         </div>
 
-        {/* Meta + fiyat */}
         <div className="mt-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-sm text-menu-muted">
             {product.prepMinutes != null && (
@@ -124,7 +129,6 @@ export default async function ProductDetailPage({ params }: Params) {
           </span>
         </div>
 
-        {/* Hakkında */}
         {product.description && (
           <section className="mt-7">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
@@ -136,7 +140,6 @@ export default async function ProductDetailPage({ params }: Params) {
           </section>
         )}
 
-        {/* Alerjen */}
         {product.allergens.length > 0 && (
           <section className="mt-7 rounded-2xl border border-menu-border bg-menu-surface p-4">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
@@ -152,12 +155,11 @@ export default async function ProductDetailPage({ params }: Params) {
           </section>
         )}
 
-        {/* Benzer seçimler */}
         {related.length > 0 && (
           <section className="mt-9">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold">Benzer seçimler</h2>
-              <Link href={`/m/${slug}`} className="text-xs uppercase tracking-widest text-menu-muted hover:text-menu-text">
+              <Link href={backHref} className="text-xs uppercase tracking-widest text-menu-muted hover:text-menu-text">
                 Tümü →
               </Link>
             </div>
@@ -165,7 +167,7 @@ export default async function ProductDetailPage({ params }: Params) {
               {related.map((r) => (
                 <Link
                   key={r.id}
-                  href={`/m/${slug}/${r.id}`}
+                  href={`/m/${slug}/urun/${r.id}`}
                   className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-menu-border bg-menu-surface transition-colors hover:border-menu-gold/40"
                 >
                   {r.imageUrl ? (

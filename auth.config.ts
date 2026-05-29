@@ -15,8 +15,10 @@ export const authConfig = {
       const user = auth?.user;
       const path = nextUrl.pathname;
 
-      if (path.startsWith("/admin") || path.startsWith("/dashboard")) {
-        return !!user; // rol kontrolü /admin layout'ta yapılır
+      // /admin: gate'leme middleware'de yapılmaz; panel layout oturumsuzları
+      // /admin/login'e yönlendirir (ayrı admin giriş akışı).
+      if (path.startsWith("/dashboard")) {
+        return !!user;
       }
       return true;
     },

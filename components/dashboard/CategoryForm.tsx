@@ -5,9 +5,11 @@ import type { CategoryView } from "./types";
 import { createCategory, updateCategory } from "@/lib/actions/menu";
 
 export default function CategoryForm({
+  menuId,
   category,
   onDone,
 }: {
+  menuId: string;
   category?: CategoryView;
   onDone: () => void;
 }) {
@@ -22,7 +24,7 @@ export default function CategoryForm({
     setPending(true);
     const result = category
       ? await updateCategory(category.id, name)
-      : await createCategory(name);
+      : await createCategory(menuId, name);
     if (!result.success) {
       setError(result.error);
       setPending(false);
