@@ -95,6 +95,7 @@ model Business {
   address      String?
   about        String? // hakkında metni
   openingHours String? // açık saatler (serbest metin)
+  currency     String   @default("TRY") // görüntüleme para birimi (ISO 4217, bkz. lib/currency.ts)
   themeKey     String   @default("mineral") // müşteri menüsü teması (bkz. lib/themes.ts)
   allowedThemes String[] @default([]) // admin'in açtığı premium temalar (free temalar her zaman açık)
   // Üyelik planı + admin'in eklediği ekstra medya kotası (plan limitinin üzerine eklenir)
@@ -193,6 +194,7 @@ model Category {
   menu      Menu   @relation(fields: [menuId], references: [id], onDelete: Cascade)
   name      String
   sortOrder Int    @default(0)
+  translations Json @default("{}") // { en: { name }, de: { name } }
 
   products Product[]
 
@@ -220,6 +222,7 @@ model Product {
   videoUrl    String? // R2: hazırlanış / tanıtım videosu
   modelGlbUrl String? // R2: 3D model (web / Android AR)
   modelUsdzUrl String? // R2: 3D model (iOS AR)
+  translations Json    @default("{}") // { en: { name, description }, de: {...} }
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -310,6 +313,36 @@ model Subscription {
   currentPeriodEnd DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+}
+
+// Platform dilleri — admin panelinden eklenir/açılır. TR temel dildir (kayıt yok).
+model Language {
+  code        String   @id // ISO: "en", "de", "ar"
+  label       String // Türkçe ad: "İngilizce"
+  nativeLabel String // yerel ad: "English"
+  rtl         Boolean  @default(false) // Arapça vb. sağdan-sola
+  enabled     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+// Genel anahtar/değer ayarları (örn. translation_model)
+model AppSetting {
+  key   String @id
+  value String
+}
+
+// Para birimleri — admin panelinden eklenir/açılır. İşletme birini seçer.
+model Currency {
+  code      String   @id // ISO 4217: "TRY", "USD"
+  symbol    String // "₺"
+  label     String // Türkçe ad
+  position  String   @default("before") // "before" | "after" (sembol konumu)
+  space     Boolean  @default(false) // sembol ile rakam arası boşluk
+  decimals  Int      @default(2)
+  enabled   Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
 }
 
 // Plan başına medya limitleri — admin panelinden dinamik düzenlenir.

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import ImageUpload from "./ImageUpload";
 import { updateBusinessInfo } from "@/lib/actions/business";
+import { formatPrice, FALLBACK_CURRENCY, type CurrencySpec } from "@/lib/currency";
 
 const inputBase =
   "w-full rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark";
@@ -16,11 +17,17 @@ type Props = {
   address: string;
   about: string;
   openingHours: string;
+  currency: string;
+  currencies: CurrencySpec[];
 };
 
 export default function BusinessInfoForm(initial: Props) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState<string | null>(initial.logoUrl);
+  const [currency, setCurrency] = useState(initial.currency);
+  const currencyList = initial.currencies;
+  const currentSpec =
+    currencyList.find((c) => c.code === currency) ?? FALLBACK_CURRENCY;
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
 
@@ -37,6 +44,7 @@ export default function BusinessInfoForm(initial: Props) {
       address: String(f.get("address") ?? ""),
       about: String(f.get("about") ?? ""),
       openingHours: String(f.get("openingHours") ?? ""),
+      currency,
     });
     if (res.success) {
       setStatus("saved");
@@ -86,6 +94,31 @@ export default function BusinessInfoForm(initial: Props) {
       <div>
         <label htmlFor="b-hours" className="mb-1.5 block text-sm font-medium text-ink">Açık saatler</label>
         <input id="b-hours" name="openingHours" defaultValue={initial.openingHours} placeholder="Örn. Her gün 08:00 - 23:00" className={inputBase} />
+      </div>
+
+      <div>
+        <label htmlFor="b-currency" className="mb-1.5 block text-sm font-medium text-ink">Para birimi</label>
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            id="b-currency"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className={`${inputBase} max-w-xs`}
+          >
+            {currencyList.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} · {c.label} ({c.symbol})
+              </option>
+            ))}
+          </select>
+          <span className="text-sm text-ink/50">
+            Örnek: {formatPrice(85, currentSpec)}
+          </span>
+        </div>
+        <p className="mt-1.5 text-xs text-ink/45">
+          Menüdeki fiyatların gösterileceği para birimi. Fiyatlar bu birimde
+          girilir; otomatik kur dönüşümü yapılmaz.
+        </p>
       </div>
 
       <div>

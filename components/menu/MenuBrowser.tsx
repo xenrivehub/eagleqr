@@ -15,6 +15,7 @@ export type MenuProduct = {
   hasAr: boolean;
   categoryId: string;
   categoryName: string;
+  translations: Record<string, { name?: string; description?: string }>;
   allergens: { code: string; label: string }[];
   isFeatured: boolean;
   isNew: boolean;

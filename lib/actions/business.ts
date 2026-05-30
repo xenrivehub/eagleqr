@@ -83,6 +83,7 @@ export type BusinessInfoInput = {
   address: string;
   about: string;
   openingHours: string;
+  currency: string;
 };
 
 export async function updateBusinessInfo(
@@ -95,6 +96,11 @@ export async function updateBusinessInfo(
   if (name.length < 2) {
     return { success: false, error: "İşletme adı en az 2 karakter olmalı." };
   }
+  const curRow = await prisma.currency.findFirst({
+    where: { code: input.currency, enabled: true },
+    select: { code: true },
+  });
+  const currency = curRow?.code ?? "TRY";
 
   try {
     const business = await prisma.business.update({
@@ -107,6 +113,7 @@ export async function updateBusinessInfo(
         address: input.address.trim() || null,
         about: input.about.trim() || null,
         openingHours: input.openingHours.trim() || null,
+        currency,
       },
       select: { slug: true },
     });

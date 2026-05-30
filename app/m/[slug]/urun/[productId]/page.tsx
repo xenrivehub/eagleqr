@@ -1,12 +1,17 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getTheme } from "@/lib/themes";
+import { allergenLabel } from "@/lib/allergen-i18n";
+import { formatPrice } from "@/lib/currency";
+import { getCurrencySpec } from "@/lib/queries/currencies";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
+import AllergenWarning from "@/components/menu/AllergenWarning";
 
 type Params = { params: Promise<{ slug: string; productId: string }> };
 
@@ -14,9 +19,9 @@ async function getProduct(slug: string, productId: string) {
   const product = await prisma.product.findFirst({
     where: { id: productId, business: { slug } },
     include: {
-      business: { select: { name: true, type: true, themeKey: true } },
+      business: { select: { name: true, type: true, themeKey: true, currency: true } },
       category: {
-        select: { id: true, name: true, menu: { select: { id: true, slug: true } } },
+        select: { id: true, name: true, translations: true, menu: { select: { id: true, slug: true } } },
       },
       allergens: { include: { allergen: true } },
     },
@@ -49,6 +54,24 @@ export default async function ProductDetailPage({ params }: Params) {
   if (!data) notFound();
 
   const { product, related } = data;
+
+  // Müşterinin seçtiği dil (cookie ile gelir; menü sayfasındaki seçici yazıyor)
+  const store = await cookies();
+  const langPref = store.get("eq_lang")?.value ?? "tr";
+  const langRow =
+    langPref !== "tr"
+      ? await prisma.language.findUnique({ where: { code: langPref } })
+      : null;
+  const lang = langRow?.enabled ? langPref : "tr";
+  const isRtl = langRow?.rtl ?? false;
+  const ptr = (product.translations as Record<string, { name?: string; description?: string }>) ?? {};
+  const ctr = (product.category.translations as Record<string, { name?: string }>) ?? {};
+  const dName = (lang !== "tr" && ptr[lang]?.name) || product.name;
+  const dDesc = (lang !== "tr" && ptr[lang]?.description) || product.description;
+  const dCat = (lang !== "tr" && ctr[lang]?.name) || product.category.name;
+
+  const currency = await getCurrencySpec(product.business.currency);
+
   const branchSlug = product.category.menu.slug;
   const backHref =
     product.business.type === "CHAIN" && branchSlug
@@ -79,7 +102,7 @@ export default async function ProductDetailPage({ params }: Params) {
   } as CSSProperties;
 
   return (
-    <div className="min-h-dvh bg-menu-bg font-sans text-menu-text" style={themeVars}>
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-dvh bg-menu-bg font-sans text-menu-text" style={themeVars}>
       <link rel="stylesheet" href={theme.fonts.import} />
       <TrackView businessId={product.businessId} type="VIEW" productId={product.id} menuId={product.category.menu.id} />
       <header className="sticky top-0 z-30 border-b border-menu-border bg-menu-bg/90 backdrop-blur">
@@ -135,13 +158,20 @@ export default async function ProductDetailPage({ params }: Params) {
           )}
           <div className="absolute inset-x-0 bottom-0 p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
-              {product.category.name}
+              {dCat}
             </p>
             <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">
-              {product.name}
+              {dName}
             </h1>
           </div>
         </div>
+
+        <AllergenWarning
+          allergens={product.allergens.map((a) => ({
+            code: a.allergen.code,
+            label: a.allergen.label,
+          }))}
+        />
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3 text-sm text-menu-muted">
@@ -160,17 +190,17 @@ export default async function ProductDetailPage({ params }: Params) {
             )}
           </div>
           <span className="font-display text-2xl font-bold text-menu-gold">
-            ₺{product.price.toFixed(2)}
+            {formatPrice(product.price.toFixed(2), currency)}
           </span>
         </div>
 
-        {product.description && (
+        {dDesc && (
           <section className="mt-7">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
               ✦ Hakkında
             </h2>
             <p className="mt-2.5 leading-relaxed text-menu-text/90">
-              {product.description}
+              {dDesc}
             </p>
           </section>
         )}
@@ -183,7 +213,7 @@ export default async function ProductDetailPage({ params }: Params) {
             <p className="mt-2 text-sm text-menu-text/90">
               Bu ürün şu alerjenleri içerir:{" "}
               <span className="font-semibold">
-                {product.allergens.map((a) => a.allergen.label).join(", ")}
+                {product.allergens.map((a) => allergenLabel(a.allergen.code, lang, a.allergen.label)).join(", ")}
               </span>
               .
             </p>
@@ -218,7 +248,7 @@ export default async function ProductDetailPage({ params }: Params) {
                   <div className="p-2.5">
                     <p className="truncate font-display text-sm font-semibold">{r.name}</p>
                     <p className="mt-0.5 font-display text-sm font-bold text-menu-gold">
-                      ₺{r.price.toFixed(2)}
+                      {formatPrice(r.price.toFixed(2), currency)}
                     </p>
                   </div>
                 </Link>

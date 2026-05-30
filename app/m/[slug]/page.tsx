@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
+import { getEnabledLanguages } from "@/lib/queries/languages";
+import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 import TrackView from "@/components/menu/TrackView";
@@ -82,9 +84,11 @@ export default async function CustomerMenuPage({ params }: Params) {
     orderBy: { createdAt: "asc" },
     select: { id: true },
   });
-  const { products, categoryList } = menu
-    ? await loadMenuProducts(menu.id)
-    : { products: [], categoryList: [] };
+  const [{ products, categoryList }, languages, currency] = await Promise.all([
+    menu ? loadMenuProducts(menu.id) : Promise.resolve({ products: [], categoryList: [] }),
+    getEnabledLanguages(),
+    getCurrencySpec(business.currency),
+  ]);
 
   return (
     <>
@@ -96,6 +100,8 @@ export default async function CustomerMenuPage({ params }: Params) {
         menuId={menu?.id}
         products={products}
         categories={categoryList}
+        languages={languages}
+        currency={currency}
       />
     </>
   );

@@ -7,6 +7,7 @@ const businessSelect = {
   name: true,
   type: true,
   themeKey: true,
+  currency: true,
   logoUrl: true,
   coverUrl: true,
   heroOverline: true,
@@ -28,9 +29,12 @@ export type MenuBusinessWithType = MenuBusiness & {
   type: "SINGLE" | "CHAIN";
 };
 
+type CatTrans = Record<string, { name?: string }>;
+type ProdTrans = Record<string, { name?: string; description?: string }>;
+
 export async function loadMenuProducts(menuId: string): Promise<{
   products: MenuProduct[];
-  categoryList: { id: string; name: string }[];
+  categoryList: { id: string; name: string; translations: CatTrans }[];
 }> {
   const categories = await prisma.category.findMany({
     where: { menuId },
@@ -56,6 +60,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
       hasAr: !!p.modelGlbUrl,
       categoryId: c.id,
       categoryName: c.name,
+      translations: (p.translations as ProdTrans) ?? {},
       allergens: p.allergens.map((a) => ({
         code: a.allergen.code,
         label: a.allergen.label,
@@ -68,7 +73,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
 
   const categoryList = categories
     .filter((c) => c.products.length > 0)
-    .map((c) => ({ id: c.id, name: c.name }));
+    .map((c) => ({ id: c.id, name: c.name, translations: (c.translations as CatTrans) ?? {} }));
 
   return { products, categoryList };
 }

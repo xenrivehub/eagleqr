@@ -10,6 +10,8 @@ const nav = [
   { href: "/admin", label: "Genel Bakış", icon: "M3 12l9-9 9 9M5 10v10h14V10" },
   { href: "/admin/businesses", label: "İşletmeler", icon: "M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" },
   { href: "/admin/plans", label: "Plan Limitleri", icon: "M3 3v18h18M7 14l3-3 3 3 5-5" },
+  { href: "/admin/languages", label: "Diller & Çeviri", icon: "M3 5h12M9 3v2m1.5 14 4-9 4 9M12.5 17h4M5 8c0 2 1.5 4.5 4 6M3 12c2.5 0 5-1.2 6-4" },
+  { href: "/admin/currencies", label: "Para Birimleri", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" },
 ];
 
 export default function AdminShell({

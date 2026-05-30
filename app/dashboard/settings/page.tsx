@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveBranch } from "@/lib/branch-context";
+import { getEnabledCurrencies, getCurrencySpec } from "@/lib/queries/currencies";
 import BusinessInfoForm from "@/components/dashboard/BusinessInfoForm";
 import BranchContactForm from "@/components/dashboard/BranchContactForm";
 
@@ -21,9 +22,15 @@ export default async function SettingsPage() {
       address: true,
       about: true,
       openingHours: true,
+      currency: true,
     },
   });
   if (!business) redirect("/login");
+
+  const currencies = await getEnabledCurrencies();
+  if (!currencies.some((c) => c.code === business.currency)) {
+    currencies.unshift(await getCurrencySpec(business.currency));
+  }
 
   const isChain = business.type === "CHAIN";
   const active = isChain ? (await getActiveBranch(businessId)).active : null;
@@ -57,6 +64,8 @@ export default async function SettingsPage() {
           address={business.address ?? ""}
           about={business.about ?? ""}
           openingHours={business.openingHours ?? ""}
+          currency={business.currency}
+          currencies={currencies}
         />
       </div>
 

@@ -5,6 +5,13 @@ import Link from "next/link";
 import type { ThemeSpec } from "@/lib/themes";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import TrackView from "@/components/menu/TrackView";
+import { useAllergenFilter } from "@/lib/use-allergen-filter";
+import { useMenuLang } from "@/lib/use-menu-lang";
+import { allergenLabel } from "@/lib/allergen-i18n";
+import { formatPrice, type CurrencySpec } from "@/lib/currency";
+
+export type MenuLang = { code: string; label: string; nativeLabel: string; rtl: boolean };
+type CatItem = { id: string; name: string; translations?: Record<string, { name?: string }> };
 
 export type ThemedBusiness = {
   id: string;
@@ -36,6 +43,8 @@ export default function ThemedMenu({
   branchName,
   products,
   categories,
+  languages = [],
+  currency,
 }: {
   theme: ThemeSpec;
   business: ThemedBusiness;
@@ -43,12 +52,54 @@ export default function ThemedMenu({
   menuId?: string;
   branchName?: string;
   products: MenuProduct[];
-  categories: { id: string; name: string }[];
+  categories: CatItem[];
+  languages?: MenuLang[];
+  currency: CurrencySpec;
 }) {
   const c = t.colors;
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState("all");
   const [chips, setChips] = useState<Set<Chip>>(new Set());
+  const { lang, setLang, ready: langReady } = useMenuLang();
+
+  // Kullanılabilir diller: TR (temel) + bu menüde çevirisi olan açık diller
+  const availableLangs = useMemo<MenuLang[]>(() => {
+    const base: MenuLang = { code: "tr", label: "Türkçe", nativeLabel: "Türkçe", rtl: false };
+    const has = (code: string) =>
+      products.some((p) => p.translations?.[code]?.name) ||
+      categories.some((cat) => cat.translations?.[code]?.name);
+    return [base, ...languages.filter((l) => has(l.code))];
+  }, [languages, products, categories]);
+
+  // Seçili dil kullanılabilir değilse TR'ye düş
+  const activeLang = langReady && availableLangs.some((l) => l.code === lang) ? lang : "tr";
+  const isRtl = availableLangs.find((l) => l.code === activeLang)?.rtl ?? false;
+
+  // çeviri yardımcıları (yoksa TR'ye düşer)
+  const nm = (p: MenuProduct) => (activeLang !== "tr" && p.translations?.[activeLang]?.name) || p.name;
+  const ds = (p: MenuProduct) => (activeLang !== "tr" && p.translations?.[activeLang]?.description) || p.description;
+  const cn = (cat: CatItem) => (activeLang !== "tr" && cat.translations?.[activeLang]?.name) || cat.name;
+  const al = (code: string, trLabel: string) => allergenLabel(code, activeLang, trLabel);
+
+  const ALL_LABELS: Record<string, string> = { tr: "Tümü", en: "All", de: "Alle", fr: "Tous", es: "Todos", it: "Tutti", ru: "Все", ar: "الكل", zh: "全部", ja: "すべて" };
+  const allLabel = ALL_LABELS[activeLang] ?? "Tümü";
+  const catName = (cat: CatItem) => cn(cat);
+  const { selected: allerSel, toggle: toggleAller, clear: clearAller, ready: allerReady } = useAllergenFilter();
+  const [allerOpen, setAllerOpen] = useState(false);
+
+  // Bu menüde geçen alerjenler (boş olanları gösterme)
+  const menuAllergens = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of products) for (const a of p.allergens) map.set(a.code, a.label);
+    return [...map].map(([code, label]) => ({ code, label })).sort((x, y) => x.label.localeCompare(y.label, "tr"));
+  }, [products]);
+
+  // Ürünün, müşterinin kaçındığı alerjenlerden hangilerini içerdiği
+  const conflicts = (p: MenuProduct): string[] =>
+    allerReady && allerSel.length
+      ? p.allergens.filter((a) => allerSel.includes(a.code)).map((a) => al(a.code, a.label))
+      : [];
+  const activeAllerCount = allerReady ? allerSel.length : 0;
 
   const featured = products.filter((p) => p.isFeatured).slice(0, 6);
 
@@ -114,7 +165,7 @@ export default function ThemedMenu({
   const itemTags = (p: MenuProduct) =>
     [p.isFeatured && "Şefin Seçimi", p.isPopular && "Popüler", p.isNew && "Yeni"].filter(Boolean) as string[];
 
-  const Price = ({ p }: { p: MenuProduct }) => <span style={{ ...priceStyle, fontSize: 14, whiteSpace: "nowrap" }}>₺{p.price}</span>;
+  const Price = ({ p }: { p: MenuProduct }) => <span style={{ ...priceStyle, fontSize: 14, whiteSpace: "nowrap" }}>{formatPrice(p.price, currency)}</span>;
 
   // video / AR işareti — ürün adının yanına küçük rozet
   const mediaMark = (p: MenuProduct) =>
@@ -122,6 +173,14 @@ export default function ThemedMenu({
       <span style={{ display: "inline-flex", gap: 4, marginLeft: 6, verticalAlign: "middle" }}>
         {p.hasVideo && <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", color: c.accent, border: `1px solid ${c.line}`, borderRadius: 4, padding: "1px 4px" }}>▶ VIDEO</span>}
         {p.hasAr && <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", color: c.accent, border: `1px solid ${c.line}`, borderRadius: 4, padding: "1px 4px" }}>AR</span>}
+      </span>
+    ) : null;
+
+  // alerjen uyarı rozeti — müşterinin seçtiği alerjeni içeren ürünlerde
+  const warnBadge = (labels: string[]) =>
+    labels.length ? (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#e0524a", background: "rgba(224,82,74,0.13)", border: "1px solid rgba(224,82,74,0.34)", borderRadius: 999, padding: "2px 9px", marginTop: 8 }}>
+        ⚠ {labels.join(", ")} içerir
       </span>
     ) : null;
 
@@ -183,13 +242,13 @@ export default function ThemedMenu({
 
   // ---- TABS --------------------------------------------------------------
   function Tabs() {
-    const cats = [{ id: "all", name: "Tümü" }, ...categories];
+    const cats: CatItem[] = [{ id: "all", name: allLabel, translations: {} }, ...categories];
     if (t.tabStyle === "pill") {
       return (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
           {cats.map((cat) => {
             const on = activeCat === cat.id;
-            return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "8px 15px", borderRadius: 999, border: `1px solid ${on ? c.accent : c.line}`, background: on ? c.accent : "transparent", color: on ? c.onAccent : c.sub, fontFamily: t.fonts.body }}>{cat.name}</button>;
+            return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "8px 15px", borderRadius: 999, border: `1px solid ${on ? c.accent : c.line}`, background: on ? c.accent : "transparent", color: on ? c.onAccent : c.sub, fontFamily: t.fonts.body }}>{catName(cat)}</button>;
           })}
         </div>
       );
@@ -199,7 +258,7 @@ export default function ThemedMenu({
         <div style={{ display: "flex", marginBottom: 24, border: t.cardBorder, overflow: "hidden", flexWrap: "wrap" }}>
           {cats.map((cat, i) => {
             const on = activeCat === cat.id;
-            return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", fontFamily: t.fonts.body, fontSize: 11, textTransform: "uppercase", fontWeight: 700, padding: "8px 11px", whiteSpace: "nowrap", borderLeft: i > 0 ? `2px solid ${c.ink}` : "none", background: on ? c.ink : "transparent", color: on ? "#fff" : c.ink }}>{cat.name}</button>;
+            return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", fontFamily: t.fonts.body, fontSize: 11, textTransform: "uppercase", fontWeight: 700, padding: "8px 11px", whiteSpace: "nowrap", borderLeft: i > 0 ? `2px solid ${c.ink}` : "none", background: on ? c.ink : "transparent", color: on ? "#fff" : c.ink }}>{catName(cat)}</button>;
           })}
         </div>
       );
@@ -209,7 +268,7 @@ export default function ThemedMenu({
       <div style={{ display: "flex", gap: 18, marginBottom: 22, borderBottom: `1px solid ${c.line}`, overflowX: "auto" }}>
         {cats.map((cat) => {
           const on = activeCat === cat.id;
-          return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", background: "transparent", border: "none", fontFamily: t.headingSerif ? t.fonts.display : t.fonts.body, fontSize: t.headingSerif ? 15.5 : 13.5, paddingBottom: 11, whiteSpace: "nowrap", fontWeight: on ? 700 : 400, color: on ? c.accent : c.sub, borderBottom: on ? `2px solid ${c.accent}` : "2px solid transparent", marginBottom: -1 }}>{cat.name}</button>;
+          return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", background: "transparent", border: "none", fontFamily: t.headingSerif ? t.fonts.display : t.fonts.body, fontSize: t.headingSerif ? 15.5 : 13.5, paddingBottom: 11, whiteSpace: "nowrap", fontWeight: on ? 700 : 400, color: on ? c.accent : c.sub, borderBottom: on ? `2px solid ${c.accent}` : "2px solid transparent", marginBottom: -1 }}>{catName(cat)}</button>;
         })}
       </div>
     );
@@ -219,33 +278,37 @@ export default function ThemedMenu({
   function Item({ p, index, last }: { p: MenuProduct; index: number; last: boolean }) {
     const href = `/m/${slug}/urun/${p.id}`;
     const nameStyle = display({ fontSize: t.itemStyle === "list-plain" ? 20 : 15.5, fontWeight: 700, lineHeight: 1.15 });
+    const conf = conflicts(p);
+    const dim: CSSProperties = conf.length ? { opacity: 0.5 } : {};
 
     if (t.itemStyle === "list-plain") {
       // à la carte: ad ...... fiyat
       return (
-        <Link href={href} style={{ display: "block", padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink }}>
+        <Link href={href} style={{ display: "block", padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={nameStyle}>{p.name}{mediaMark(p)}</span>
+            <span style={nameStyle}>{nm(p)}{mediaMark(p)}</span>
             <span style={{ flex: 1, borderBottom: `1px dotted ${c.line}`, margin: "0 4px", transform: "translateY(-5px)" }} />
-            <span style={{ ...priceStyle, fontSize: 18, whiteSpace: "nowrap" }}>₺{p.price}</span>
+            <span style={{ ...priceStyle, fontSize: 18, whiteSpace: "nowrap" }}>{formatPrice(p.price, currency)}</span>
           </div>
-          {p.description && <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.6, color: c.sub }}>{p.description}</p>}
+          {p.description && <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.6, color: c.sub }}>{ds(p)}</p>}
+          {warnBadge(conf)}
         </Link>
       );
     }
 
     if (t.itemStyle === "list-number") {
       return (
-        <Link href={href} style={{ display: "flex", gap: 14, padding: "16px 2px", borderBottom: `${t.cardBorder.startsWith("2") ? "2px" : "1px"} solid ${c.line}`, textDecoration: "none", color: c.ink }}>
+        <Link href={href} style={{ display: "flex", gap: 14, padding: "16px 2px", borderBottom: `${t.cardBorder.startsWith("2") ? "2px" : "1px"} solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim }}>
           <div style={{ flex: "0 0 26px", fontFamily: t.fonts.display, fontSize: 20, color: c.accent, lineHeight: 1, paddingTop: 2 }}>{String(index + 1).padStart(2, "0")}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
-              <span style={display({ fontSize: 18, fontWeight: 800, lineHeight: 1.05 })}>{p.name}{mediaMark(p)}</span>
+              <span style={display({ fontSize: 18, fontWeight: 800, lineHeight: 1.05 })}>{nm(p)}{mediaMark(p)}</span>
               <Price p={p} />
             </div>
-            {p.description && <p style={{ margin: "7px 0 0", fontSize: 12, lineHeight: 1.55, color: c.sub }}>{p.description}</p>}
+            {p.description && <p style={{ margin: "7px 0 0", fontSize: 12, lineHeight: 1.55, color: c.sub }}>{ds(p)}</p>}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
               {itemTags(p).map(tagPill)}
+              {warnBadge(conf)}
               {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
             </div>
           </div>
@@ -256,19 +319,20 @@ export default function ThemedMenu({
     // card & list-thumb (thumbnail + içerik)
     const wrapperStyle: CSSProperties =
       t.itemStyle === "card"
-        ? { ...cardStyle, padding: 13, display: "flex", gap: 14, textDecoration: "none", color: c.ink }
-        : { display: "flex", gap: 14, padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink };
+        ? { ...cardStyle, padding: 13, display: "flex", gap: 14, textDecoration: "none", color: c.ink, ...dim }
+        : { display: "flex", gap: 14, padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim };
     return (
       <Link href={href} style={wrapperStyle}>
         <div style={{ flex: "0 0 78px" }}><ImgFrame src={p.imageUrl} h={78} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
-            <span style={nameStyle}>{p.name}{mediaMark(p)}</span>
+            <span style={nameStyle}>{nm(p)}{mediaMark(p)}</span>
             <Price p={p} />
           </div>
-          {p.description && <p style={{ margin: "6px 0 0", fontSize: 12.5, lineHeight: 1.5, color: c.sub, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</p>}
+          {p.description && <p style={{ margin: "6px 0 0", fontSize: 12.5, lineHeight: 1.5, color: c.sub, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{ds(p)}</p>}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
             {itemTags(p).map(tagPill)}
+            {warnBadge(conf)}
             {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
           </div>
         </div>
@@ -280,10 +344,30 @@ export default function ThemedMenu({
     t.itemStyle === "card" ? { display: "flex", flexDirection: "column", gap: 12 } : {};
 
   return (
-    <div style={{ minHeight: "100dvh", background: c.bg, color: c.ink, fontFamily: t.fonts.body }}>
+    <div dir={isRtl ? "rtl" : "ltr"} style={{ minHeight: "100dvh", background: c.bg, color: c.ink, fontFamily: t.fonts.body }}>
       <TrackView businessId={business.id} type="SCAN" menuId={menuId} />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 20px 48px" }}>
+        {/* DİL SEÇİCİ */}
+        {availableLangs.length > 1 && (
+          <div dir="ltr" style={{ display: "flex", justifyContent: "flex-end", gap: 6, paddingTop: 14, flexWrap: "wrap" }}>
+            {availableLangs.map((l) => {
+              const on = activeLang === l.code;
+              return (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => setLang(l.code)}
+                  style={{ cursor: "pointer", fontSize: 11.5, fontWeight: on ? 700 : 500, fontFamily: t.fonts.body, textTransform: "uppercase", letterSpacing: "0.05em", color: on ? c.onAccent : c.sub, background: on ? c.accent : "transparent", border: `1px solid ${on ? c.accent : c.line}`, borderRadius: 999, padding: "4px 10px" }}
+                  title={l.label}
+                >
+                  {l.code}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* HEADER */}
         <header style={{ textAlign: "center", padding: "36px 0 28px" }}>
           {business.logoUrl && (
@@ -315,13 +399,17 @@ export default function ThemedMenu({
                   <span style={{ fontSize: 9.5, letterSpacing: "0.16em", color: c.faint }}>EL İLE DERLENDİ</span>
                 </div>
                 <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
-                  {featured.map((p) => (
-                    <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 160, flex: "0 0 160px", textDecoration: "none", color: c.ink, ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
+                  {featured.map((p) => {
+                    const conf = conflicts(p);
+                    return (
+                    <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 160, flex: "0 0 160px", textDecoration: "none", color: c.ink, ...(conf.length ? { opacity: 0.5 } : {}), ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
                       <ImgFrame src={p.imageUrl} h={108} />
-                      <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{p.name}</div>
-                      <div style={{ marginTop: 6 }}><span style={{ ...priceStyle, fontSize: 13, display: "inline-block" }}>₺{p.price}</span></div>
+                      <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
+                      {conf.length > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: "#e0524a", marginTop: 4 }}>⚠ {conf.join(", ")}</div>}
+                      <div style={{ marginTop: 6 }}><span style={{ ...priceStyle, fontSize: 13, display: "inline-block" }}>{formatPrice(p.price, currency)}</span></div>
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -344,6 +432,49 @@ export default function ThemedMenu({
                 return <button key={ch.key} type="button" onClick={() => toggleChip(ch.key)} style={{ ...style, cursor: "pointer", fontSize: 12, borderRadius: 999, padding: "6px 14px" }}>{ch.label}</button>;
               })}
             </div>
+
+            {/* ALERJEN FİLTRESİ */}
+            {menuAllergens.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <button
+                  type="button"
+                  onClick={() => setAllerOpen((v) => !v)}
+                  style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, fontWeight: 600, fontFamily: t.fonts.body, color: activeAllerCount ? c.onAccent : c.sub, background: activeAllerCount ? c.accent : c.surface, border: `1px solid ${activeAllerCount ? c.accent : c.line}`, borderRadius: 999, padding: "8px 15px" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 4h18M6 9h12M10 14h4M11 19h2" /></svg>
+                  Alerjen filtresi{activeAllerCount ? ` · ${activeAllerCount}` : ""}
+                  <span style={{ transform: allerOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▾</span>
+                </button>
+
+                {allerOpen && (
+                  <div style={{ marginTop: 12, background: c.surface, border: `1px solid ${c.line}`, borderRadius: t.radius === 0 ? 0 : 14, padding: 14 }}>
+                    <p style={{ margin: "0 0 10px", fontSize: 12, color: c.sub, lineHeight: 1.5 }}>
+                      Kaçındığınız alerjenleri seçin; içeren ürünler işaretlenir.
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {menuAllergens.map((a) => {
+                        const on = allerSel.includes(a.code);
+                        return (
+                          <button
+                            key={a.code}
+                            type="button"
+                            onClick={() => toggleAller(a.code)}
+                            style={{ cursor: "pointer", fontSize: 12, fontWeight: on ? 700 : 500, fontFamily: t.fonts.body, color: on ? "#fff" : c.ink, background: on ? "#e0524a" : "transparent", border: `1px solid ${on ? "#e0524a" : c.line}`, borderRadius: 999, padding: "6px 13px" }}
+                          >
+                            {on ? "⚠ " : ""}{al(a.code, a.label)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {activeAllerCount > 0 && (
+                      <button type="button" onClick={clearAller} style={{ cursor: "pointer", marginTop: 12, fontSize: 11.5, fontWeight: 600, color: c.sub, background: "transparent", border: "none", textDecoration: "underline" }}>
+                        Filtreyi temizle
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <Tabs />
 

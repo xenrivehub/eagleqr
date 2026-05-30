@@ -143,6 +143,188 @@ export async function setPlanLimit(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Para birimleri (dinamik)
+// ---------------------------------------------------------------------------
+
+export type CurrencyInput = {
+  code: string;
+  symbol: string;
+  label: string;
+  position: "before" | "after";
+  space: boolean;
+  decimals: number;
+};
+
+export async function addCurrency(input: CurrencyInput): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const code = input.code.trim().toUpperCase();
+    if (!/^[A-Z]{3}$/.test(code)) {
+      return { success: false, error: "Geçersiz kod (3 harf, örn. USD)." };
+    }
+    if (!input.symbol.trim() || !input.label.trim()) {
+      return { success: false, error: "Sembol ve ad gerekli." };
+    }
+    if (input.position !== "before" && input.position !== "after") {
+      return { success: false, error: "Geçersiz konum." };
+    }
+    const decimals = Math.trunc(input.decimals);
+    if (decimals < 0 || decimals > 4) {
+      return { success: false, error: "Ondalık 0-4 arası olmalı." };
+    }
+    const exists = await prisma.currency.findUnique({ where: { code } });
+    if (exists) return { success: false, error: "Bu para birimi zaten ekli." };
+
+    const max = await prisma.currency.aggregate({ _max: { sortOrder: true } });
+    await prisma.currency.create({
+      data: {
+        code,
+        symbol: input.symbol.trim(),
+        label: input.label.trim(),
+        position: input.position,
+        space: input.space,
+        decimals,
+        sortOrder: (max._max.sortOrder ?? 0) + 1,
+      },
+    });
+    revalidatePath("/admin/currencies");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Para birimi eklenemedi." };
+  }
+}
+
+export async function updateCurrency(input: CurrencyInput): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const code = input.code.trim().toUpperCase();
+    if (input.position !== "before" && input.position !== "after") {
+      return { success: false, error: "Geçersiz konum." };
+    }
+    const decimals = Math.trunc(input.decimals);
+    if (decimals < 0 || decimals > 4) {
+      return { success: false, error: "Ondalık 0-4 arası olmalı." };
+    }
+    await prisma.currency.update({
+      where: { code },
+      data: {
+        symbol: input.symbol.trim(),
+        label: input.label.trim(),
+        position: input.position,
+        space: input.space,
+        decimals,
+      },
+    });
+    revalidatePath("/admin/currencies");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Para birimi güncellenemedi." };
+  }
+}
+
+export async function toggleCurrency(code: string, enabled: boolean): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.currency.update({ where: { code }, data: { enabled } });
+    revalidatePath("/admin/currencies");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Para birimi güncellenemedi." };
+  }
+}
+
+export async function deleteCurrency(code: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (code === "TRY") return { success: false, error: "TRY silinemez (varsayılan)." };
+    await prisma.currency.delete({ where: { code } });
+    revalidatePath("/admin/currencies");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Para birimi silinemedi." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Diller & çeviri modeli (dinamik)
+// ---------------------------------------------------------------------------
+
+export async function addLanguage(
+  code: string,
+  label: string,
+  nativeLabel: string,
+  rtl: boolean,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const c = code.trim().toLowerCase();
+    if (!/^[a-z]{2}(-[a-z]{2})?$/.test(c)) {
+      return { success: false, error: "Geçersiz dil kodu (örn. en, de, pt-br)." };
+    }
+    if (c === "tr") return { success: false, error: "TR temel dildir, eklenemez." };
+    if (!label.trim() || !nativeLabel.trim()) {
+      return { success: false, error: "Dil adı gerekli." };
+    }
+    const exists = await prisma.language.findUnique({ where: { code: c } });
+    if (exists) return { success: false, error: "Bu dil zaten ekli." };
+
+    const max = await prisma.language.aggregate({ _max: { sortOrder: true } });
+    await prisma.language.create({
+      data: {
+        code: c,
+        label: label.trim(),
+        nativeLabel: nativeLabel.trim(),
+        rtl,
+        sortOrder: (max._max.sortOrder ?? 0) + 1,
+      },
+    });
+    revalidatePath("/admin/languages");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Dil eklenemedi." };
+  }
+}
+
+export async function toggleLanguage(code: string, enabled: boolean): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.language.update({ where: { code }, data: { enabled } });
+    revalidatePath("/admin/languages");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Dil güncellenemedi." };
+  }
+}
+
+export async function deleteLanguage(code: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.language.delete({ where: { code } });
+    revalidatePath("/admin/languages");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Dil silinemedi." };
+  }
+}
+
+export async function setTranslationModel(model: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const v = model.trim();
+    if (!v) return { success: false, error: "Model adı gerekli." };
+    await prisma.appSetting.upsert({
+      where: { key: "translation_model" },
+      create: { key: "translation_model", value: v },
+      update: { value: v },
+    });
+    revalidatePath("/admin/languages");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Model güncellenemedi." };
+  }
+}
+
 // Bir işletmeye premium (kilitli) tema erişimi aç/kapat.
 // Free temalar her zaman açık olduğundan allowedThemes'e yazılmaz.
 export async function setBusinessThemeAccess(

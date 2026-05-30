@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
+import { getEnabledLanguages } from "@/lib/queries/languages";
+import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 
@@ -36,7 +38,11 @@ export default async function BranchMenuPage({ params }: Params) {
   if (!data) notFound();
 
   const { business, menu } = data;
-  const { products, categoryList } = await loadMenuProducts(menu.id);
+  const [{ products, categoryList }, languages, currency] = await Promise.all([
+    loadMenuProducts(menu.id),
+    getEnabledLanguages(),
+    getCurrencySpec(business.currency),
+  ]);
   const theme = getTheme(business.themeKey);
 
   // Şube iletişim bilgisi varsa onu, yoksa işletme genelini göster
@@ -58,6 +64,8 @@ export default async function BranchMenuPage({ params }: Params) {
         branchName={menu.name}
         products={products}
         categories={categoryList}
+        languages={languages}
+        currency={currency}
       />
     </>
   );

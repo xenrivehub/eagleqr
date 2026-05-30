@@ -6,6 +6,8 @@ import { getOrCreateDefaultMenu } from "@/lib/actions/menu";
 import { getActiveBranch } from "@/lib/branch-context";
 import { loadMenuForManager } from "@/lib/queries/menu";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
+import { getEnabledLanguages } from "@/lib/queries/languages";
+import { getCurrencySpec } from "@/lib/queries/currencies";
 import MenuManager from "@/components/dashboard/MenuManager";
 
 export default async function MenuPage() {
@@ -15,7 +17,7 @@ export default async function MenuPage() {
 
   const business = await prisma.business.findUnique({
     where: { id: businessId },
-    select: { type: true },
+    select: { type: true, currency: true },
   });
   if (!business) redirect("/login");
 
@@ -40,9 +42,11 @@ export default async function MenuPage() {
       );
     }
 
-    const [{ categories, allergens }, media] = await Promise.all([
+    const [{ categories, allergens }, media, languages, currency] = await Promise.all([
       loadMenuForManager(active.id),
       getMediaEntitlements(businessId),
+      getEnabledLanguages(),
+      getCurrencySpec(business.currency),
     ]);
 
     return (
@@ -58,21 +62,23 @@ export default async function MenuPage() {
             Şubeleri yönet ({branches.length}) →
           </Link>
         </div>
-        <MenuManager menuId={active.id} categories={categories} allergens={allergens} media={media} />
+        <MenuManager menuId={active.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} />
       </div>
     );
   }
 
   // Tekil işletme → tek menü
   const menu = await getOrCreateDefaultMenu(businessId);
-  const [{ categories, allergens }, media] = await Promise.all([
+  const [{ categories, allergens }, media, languages, currency] = await Promise.all([
     loadMenuForManager(menu.id),
     getMediaEntitlements(businessId),
+    getEnabledLanguages(),
+    getCurrencySpec(business.currency),
   ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
-      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} />
+      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} />
     </div>
   );
 }

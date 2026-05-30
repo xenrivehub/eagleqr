@@ -8,7 +8,9 @@ import SlideOver from "./SlideOver";
 import ConfirmDialog from "./ConfirmDialog";
 import CategoryForm from "./CategoryForm";
 import ProductForm from "./ProductForm";
+import TranslateMenu, { type TargetLang } from "./TranslateMenu";
 import { deleteCategory, deleteProduct } from "@/lib/actions/menu";
+import { formatPrice, type CurrencySpec } from "@/lib/currency";
 
 type Panel =
   | { kind: "category-new" }
@@ -25,11 +27,15 @@ export default function MenuManager({
   categories,
   allergens,
   media,
+  languages,
+  currency,
 }: {
   menuId: string;
   categories: CategoryView[];
   allergens: AllergenOption[];
   media: MediaEntitlements;
+  languages: TargetLang[];
+  currency: CurrencySpec;
 }) {
   const router = useRouter();
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -71,13 +77,16 @@ export default function MenuManager({
             Kategorileri ve ürünleri buradan yönetin.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setPanel({ kind: "category-new" })}
-          className="shrink-0 cursor-pointer rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-ink transition-all hover:bg-brand-dark hover:scale-[1.02] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
-        >
-          + Kategori
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <TranslateMenu menuId={menuId} languages={languages} />
+          <button
+            type="button"
+            onClick={() => setPanel({ kind: "category-new" })}
+            className="cursor-pointer rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-ink transition-all hover:bg-brand-dark hover:scale-[1.02] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
+          >
+            + Kategori
+          </button>
+        </div>
       </div>
 
       {categories.length === 0 ? (
@@ -166,7 +175,7 @@ export default function MenuManager({
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-display font-semibold text-ink tabular-nums">
-                          ₺{product.price}
+                          {formatPrice(product.price, currency)}
                         </span>
                         <IconButton
                           label="Ürünü düzenle"
@@ -219,6 +228,7 @@ export default function MenuManager({
             categoryId={panel.categoryId}
             allergens={allergens}
             media={media}
+            currency={currency}
             onDone={closeAndRefresh}
           />
         )}
@@ -228,6 +238,7 @@ export default function MenuManager({
             allergens={allergens}
             product={panel.product}
             media={media}
+            currency={currency}
             onDone={closeAndRefresh}
           />
         )}

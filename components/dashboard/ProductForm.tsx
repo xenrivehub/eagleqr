@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import type { AllergenOption, ProductView } from "./types";
 import { createProduct, updateProduct, type ProductInput } from "@/lib/actions/menu";
 import type { MediaEntitlements } from "@/lib/plans";
+import type { CurrencySpec } from "@/lib/currency";
 import ImageUpload from "./ImageUpload";
 import MediaUpload from "./MediaUpload";
 
@@ -15,12 +16,14 @@ export default function ProductForm({
   allergens,
   product,
   media,
+  currency,
   onDone,
 }: {
   categoryId: string;
   allergens: AllergenOption[];
   product?: ProductView;
   media: MediaEntitlements;
+  currency: CurrencySpec;
   onDone: () => void;
 }) {
   const [selected, setSelected] = useState<string[]>(product?.allergenIds ?? []);
@@ -118,7 +121,7 @@ export default function ProductForm({
 
       <div>
         <label htmlFor="p-price" className="mb-1.5 block text-sm font-medium text-ink">
-          Fiyat (₺) <span className="text-red-600">*</span>
+          Fiyat ({currency.symbol}) <span className="text-red-600">*</span>
         </label>
         <input id="p-price" name="price" required inputMode="decimal" defaultValue={product?.price} placeholder="0,00" className={`${inputBase} tabular-nums`} />
       </div>

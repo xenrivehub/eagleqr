@@ -12,11 +12,11 @@ const columns = [
     ],
   },
   {
-    title: "Şirket",
+    title: "Yasal",
     links: [
-      { href: "#", label: "Hakkımızda" },
-      { href: "#", label: "Gizlilik Politikası" },
-      { href: "#", label: "Kullanım Koşulları" },
+      { href: "/kullanim-kosullari", label: "Kullanım Koşulları" },
+      { href: "/gizlilik", label: "Gizlilik Politikası" },
+      { href: "/kvkk", label: "KVKK Aydınlatma Metni" },
     ],
   },
 ];

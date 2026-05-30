@@ -4,6 +4,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { loadMenuForManager } from "@/lib/queries/menu";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
+import { getEnabledLanguages } from "@/lib/queries/languages";
+import { getCurrencySpec } from "@/lib/queries/currencies";
 import MenuManager from "@/components/dashboard/MenuManager";
 
 type Params = { params: Promise<{ menuId: string }> };
@@ -19,9 +21,15 @@ export default async function BranchMenuPage({ params }: Params) {
   });
   if (!menu) notFound();
 
-  const [{ categories, allergens }, media] = await Promise.all([
+  const biz = await prisma.business.findUnique({
+    where: { id: session.user.businessId },
+    select: { currency: true },
+  });
+  const [{ categories, allergens }, media, languages, currency] = await Promise.all([
     loadMenuForManager(menu.id),
     getMediaEntitlements(session.user.businessId),
+    getEnabledLanguages(),
+    getCurrencySpec(biz?.currency),
   ]);
 
   return (
@@ -41,7 +49,7 @@ export default async function BranchMenuPage({ params }: Params) {
         </p>
         <h2 className="font-display text-xl font-bold text-ink">{menu.name}</h2>
       </div>
-      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} />
+      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} />
     </div>
   );
 }
