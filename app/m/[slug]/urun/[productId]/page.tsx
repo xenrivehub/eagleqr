@@ -1,7 +1,9 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getTheme } from "@/lib/themes";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 
@@ -11,7 +13,7 @@ async function getProduct(slug: string, productId: string) {
   const product = await prisma.product.findFirst({
     where: { id: productId, business: { slug } },
     include: {
-      business: { select: { name: true, type: true } },
+      business: { select: { name: true, type: true, themeKey: true } },
       category: {
         select: { id: true, name: true, menu: { select: { id: true, slug: true } } },
       },
@@ -58,8 +60,25 @@ export default async function ProductDetailPage({ params }: Params) {
     product.isNew && "Yeni",
   ].filter(Boolean) as string[];
 
+  // Tema: menü CSS değişkenlerini ve fontları işletmenin temasına göre override et
+  const theme = getTheme(product.business.themeKey);
+  const tc = theme.colors;
+  const themeVars = {
+    "--color-menu-bg": tc.bg,
+    "--color-menu-surface": tc.surface,
+    "--color-menu-surface-2": tc.surface2,
+    "--color-menu-text": tc.ink,
+    "--color-menu-muted": tc.sub,
+    "--color-menu-gold": tc.accent,
+    "--color-menu-border": tc.line,
+    "--font-display": theme.fonts.display,
+    "--font-sans": theme.fonts.body,
+    fontFamily: theme.fonts.body,
+  } as CSSProperties;
+
   return (
-    <div className="min-h-dvh bg-menu-bg font-sans text-menu-text">
+    <div className="min-h-dvh bg-menu-bg font-sans text-menu-text" style={themeVars}>
+      <link rel="stylesheet" href={theme.fonts.import} />
       <TrackView businessId={product.businessId} type="VIEW" productId={product.id} menuId={product.category.menu.id} />
       <header className="sticky top-0 z-30 border-b border-menu-border bg-menu-bg/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">

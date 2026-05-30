@@ -6,6 +6,7 @@ const businessSelect = {
   id: true,
   name: true,
   type: true,
+  themeKey: true,
   logoUrl: true,
   coverUrl: true,
   heroOverline: true,

@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { ACTIVE_BRANCH_COOKIE } from "@/lib/branch-context";
+import { THEMES } from "@/lib/themes";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -114,6 +115,26 @@ export async function updateBusinessInfo(
     return { success: true };
   } catch {
     return { success: false, error: "Kaydedilemedi." };
+  }
+}
+
+export async function setTheme(themeKey: string): Promise<ActionResult> {
+  const businessId = await requireBusinessId().catch(() => null);
+  if (!businessId) return { success: false, error: "Yetkisiz erişim." };
+  if (!THEMES.some((t) => t.key === themeKey)) {
+    return { success: false, error: "Geçersiz tema." };
+  }
+  try {
+    const business = await prisma.business.update({
+      where: { id: businessId },
+      data: { themeKey },
+      select: { slug: true },
+    });
+    revalidatePath("/dashboard/tema");
+    revalidatePath(`/m/${business.slug}`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Tema kaydedilemedi." };
   }
 }
 

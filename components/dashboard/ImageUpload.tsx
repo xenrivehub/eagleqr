@@ -62,13 +62,22 @@ export default function ImageUpload({
         xhr.onload = () =>
           xhr.status >= 200 && xhr.status < 300
             ? resolve()
-            : reject(new Error("upload-failed"));
-        xhr.onerror = () => reject(new Error("network"));
+            : reject(new Error(`HTTP ${xhr.status}: ${xhr.responseText?.slice(0, 200) || xhr.statusText}`));
+        xhr.onerror = () => reject(new Error("network/cors"));
         xhr.send(file);
       });
       onChange(presign.publicUrl);
-    } catch {
-      setError("Görsel yüklenemedi. Tekrar deneyin.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "";
+      // Konsola tam detay (R2 durum kodu / hata gövdesi) bas — teşhis için
+      console.error("[ImageUpload] yükleme hatası:", detail);
+      const friendly =
+        detail.startsWith("HTTP 401") || detail.startsWith("HTTP 403")
+          ? "Görsel yüklenemedi: depolama erişimi reddedildi (R2 kimlik bilgileri/CORS). Detay konsolda."
+          : detail === "network/cors"
+            ? "Görsel yüklenemedi: ağ/CORS hatası. Detay konsolda."
+            : "Görsel yüklenemedi. Tekrar deneyin. (Detay konsolda.)";
+      setError(friendly);
     } finally {
       setUploading(false);
     }

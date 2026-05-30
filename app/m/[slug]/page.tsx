@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
-import MenuView from "@/components/menu/MenuView";
+import { getTheme } from "@/lib/themes";
+import ThemedMenu from "@/components/menu/ThemedMenu";
 import TrackView from "@/components/menu/TrackView";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -25,7 +26,10 @@ export default async function CustomerMenuPage({ params }: Params) {
   const business = await getMenuBusiness(slug);
   if (!business) notFound();
 
-  // Zincir işletme → şube seçici
+  const theme = getTheme(business.themeKey);
+  const c = theme.colors;
+
+  // Zincir işletme → şube seçici (tema renkleriyle)
   if (business.type === "CHAIN") {
     const branches = await prisma.menu.findMany({
       where: { businessId: business.id, isActive: true, slug: { not: null } },
@@ -34,45 +38,41 @@ export default async function CustomerMenuPage({ params }: Params) {
     });
 
     return (
-      <div className="min-h-dvh bg-menu-bg font-sans text-menu-text">
-        <TrackView businessId={business.id} type="SCAN" />
-        <header className="border-b border-menu-border">
-          <div className="mx-auto max-w-3xl px-4 py-7 text-center sm:px-6">
+      <>
+        <link rel="stylesheet" href={theme.fonts.import} />
+        <div style={{ minHeight: "100dvh", background: c.bg, color: c.ink, fontFamily: theme.fonts.body }}>
+          <TrackView businessId={business.id} type="SCAN" />
+          <header style={{ textAlign: "center", padding: "36px 20px 28px", borderBottom: `1px solid ${c.line}` }}>
             {business.logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={business.logoUrl} alt="" className="mx-auto mb-3 h-14 w-14 rounded-full border border-menu-border object-cover" />
+              <img src={business.logoUrl} alt="" style={{ width: 56, height: 56, borderRadius: 999, objectFit: "cover", margin: "0 auto 14px", display: "block", border: `1px solid ${c.line}` }} />
             )}
-            <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-menu-gold/80">
-              Dijital Menü
-            </p>
-            <h1 className="mt-2 font-display text-2xl font-bold uppercase tracking-[0.18em] sm:text-3xl">
+            <div style={{ fontSize: 10, letterSpacing: "0.4em", color: c.accent, fontWeight: 600 }}>DİJİTAL MENÜ</div>
+            <h1 style={{ fontFamily: theme.fonts.display, margin: "12px 0 0", fontSize: 30, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               {business.name}
             </h1>
+          </header>
+          <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 20px" }}>
+            <h2 style={{ fontFamily: theme.fonts.display, textAlign: "center", fontSize: 18, fontWeight: 700 }}>Şube seçin</h2>
+            {branches.length === 0 ? (
+              <p style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: c.sub }}>Henüz şube eklenmemiş.</p>
+            ) : (
+              <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
+                {branches.map((b) => (
+                  <Link
+                    key={b.id}
+                    href={`/m/${slug}/${b.slug}`}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: c.surface, border: theme.cardBorder, borderRadius: theme.radius, boxShadow: theme.cardShadow, padding: "16px 20px", textDecoration: "none", color: c.ink }}
+                  >
+                    <span style={{ fontFamily: theme.fonts.display, fontSize: 16, fontWeight: 700 }}>{b.name}</span>
+                    <span style={{ color: c.accent }}>→</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        </header>
-
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-          <h2 className="text-center font-display text-lg font-semibold">Şube seçin</h2>
-          {branches.length === 0 ? (
-            <p className="mt-6 text-center text-sm text-menu-muted">
-              Henüz şube eklenmemiş.
-            </p>
-          ) : (
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {branches.map((b) => (
-                <Link
-                  key={b.id}
-                  href={`/m/${slug}/${b.slug}`}
-                  className="group flex items-center justify-between rounded-2xl border border-menu-border bg-menu-surface px-5 py-4 transition-colors hover:border-menu-gold/40 hover:bg-menu-surface-2"
-                >
-                  <span className="font-display text-base font-semibold">{b.name}</span>
-                  <span className="text-menu-gold transition-transform group-hover:translate-x-1">→</span>
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
-      </div>
+      </>
     );
   }
 
@@ -87,12 +87,16 @@ export default async function CustomerMenuPage({ params }: Params) {
     : { products: [], categoryList: [] };
 
   return (
-    <MenuView
-      slug={slug}
-      business={business}
-      menuId={menu?.id}
-      products={products}
-      categoryList={categoryList}
-    />
+    <>
+      <link rel="stylesheet" href={theme.fonts.import} />
+      <ThemedMenu
+        theme={theme}
+        business={business}
+        slug={slug}
+        menuId={menu?.id}
+        products={products}
+        categories={categoryList}
+      />
+    </>
   );
 }

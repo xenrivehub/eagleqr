@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
-import MenuView from "@/components/menu/MenuView";
+import { getTheme } from "@/lib/themes";
+import ThemedMenu from "@/components/menu/ThemedMenu";
 
 type Params = { params: Promise<{ slug: string; branchSlug: string }> };
 
@@ -36,6 +37,7 @@ export default async function BranchMenuPage({ params }: Params) {
 
   const { business, menu } = data;
   const { products, categoryList } = await loadMenuProducts(menu.id);
+  const theme = getTheme(business.themeKey);
 
   // Şube iletişim bilgisi varsa onu, yoksa işletme genelini göster
   const merged = {
@@ -46,13 +48,17 @@ export default async function BranchMenuPage({ params }: Params) {
   };
 
   return (
-    <MenuView
-      slug={slug}
-      business={merged}
-      menuId={menu.id}
-      branchName={menu.name}
-      products={products}
-      categoryList={categoryList}
-    />
+    <>
+      <link rel="stylesheet" href={theme.fonts.import} />
+      <ThemedMenu
+        theme={theme}
+        business={merged}
+        slug={slug}
+        menuId={menu.id}
+        branchName={menu.name}
+        products={products}
+        categories={categoryList}
+      />
+    </>
   );
 }
