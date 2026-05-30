@@ -59,21 +59,36 @@ const features = [
 
 const tiers = [
   {
-    name: "Başlangıç",
+    name: "Standart",
     desc: "Tek lokasyonlu küçük işletmeler için.",
-    features: ["QR menü görüntüleme", "Menü editörü", "Temel analitik", "Çok dil desteği"],
+    features: [
+      "Sınırsız görsel ürün",
+      "2 ücretsiz tema (Mineral & Maison)",
+      "Menü editörü & QR kod",
+      "Çok dil desteği & temel analitik",
+    ],
     featured: false,
   },
   {
-    name: "Profesyonel",
+    name: "Pro",
     desc: "Büyüyen işletmeler için en popüler paket.",
-    features: ["Videolu & AR ürünler", "Kullanıcı profili & öneriler", "Menü versiyonlama", "Gelişmiş analitik & heatmap"],
+    features: [
+      "Standart'taki her şey",
+      "Videolu ürünler",
+      "+1 premium tema hakkı",
+      "Gelişmiş analitik & heatmap",
+    ],
     featured: true,
   },
   {
-    name: "Kurumsal",
-    desc: "Çok şubeli ve zincir işletmeler için.",
-    features: ["Çoklu şube yönetimi", "Özel şablon & marka", "Öncelikli destek", "Genişletilmiş raporlar"],
+    name: "Max",
+    desc: "Premium deneyim isteyen işletmeler için.",
+    features: [
+      "Pro'daki her şey",
+      "AR / 3D ürünler (model-viewer)",
+      "Tüm temalara erişim",
+      "Çoklu şube & öncelikli destek",
+    ],
     featured: false,
   },
 ];

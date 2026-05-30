@@ -52,6 +52,8 @@ export async function loadMenuProducts(menuId: string): Promise<{
       calories: p.calories,
       prepMinutes: p.prepMinutes,
       imageUrl: p.imageUrl,
+      hasVideo: !!p.videoUrl,
+      hasAr: !!p.modelGlbUrl,
       categoryId: c.id,
       categoryName: c.name,
       allergens: p.allergens.map((a) => ({

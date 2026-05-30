@@ -23,6 +23,9 @@ export default async function AdminBusinessesPage() {
     ownerEmail: b.users[0]?.email ?? null,
     productCount: b._count.products,
     allowedThemes: b.allowedThemes,
+    plan: b.plan,
+    videoQuota: b.videoQuota,
+    arQuota: b.arQuota,
   }));
 
   return (

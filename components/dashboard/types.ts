@@ -10,6 +10,8 @@ export type ProductView = {
   categoryId: string;
   allergenIds: string[];
   imageUrl: string | null;
+  videoUrl: string | null;
+  modelGlbUrl: string | null;
   isFeatured: boolean;
   isNew: boolean;
   isPopular: boolean;

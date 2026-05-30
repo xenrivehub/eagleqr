@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 const nav = [
   { href: "/admin", label: "Genel Bakış", icon: "M3 12l9-9 9 9M5 10v10h14V10" },
   { href: "/admin/businesses", label: "İşletmeler", icon: "M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M9 13h.01M9 17h.01M15 9h.01M15 13h.01M15 17h.01" },
+  { href: "/admin/plans", label: "Plan Limitleri", icon: "M3 3v18h18M7 14l3-3 3 3 5-5" },
 ];
 
 export default function AdminShell({

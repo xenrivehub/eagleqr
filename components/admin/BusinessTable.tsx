@@ -4,8 +4,15 @@ import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { BusinessStatus, BusinessType } from "@prisma/client";
-import { setBusinessStatus, setBusinessType, setBusinessThemeAccess } from "@/lib/actions/admin";
+import {
+  setBusinessStatus,
+  setBusinessType,
+  setBusinessThemeAccess,
+  setBusinessPlan,
+  setBusinessMediaQuota,
+} from "@/lib/actions/admin";
 import { THEMES, isThemeFree } from "@/lib/themes";
+import { PLANS, PLAN_LABELS, type Plan } from "@/lib/plans";
 
 const PREMIUM_THEMES = THEMES.filter((t) => !isThemeFree(t.key));
 
@@ -18,6 +25,9 @@ export type BusinessRow = {
   ownerEmail: string | null;
   productCount: number;
   allowedThemes: string[];
+  plan: Plan;
+  videoQuota: number;
+  arQuota: number;
 };
 
 const statusLabel: Record<BusinessStatus, string> = {
@@ -59,6 +69,13 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
     if (res.success) router.refresh();
   }
 
+  async function changePlan(id: string, plan: Plan) {
+    setPendingId(id);
+    const res = await setBusinessPlan(id, plan);
+    setPendingId(null);
+    if (res.success) router.refresh();
+  }
+
   if (businesses.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-ink/20 bg-white p-12 text-center">
@@ -76,6 +93,7 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
             <th className="px-5 py-3 font-semibold">Sahip</th>
             <th className="px-5 py-3 font-semibold">Ürün</th>
             <th className="px-5 py-3 font-semibold">Tür</th>
+            <th className="px-5 py-3 font-semibold">Plan</th>
             <th className="px-5 py-3 font-semibold">Durum</th>
             <th className="px-5 py-3 text-right font-semibold">İşlemler</th>
           </tr>
@@ -119,6 +137,23 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
                   </div>
                 </td>
                 <td className="px-5 py-3.5">
+                  <div className="inline-flex overflow-hidden rounded-full border border-ink/15 text-xs">
+                    {PLANS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        disabled={busy || b.plan === p}
+                        onClick={() => changePlan(b.id, p)}
+                        className={`cursor-pointer px-2.5 py-1 font-semibold transition-colors disabled:cursor-default ${
+                          b.plan === p ? "bg-ink text-cream" : "text-ink/60 hover:bg-ink/5"
+                        }`}
+                      >
+                        {PLAN_LABELS[p]}
+                      </button>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-5 py-3.5">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass[b.status]}`}>
                     {statusLabel[b.status]}
                   </span>
@@ -157,8 +192,13 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
               </tr>
               {expanded && (
                 <tr className="bg-cream/40">
-                  <td colSpan={6} className="px-5 py-4">
-                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-ink/50">
+                  <td colSpan={7} className="px-5 py-4">
+                    <QuotaEditor
+                      id={b.id}
+                      videoQuota={b.videoQuota}
+                      arQuota={b.arQuota}
+                    />
+                    <p className="mb-2.5 mt-5 text-xs font-semibold uppercase tracking-wider text-ink/50">
                       Premium tema erişimi — açtığınız temaları işletme kullanabilir
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -194,6 +234,67 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function QuotaEditor({
+  id,
+  videoQuota,
+  arQuota,
+}: {
+  id: string;
+  videoQuota: number;
+  arQuota: number;
+}) {
+  const router = useRouter();
+  const [video, setVideo] = useState(videoQuota);
+  const [ar, setAr] = useState(arQuota);
+  const [saving, setSaving] = useState(false);
+  const dirty = video !== videoQuota || ar !== arQuota;
+
+  async function save() {
+    setSaving(true);
+    const res = await setBusinessMediaQuota(id, video, ar);
+    setSaving(false);
+    if (res.success) router.refresh();
+  }
+
+  return (
+    <div>
+      <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-ink/50">
+        Ekstra medya kotası — plan limitinin üzerine eklenir (plan-dışı hak verir)
+      </p>
+      <div className="flex flex-wrap items-end gap-4">
+        <label className="text-sm text-ink/70">
+          <span className="mb-1 block text-xs font-medium text-ink/60">Ekstra video hakkı</span>
+          <input
+            type="number"
+            min={0}
+            value={video}
+            onChange={(e) => setVideo(Math.max(0, Number(e.target.value) || 0))}
+            className="w-28 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
+          />
+        </label>
+        <label className="text-sm text-ink/70">
+          <span className="mb-1 block text-xs font-medium text-ink/60">Ekstra AR/3D hakkı</span>
+          <input
+            type="number"
+            min={0}
+            value={ar}
+            onChange={(e) => setAr(Math.max(0, Number(e.target.value) || 0))}
+            className="w-28 rounded-lg border border-ink/15 bg-white px-3 py-1.5 text-sm tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={!dirty || saving}
+          onClick={save}
+          className="cursor-pointer rounded-full bg-brand px-4 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-brand-dark disabled:opacity-50"
+        >
+          {saving ? "Kaydediliyor…" : "Kotayı kaydet"}
+        </button>
+      </div>
     </div>
   );
 }

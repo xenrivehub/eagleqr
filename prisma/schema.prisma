@@ -72,6 +72,12 @@ enum BusinessType {
   CHAIN // zincir işletme — şube başına ayrı menü
 }
 
+enum Plan {
+  STANDART // sadece görsel
+  PRO // görsel + video
+  MAX // görsel + video + AR/3D
+}
+
 // ----------------------------------------------------------------------------
 // Tenant & kullanıcılar
 // ----------------------------------------------------------------------------
@@ -91,6 +97,10 @@ model Business {
   openingHours String? // açık saatler (serbest metin)
   themeKey     String   @default("mineral") // müşteri menüsü teması (bkz. lib/themes.ts)
   allowedThemes String[] @default([]) // admin'in açtığı premium temalar (free temalar her zaman açık)
+  // Üyelik planı + admin'in eklediği ekstra medya kotası (plan limitinin üzerine eklenir)
+  plan         Plan     @default(STANDART)
+  videoQuota   Int      @default(0) // plan dışı ekstra video hakkı (admin verir)
+  arQuota      Int      @default(0) // plan dışı ekstra AR/3D hakkı (admin verir)
   coverUrl     String? // müşteri menüsü hero kapak görseli (R2)
   heroOverline String? // hero üst etiket (örn. "BUGÜN")
   heroTitle    String? // hero serif başlık
@@ -300,6 +310,15 @@ model Subscription {
   currentPeriodEnd DateTime?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+}
+
+// Plan başına medya limitleri — admin panelinden dinamik düzenlenir.
+// Efektif limit = PlanLimit[business.plan] + business.videoQuota/arQuota
+model PlanLimit {
+  plan       Plan     @id
+  videoLimit Int      @default(0) // bu planla kaç ürüne video eklenebilir
+  arLimit    Int      @default(0) // bu planla kaç ürüne AR/3D eklenebilir
+  updatedAt  DateTime @updatedAt
 }
 
 model AuditLog {

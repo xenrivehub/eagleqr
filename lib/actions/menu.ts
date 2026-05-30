@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getMediaEntitlements } from "@/lib/queries/entitlements";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -97,10 +98,42 @@ export type ProductInput = {
   categoryId: string;
   allergenIds: string[];
   imageUrl?: string | null;
+  videoUrl?: string | null;
+  modelGlbUrl?: string | null;
   isFeatured?: boolean;
   isNew?: boolean;
   isPopular?: boolean;
 };
+
+/**
+ * Video / AR yetkisini doğrular. excludeProductId: düzenlemede kendi medyasını
+ * sayımdan çıkar. Yeni medya ekleniyorsa (önceden yokken) kalan kotaya bakar.
+ */
+async function assertMediaAllowed(
+  businessId: string,
+  input: { videoUrl?: string | null; modelGlbUrl?: string | null },
+  prev: { videoUrl: string | null; modelGlbUrl: string | null } | null,
+  excludeProductId?: string,
+): Promise<string | null> {
+  const addingVideo = !!input.videoUrl && !prev?.videoUrl;
+  const addingAr = !!input.modelGlbUrl && !prev?.modelGlbUrl;
+  if (!addingVideo && !addingAr) return null;
+
+  const ent = await getMediaEntitlements(businessId, excludeProductId);
+  if (addingVideo) {
+    if (!ent.video.allowed) return "Video yükleme planınızda kapalı.";
+    if (ent.video.remaining < 1) {
+      return `Video kotanız doldu (${ent.video.limit} ürün). Yükseltmek için iletişime geçin.`;
+    }
+  }
+  if (addingAr) {
+    if (!ent.ar.allowed) return "AR/3D yükleme planınızda kapalı.";
+    if (ent.ar.remaining < 1) {
+      return `AR/3D kotanız doldu (${ent.ar.limit} ürün). Yükseltmek için iletişime geçin.`;
+    }
+  }
+  return null;
+}
 
 type ParsedProduct =
   | { ok: false; error: string }
@@ -167,12 +200,17 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     const parsed = parseProduct(input);
     if (!parsed.ok) return { success: false, error: parsed.error };
 
+    const mediaError = await assertMediaAllowed(businessId, input, null);
+    if (mediaError) return { success: false, error: mediaError };
+
     await prisma.product.create({
       data: {
         ...parsed.data,
         categoryId: input.categoryId,
         businessId,
         imageUrl: input.imageUrl || null,
+        videoUrl: input.videoUrl || null,
+        modelGlbUrl: input.modelGlbUrl || null,
         allergens: {
           create: input.allergenIds.map((allergenId) => ({ allergenId })),
         },
@@ -193,7 +231,7 @@ export async function updateProduct(
     const businessId = await requireBusinessId();
     const owned = await prisma.product.findFirst({
       where: { id, businessId },
-      select: { id: true },
+      select: { id: true, videoUrl: true, modelGlbUrl: true },
     });
     if (!owned) return { success: false, error: "Ürün bulunamadı." };
     await assertCategoryOwned(input.categoryId, businessId);
@@ -201,12 +239,22 @@ export async function updateProduct(
     const parsed = parseProduct(input);
     if (!parsed.ok) return { success: false, error: parsed.error };
 
+    const mediaError = await assertMediaAllowed(
+      businessId,
+      input,
+      { videoUrl: owned.videoUrl, modelGlbUrl: owned.modelGlbUrl },
+      id,
+    );
+    if (mediaError) return { success: false, error: mediaError };
+
     await prisma.product.update({
       where: { id },
       data: {
         ...parsed.data,
         categoryId: input.categoryId,
         imageUrl: input.imageUrl ?? null,
+        videoUrl: input.videoUrl ?? null,
+        modelGlbUrl: input.modelGlbUrl ?? null,
         allergens: {
           deleteMany: {},
           create: input.allergenIds.map((allergenId) => ({ allergenId })),

@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { loadMenuForManager } from "@/lib/queries/menu";
+import { getMediaEntitlements } from "@/lib/queries/entitlements";
 import MenuManager from "@/components/dashboard/MenuManager";
 
 type Params = { params: Promise<{ menuId: string }> };
@@ -18,7 +19,10 @@ export default async function BranchMenuPage({ params }: Params) {
   });
   if (!menu) notFound();
 
-  const { categories, allergens } = await loadMenuForManager(menu.id);
+  const [{ categories, allergens }, media] = await Promise.all([
+    loadMenuForManager(menu.id),
+    getMediaEntitlements(session.user.businessId),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
@@ -37,7 +41,7 @@ export default async function BranchMenuPage({ params }: Params) {
         </p>
         <h2 className="font-display text-xl font-bold text-ink">{menu.name}</h2>
       </div>
-      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} />
+      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} />
     </div>
   );
 }

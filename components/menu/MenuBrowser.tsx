@@ -11,6 +11,8 @@ export type MenuProduct = {
   calories: number | null;
   prepMinutes: number | null;
   imageUrl: string | null;
+  hasVideo: boolean;
+  hasAr: boolean;
   categoryId: string;
   categoryName: string;
   allergens: { code: string; label: string }[];

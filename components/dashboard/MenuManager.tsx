@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AllergenOption, CategoryView, ProductView } from "./types";
+import type { MediaEntitlements } from "@/lib/plans";
 import SlideOver from "./SlideOver";
 import ConfirmDialog from "./ConfirmDialog";
 import CategoryForm from "./CategoryForm";
@@ -23,10 +24,12 @@ export default function MenuManager({
   menuId,
   categories,
   allergens,
+  media,
 }: {
   menuId: string;
   categories: CategoryView[];
   allergens: AllergenOption[];
+  media: MediaEntitlements;
 }) {
   const router = useRouter();
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -215,6 +218,7 @@ export default function MenuManager({
           <ProductForm
             categoryId={panel.categoryId}
             allergens={allergens}
+            media={media}
             onDone={closeAndRefresh}
           />
         )}
@@ -223,6 +227,7 @@ export default function MenuManager({
             categoryId={panel.categoryId}
             allergens={allergens}
             product={panel.product}
+            media={media}
             onDone={closeAndRefresh}
           />
         )}

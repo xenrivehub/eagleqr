@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getTheme } from "@/lib/themes";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
+import ProductMedia from "@/components/menu/ProductMedia";
 
 type Params = { params: Promise<{ slug: string; productId: string }> };
 
@@ -129,6 +130,12 @@ export default async function ProductDetailPage({ params }: Params) {
             </h1>
           </div>
         </div>
+
+        <ProductMedia
+          videoUrl={product.videoUrl}
+          modelGlbUrl={product.modelGlbUrl}
+          poster={product.imageUrl}
+        />
 
         <div className="mt-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 text-sm text-menu-muted">

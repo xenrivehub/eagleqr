@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from "react";
 import type { AllergenOption, ProductView } from "./types";
 import { createProduct, updateProduct, type ProductInput } from "@/lib/actions/menu";
+import type { MediaEntitlements } from "@/lib/plans";
 import ImageUpload from "./ImageUpload";
+import MediaUpload from "./MediaUpload";
 
 const inputBase =
   "w-full rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark";
@@ -12,16 +14,32 @@ export default function ProductForm({
   categoryId,
   allergens,
   product,
+  media,
   onDone,
 }: {
   categoryId: string;
   allergens: AllergenOption[];
   product?: ProductView;
+  media: MediaEntitlements;
   onDone: () => void;
 }) {
   const [selected, setSelected] = useState<string[]>(product?.allergenIds ?? []);
   const [imageUrl, setImageUrl] = useState<string | null>(product?.imageUrl ?? null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(product?.videoUrl ?? null);
+  const [modelGlbUrl, setModelGlbUrl] = useState<string | null>(product?.modelGlbUrl ?? null);
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
+
+  // Kilit/kota durumu: mevcut medyası olan ürün her zaman değiştirebilir
+  const videoHas = !!product?.videoUrl;
+  const arHas = !!product?.modelGlbUrl;
+  const videoLocked = !(media.video.allowed && (videoHas || media.video.remaining > 0));
+  const arLocked = !(media.ar.allowed && (arHas || media.ar.remaining > 0));
+  const videoReason = !media.video.allowed
+    ? "Video yükleme Pro/Max planında. Açtırmak için iletişime geçin."
+    : "Video kotanız doldu. Ek hak için iletişime geçin.";
+  const arReason = !media.ar.allowed
+    ? "AR/3D yükleme Max planında. Açtırmak için iletişime geçin."
+    : "AR/3D kotanız doldu. Ek hak için iletişime geçin.";
   const [isNew, setIsNew] = useState(product?.isNew ?? false);
   const [isPopular, setIsPopular] = useState(product?.isPopular ?? false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +64,8 @@ export default function ProductForm({
       categoryId,
       allergenIds: selected,
       imageUrl,
+      videoUrl,
+      modelGlbUrl,
       isFeatured,
       isNew,
       isPopular,
@@ -72,6 +92,22 @@ export default function ProductForm({
       )}
 
       <ImageUpload value={imageUrl} onChange={setImageUrl} />
+
+      <MediaUpload
+        kind="video"
+        value={videoUrl}
+        onChange={setVideoUrl}
+        locked={videoLocked}
+        lockedReason={videoReason}
+      />
+
+      <MediaUpload
+        kind="model"
+        value={modelGlbUrl}
+        onChange={setModelGlbUrl}
+        locked={arLocked}
+        lockedReason={arReason}
+      />
 
       <div>
         <label htmlFor="p-name" className="mb-1.5 block text-sm font-medium text-ink">

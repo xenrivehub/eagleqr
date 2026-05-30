@@ -116,6 +116,15 @@ export default function ThemedMenu({
 
   const Price = ({ p }: { p: MenuProduct }) => <span style={{ ...priceStyle, fontSize: 14, whiteSpace: "nowrap" }}>₺{p.price}</span>;
 
+  // video / AR işareti — ürün adının yanına küçük rozet
+  const mediaMark = (p: MenuProduct) =>
+    p.hasVideo || p.hasAr ? (
+      <span style={{ display: "inline-flex", gap: 4, marginLeft: 6, verticalAlign: "middle" }}>
+        {p.hasVideo && <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", color: c.accent, border: `1px solid ${c.line}`, borderRadius: 4, padding: "1px 4px" }}>▶ VIDEO</span>}
+        {p.hasAr && <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", color: c.accent, border: `1px solid ${c.line}`, borderRadius: 4, padding: "1px 4px" }}>AR</span>}
+      </span>
+    ) : null;
+
   // ---- HERO --------------------------------------------------------------
   function Hero() {
     if (!business.coverUrl && !business.heroTitle) return null;
@@ -216,7 +225,7 @@ export default function ThemedMenu({
       return (
         <Link href={href} style={{ display: "block", padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={nameStyle}>{p.name}</span>
+            <span style={nameStyle}>{p.name}{mediaMark(p)}</span>
             <span style={{ flex: 1, borderBottom: `1px dotted ${c.line}`, margin: "0 4px", transform: "translateY(-5px)" }} />
             <span style={{ ...priceStyle, fontSize: 18, whiteSpace: "nowrap" }}>₺{p.price}</span>
           </div>
@@ -231,7 +240,7 @@ export default function ThemedMenu({
           <div style={{ flex: "0 0 26px", fontFamily: t.fonts.display, fontSize: 20, color: c.accent, lineHeight: 1, paddingTop: 2 }}>{String(index + 1).padStart(2, "0")}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
-              <span style={display({ fontSize: 18, fontWeight: 800, lineHeight: 1.05 })}>{p.name}</span>
+              <span style={display({ fontSize: 18, fontWeight: 800, lineHeight: 1.05 })}>{p.name}{mediaMark(p)}</span>
               <Price p={p} />
             </div>
             {p.description && <p style={{ margin: "7px 0 0", fontSize: 12, lineHeight: 1.55, color: c.sub }}>{p.description}</p>}
@@ -254,7 +263,7 @@ export default function ThemedMenu({
         <div style={{ flex: "0 0 78px" }}><ImgFrame src={p.imageUrl} h={78} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
-            <span style={nameStyle}>{p.name}</span>
+            <span style={nameStyle}>{p.name}{mediaMark(p)}</span>
             <Price p={p} />
           </div>
           {p.description && <p style={{ margin: "6px 0 0", fontSize: 12.5, lineHeight: 1.5, color: c.sub, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</p>}

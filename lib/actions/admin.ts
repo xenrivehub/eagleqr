@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { THEMES, isThemeFree } from "@/lib/themes";
+import { PLANS, type Plan } from "@/lib/plans";
 import type { BusinessStatus, BusinessType } from "@prisma/client";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -76,6 +77,69 @@ export async function setBusinessType(
     return { success: true };
   } catch {
     return { success: false, error: "Tür güncellenemedi." };
+  }
+}
+
+// İşletmenin üyelik planını ayarla (STANDART / PRO / MAX).
+export async function setBusinessPlan(id: string, plan: Plan): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!PLANS.includes(plan)) return { success: false, error: "Geçersiz plan." };
+    await prisma.business.update({ where: { id }, data: { plan } });
+    revalidatePath("/admin/businesses");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Plan güncellenemedi." };
+  }
+}
+
+// İşletmeye plan dışı ekstra medya kotası ver (video / AR).
+export async function setBusinessMediaQuota(
+  id: string,
+  videoQuota: number,
+  arQuota: number,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const v = Math.trunc(videoQuota);
+    const a = Math.trunc(arQuota);
+    if (!Number.isFinite(v) || !Number.isFinite(a) || v < 0 || a < 0) {
+      return { success: false, error: "Kota negatif olamaz." };
+    }
+    await prisma.business.update({
+      where: { id },
+      data: { videoQuota: v, arQuota: a },
+    });
+    revalidatePath("/admin/businesses");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kota güncellenemedi." };
+  }
+}
+
+// Plan başına medya limitlerini düzenle (dinamik — admin paneli).
+export async function setPlanLimit(
+  plan: Plan,
+  videoLimit: number,
+  arLimit: number,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!PLANS.includes(plan)) return { success: false, error: "Geçersiz plan." };
+    const v = Math.trunc(videoLimit);
+    const a = Math.trunc(arLimit);
+    if (!Number.isFinite(v) || !Number.isFinite(a) || v < 0 || a < 0) {
+      return { success: false, error: "Limit negatif olamaz." };
+    }
+    await prisma.planLimit.upsert({
+      where: { plan },
+      create: { plan, videoLimit: v, arLimit: a },
+      update: { videoLimit: v, arLimit: a },
+    });
+    revalidatePath("/admin/plans");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Limit güncellenemedi." };
   }
 }
 

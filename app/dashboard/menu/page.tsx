@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateDefaultMenu } from "@/lib/actions/menu";
 import { getActiveBranch } from "@/lib/branch-context";
 import { loadMenuForManager } from "@/lib/queries/menu";
+import { getMediaEntitlements } from "@/lib/queries/entitlements";
 import MenuManager from "@/components/dashboard/MenuManager";
 
 export default async function MenuPage() {
@@ -39,7 +40,10 @@ export default async function MenuPage() {
       );
     }
 
-    const { categories, allergens } = await loadMenuForManager(active.id);
+    const [{ categories, allergens }, media] = await Promise.all([
+      loadMenuForManager(active.id),
+      getMediaEntitlements(businessId),
+    ]);
 
     return (
       <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
@@ -54,18 +58,21 @@ export default async function MenuPage() {
             Şubeleri yönet ({branches.length}) →
           </Link>
         </div>
-        <MenuManager menuId={active.id} categories={categories} allergens={allergens} />
+        <MenuManager menuId={active.id} categories={categories} allergens={allergens} media={media} />
       </div>
     );
   }
 
   // Tekil işletme → tek menü
   const menu = await getOrCreateDefaultMenu(businessId);
-  const { categories, allergens } = await loadMenuForManager(menu.id);
+  const [{ categories, allergens }, media] = await Promise.all([
+    loadMenuForManager(menu.id),
+    getMediaEntitlements(businessId),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
-      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} />
+      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} />
     </div>
   );
 }

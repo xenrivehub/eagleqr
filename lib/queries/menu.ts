@@ -33,6 +33,8 @@ export async function loadMenuForManager(menuId: string): Promise<{
       categoryId: c.id,
       allergenIds: p.allergens.map((a) => a.allergenId),
       imageUrl: p.imageUrl,
+      videoUrl: p.videoUrl,
+      modelGlbUrl: p.modelGlbUrl,
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,
