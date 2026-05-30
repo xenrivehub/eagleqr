@@ -332,6 +332,17 @@ model AppSetting {
   value String
 }
 
+// Arayüz metni çevirileri (admin panelinden girilir). Anahtar + TR/EN
+// varsayılanları koddadır (lib/ui-strings.ts); bu tablo onları geçersiz kılar.
+model UiTranslation {
+  lang  String
+  key   String
+  value String
+
+  @@id([lang, key])
+  @@index([lang])
+}
+
 // Para birimleri — admin panelinden eklenir/açılır. İşletme birini seçer.
 model Currency {
   code      String   @id // ISO 4217: "TRY", "USD"

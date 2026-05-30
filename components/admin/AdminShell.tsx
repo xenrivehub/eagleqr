@@ -12,6 +12,7 @@ const nav = [
   { href: "/admin/plans", label: "Plan Limitleri", icon: "M3 3v18h18M7 14l3-3 3 3 5-5" },
   { href: "/admin/languages", label: "Diller & Çeviri", icon: "M3 5h12M9 3v2m1.5 14 4-9 4 9M12.5 17h4M5 8c0 2 1.5 4.5 4 6M3 12c2.5 0 5-1.2 6-4" },
   { href: "/admin/currencies", label: "Para Birimleri", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" },
+  { href: "/admin/ui-strings", label: "Arayüz Metinleri", icon: "M4 7V4h16v3M9 20h6M12 4v16" },
 ];
 
 export default function AdminShell({

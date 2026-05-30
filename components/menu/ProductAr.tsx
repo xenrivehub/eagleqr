@@ -10,9 +10,11 @@ const MV_SRC =
 export default function ProductAr({
   src,
   poster,
+  label,
 }: {
   src: string;
   poster: string | null;
+  label: string;
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const [ready, setReady] = useState(false);
@@ -72,7 +74,7 @@ export default function ProductAr({
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M12 2 3 7v10l9 5 9-5V7zM3 7l9 5 9-5M12 12v10" />
         </svg>
-        Masamda Görüntüle
+        {label}
       </button>
     </>
   );

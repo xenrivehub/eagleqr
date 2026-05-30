@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
+import { cookies } from "next/headers";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
+import { getUiStrings } from "@/lib/queries/ui-strings";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 import TrackView from "@/components/menu/TrackView";
@@ -39,6 +41,9 @@ export default async function CustomerMenuPage({ params }: Params) {
       select: { id: true, name: true, slug: true },
     });
 
+    const cLang = (await cookies()).get("eq_lang")?.value ?? "tr";
+    const cui = (await getUiStrings([cLang]))[cLang];
+
     return (
       <>
         <link rel="stylesheet" href={theme.fonts.import} />
@@ -49,13 +54,13 @@ export default async function CustomerMenuPage({ params }: Params) {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={business.logoUrl} alt="" style={{ width: 56, height: 56, borderRadius: 999, objectFit: "cover", margin: "0 auto 14px", display: "block", border: `1px solid ${c.line}` }} />
             )}
-            <div style={{ fontSize: 10, letterSpacing: "0.4em", color: c.accent, fontWeight: 600 }}>DİJİTAL MENÜ</div>
+            <div style={{ fontSize: 10, letterSpacing: "0.4em", color: c.accent, fontWeight: 600 }}>{cui.digitalMenu}</div>
             <h1 style={{ fontFamily: theme.fonts.display, margin: "12px 0 0", fontSize: 30, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
               {business.name}
             </h1>
           </header>
           <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 20px" }}>
-            <h2 style={{ fontFamily: theme.fonts.display, textAlign: "center", fontSize: 18, fontWeight: 700 }}>Şube seçin</h2>
+            <h2 style={{ fontFamily: theme.fonts.display, textAlign: "center", fontSize: 18, fontWeight: 700 }}>{cui.selectBranch}</h2>
             {branches.length === 0 ? (
               <p style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: c.sub }}>Henüz şube eklenmemiş.</p>
             ) : (
@@ -89,6 +94,7 @@ export default async function CustomerMenuPage({ params }: Params) {
     getEnabledLanguages(),
     getCurrencySpec(business.currency),
   ]);
+  const ui = await getUiStrings(["tr", ...languages.map((l) => l.code)]);
 
   return (
     <>
@@ -102,6 +108,7 @@ export default async function CustomerMenuPage({ params }: Params) {
         categories={categoryList}
         languages={languages}
         currency={currency}
+        ui={ui}
       />
     </>
   );

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
+import { getUiStrings } from "@/lib/queries/ui-strings";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 
@@ -43,6 +44,7 @@ export default async function BranchMenuPage({ params }: Params) {
     getEnabledLanguages(),
     getCurrencySpec(business.currency),
   ]);
+  const ui = await getUiStrings(["tr", ...languages.map((l) => l.code)]);
   const theme = getTheme(business.themeKey);
 
   // Şube iletişim bilgisi varsa onu, yoksa işletme genelini göster
@@ -66,6 +68,7 @@ export default async function BranchMenuPage({ params }: Params) {
         categories={categoryList}
         languages={languages}
         currency={currency}
+        ui={ui}
       />
     </>
   );

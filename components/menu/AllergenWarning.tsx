@@ -7,8 +7,10 @@ import { allergenLabel } from "@/lib/allergen-i18n";
 // Ürün detayında: müşterinin kaçındığı alerjenlerden birini içeriyorsa uyarı şeridi.
 export default function AllergenWarning({
   allergens,
+  intro,
 }: {
   allergens: { code: string; label: string }[];
+  intro: string;
 }) {
   const { selected, ready } = useAllergenFilter();
   const { lang } = useMenuLang();
@@ -31,8 +33,7 @@ export default function AllergenWarning({
     >
       <span aria-hidden className="text-base leading-none">⚠</span>
       <p>
-        <strong>Dikkat:</strong> Bu ürün, filtrelediğiniz alerjen
-        {hit.length > 1 ? "leri" : "i"} içeriyor:{" "}
+        {intro}{" "}
         <strong>{hit.map((h) => h.label).join(", ")}</strong>.
       </p>
     </div>

@@ -308,6 +308,36 @@ export async function deleteLanguage(code: string): Promise<ActionResult> {
   }
 }
 
+// Arayüz metni çevirileri — bir dil için anahtar/değer çiftlerini kaydet.
+// Boş değer gönderilirse o anahtarın çevirisi silinir (fallback'e döner).
+export async function setUiTranslations(
+  lang: string,
+  entries: Record<string, string>,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const code = lang.trim().toLowerCase();
+    if (!code) return { success: false, error: "Dil gerekli." };
+
+    for (const [key, raw] of Object.entries(entries)) {
+      const value = (raw ?? "").trim();
+      if (value) {
+        await prisma.uiTranslation.upsert({
+          where: { lang_key: { lang: code, key } },
+          create: { lang: code, key, value },
+          update: { value },
+        });
+      } else {
+        await prisma.uiTranslation.deleteMany({ where: { lang: code, key } });
+      }
+    }
+    revalidatePath("/admin/ui-strings");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Çeviriler kaydedilemedi." };
+  }
+}
+
 export async function setTranslationModel(model: string): Promise<ActionResult> {
   try {
     await requireAdmin();

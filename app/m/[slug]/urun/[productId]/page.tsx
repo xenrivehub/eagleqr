@@ -8,6 +8,7 @@ import { getTheme } from "@/lib/themes";
 import { allergenLabel } from "@/lib/allergen-i18n";
 import { formatPrice } from "@/lib/currency";
 import { getCurrencySpec } from "@/lib/queries/currencies";
+import { getUiStrings } from "@/lib/queries/ui-strings";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
@@ -71,6 +72,7 @@ export default async function ProductDetailPage({ params }: Params) {
   const dCat = (lang !== "tr" && ctr[lang]?.name) || product.category.name;
 
   const currency = await getCurrencySpec(product.business.currency);
+  const ui = (await getUiStrings([lang]))[lang];
 
   const branchSlug = product.category.menu.slug;
   const backHref =
@@ -114,7 +116,7 @@ export default async function ProductDetailPage({ params }: Params) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="m15 18-6-6 6-6" />
             </svg>
-            Menü
+            {ui.backToMenu}
           </Link>
           <span className="truncate font-display text-sm font-semibold uppercase tracking-[0.18em] text-menu-muted">
             {product.business.name}
@@ -167,6 +169,7 @@ export default async function ProductDetailPage({ params }: Params) {
         </div>
 
         <AllergenWarning
+          intro={ui.allergenWarnIntro}
           allergens={product.allergens.map((a) => ({
             code: a.allergen.code,
             label: a.allergen.label,
@@ -181,12 +184,12 @@ export default async function ProductDetailPage({ params }: Params) {
                   <circle cx="12" cy="12" r="9" />
                   <path d="M12 7v5l3 2" />
                 </svg>
-                {product.prepMinutes} dk
+                {product.prepMinutes} {ui.minutesShort}
               </span>
             )}
             {product.calories != null && <span>{product.calories} kcal</span>}
             {product.modelGlbUrl && (
-              <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} />
+              <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} label={ui.viewInAR} />
             )}
           </div>
           <span className="font-display text-2xl font-bold text-menu-gold">
@@ -197,7 +200,7 @@ export default async function ProductDetailPage({ params }: Params) {
         {dDesc && (
           <section className="mt-7">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
-              ✦ Hakkında
+              ✦ {ui.about}
             </h2>
             <p className="mt-2.5 leading-relaxed text-menu-text/90">
               {dDesc}
@@ -208,10 +211,10 @@ export default async function ProductDetailPage({ params }: Params) {
         {product.allergens.length > 0 && (
           <section className="mt-7 rounded-2xl border border-menu-border bg-menu-surface p-4">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
-              ⚠ Alerjen Bilgisi
+              ⚠ {ui.allergenInfo}
             </h2>
             <p className="mt-2 text-sm text-menu-text/90">
-              Bu ürün şu alerjenleri içerir:{" "}
+              {ui.productAllergenIntro}{" "}
               <span className="font-semibold">
                 {product.allergens.map((a) => allergenLabel(a.allergen.code, lang, a.allergen.label)).join(", ")}
               </span>
@@ -223,9 +226,9 @@ export default async function ProductDetailPage({ params }: Params) {
         {related.length > 0 && (
           <section className="mt-9">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-display text-lg font-semibold">Benzer seçimler</h2>
+              <h2 className="font-display text-lg font-semibold">{ui.similar}</h2>
               <Link href={backHref} className="text-xs uppercase tracking-widest text-menu-muted hover:text-menu-text">
-                Tümü →
+                {ui.seeAll} →
               </Link>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">

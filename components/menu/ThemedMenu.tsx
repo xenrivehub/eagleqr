@@ -9,6 +9,7 @@ import { useAllergenFilter } from "@/lib/use-allergen-filter";
 import { useMenuLang } from "@/lib/use-menu-lang";
 import { allergenLabel } from "@/lib/allergen-i18n";
 import { formatPrice, type CurrencySpec } from "@/lib/currency";
+import { fillTemplate, type UiStrings } from "@/lib/ui-strings";
 
 export type MenuLang = { code: string; label: string; nativeLabel: string; rtl: boolean };
 type CatItem = { id: string; name: string; translations?: Record<string, { name?: string }> };
@@ -45,6 +46,7 @@ export default function ThemedMenu({
   categories,
   languages = [],
   currency,
+  ui = {},
 }: {
   theme: ThemeSpec;
   business: ThemedBusiness;
@@ -55,6 +57,7 @@ export default function ThemedMenu({
   categories: CatItem[];
   languages?: MenuLang[];
   currency: CurrencySpec;
+  ui?: Record<string, UiStrings>;
 }) {
   const c = t.colors;
   const [query, setQuery] = useState("");
@@ -80,6 +83,7 @@ export default function ThemedMenu({
   const ds = (p: MenuProduct) => (activeLang !== "tr" && p.translations?.[activeLang]?.description) || p.description;
   const cn = (cat: CatItem) => (activeLang !== "tr" && cat.translations?.[activeLang]?.name) || cat.name;
   const al = (code: string, trLabel: string) => allergenLabel(code, activeLang, trLabel);
+  const T = (key: string) => ui[activeLang]?.[key] ?? ui["tr"]?.[key] ?? key;
 
   const ALL_LABELS: Record<string, string> = { tr: "Tümü", en: "All", de: "Alle", fr: "Tous", es: "Todos", it: "Tutti", ru: "Все", ar: "الكل", zh: "全部", ja: "すべて" };
   const allLabel = ALL_LABELS[activeLang] ?? "Tümü";
@@ -163,7 +167,7 @@ export default function ThemedMenu({
     <span key={tag} style={{ fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, color: c.accent, border: `1px solid ${c.line}`, borderRadius: 999, padding: "2px 8px" }}>{tag}</span>
   );
   const itemTags = (p: MenuProduct) =>
-    [p.isFeatured && "Şefin Seçimi", p.isPopular && "Popüler", p.isNew && "Yeni"].filter(Boolean) as string[];
+    [p.isFeatured && T("chefPick"), p.isPopular && T("popular"), p.isNew && T("isNew")].filter(Boolean) as string[];
 
   const Price = ({ p }: { p: MenuProduct }) => <span style={{ ...priceStyle, fontSize: 14, whiteSpace: "nowrap" }}>{formatPrice(p.price, currency)}</span>;
 
@@ -180,7 +184,7 @@ export default function ThemedMenu({
   const warnBadge = (labels: string[]) =>
     labels.length ? (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#e0524a", background: "rgba(224,82,74,0.13)", border: "1px solid rgba(224,82,74,0.34)", borderRadius: 999, padding: "2px 9px", marginTop: 8 }}>
-        ⚠ {labels.join(", ")} içerir
+        ⚠ {fillTemplate(T("containsTemplate"), labels.join(", "))}
       </span>
     ) : null;
 
@@ -374,11 +378,11 @@ export default function ThemedMenu({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={business.logoUrl} alt="" style={{ width: 56, height: 56, borderRadius: 999, objectFit: "cover", margin: "0 auto 14px", display: "block", border: `1px solid ${c.line}` }} />
           )}
-          <div style={{ fontSize: 10, letterSpacing: "0.4em", color: c.accent, fontWeight: 600 }}>DİJİTAL MENÜ</div>
+          <div style={{ fontSize: 10, letterSpacing: "0.4em", color: c.accent, fontWeight: 600 }}>{T("digitalMenu")}</div>
           <h1 style={display({ margin: "12px 0 6px", fontSize: 30, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" })}>{business.name}</h1>
           {branchName && <div style={{ fontSize: 14, color: c.accent, fontWeight: 600 }}>{branchName}</div>}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 12, fontSize: 11.5, color: c.sub, border: `1px solid ${c.line}`, borderRadius: 999, padding: "5px 13px" }}>
-            <span style={{ width: 6, height: 6, borderRadius: 5, background: "#22c55e" }} />Açık
+            <span style={{ width: 6, height: 6, borderRadius: 5, background: "#22c55e" }} />{T("open")}
           </div>
         </header>
 
@@ -386,7 +390,7 @@ export default function ThemedMenu({
 
         {products.length === 0 ? (
           <div style={{ ...cardStyle, padding: 40, textAlign: "center" }}>
-            <p style={display({ fontSize: 18, fontWeight: 700, margin: 0 })}>Menü hazırlanıyor</p>
+            <p style={display({ fontSize: 18, fontWeight: 700, margin: 0 })}>{T("menuPreparing")}</p>
             <p style={{ fontSize: 13, color: c.sub, marginTop: 6 }}>Bu menü henüz yayınlanmadı.</p>
           </div>
         ) : (
@@ -395,8 +399,8 @@ export default function ThemedMenu({
             {featured.length > 0 && (
               <section style={{ marginBottom: 32 }}>
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16 }}>
-                  <h3 style={display({ margin: 0, fontSize: 18, fontWeight: 700 })}><span style={{ color: c.accent }}>✦</span> Şefin Seçimi</h3>
-                  <span style={{ fontSize: 9.5, letterSpacing: "0.16em", color: c.faint }}>EL İLE DERLENDİ</span>
+                  <h3 style={display({ margin: 0, fontSize: 18, fontWeight: 700 })}><span style={{ color: c.accent }}>✦</span> {T("chefPick")}</h3>
+                  <span style={{ fontSize: 9.5, letterSpacing: "0.16em", color: c.faint }}>{T("curatedByHand")}</span>
                 </div>
                 <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
                   {featured.map((p) => {
@@ -417,7 +421,7 @@ export default function ThemedMenu({
             {/* SEARCH */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, background: c.surface, border: `1px solid ${c.line}`, borderRadius: t.radius >= 14 ? 999 : t.radius, padding: "11px 15px", marginBottom: 16 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2" aria-hidden><circle cx="11" cy="11" r="7" /><path d="m20 20-3-3" /></svg>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Yemek, malzeme veya kategori ara…" style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 13.5, color: c.ink, fontFamily: t.fonts.body }} />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={T("searchPlaceholder")} style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 13.5, color: c.ink, fontFamily: t.fonts.body }} />
             </div>
 
             {/* FILTER CHIPS */}
@@ -429,7 +433,7 @@ export default function ThemedMenu({
                   : t.chipFilled
                     ? { background: "transparent", color: c.accent, fontWeight: 600, border: `1px solid ${c.accent}` }
                     : { background: c.surface, color: c.sub, border: `1px solid ${c.line}` };
-                return <button key={ch.key} type="button" onClick={() => toggleChip(ch.key)} style={{ ...style, cursor: "pointer", fontSize: 12, borderRadius: 999, padding: "6px 14px" }}>{ch.label}</button>;
+                return <button key={ch.key} type="button" onClick={() => toggleChip(ch.key)} style={{ ...style, cursor: "pointer", fontSize: 12, borderRadius: 999, padding: "6px 14px" }}>{T(ch.key === "featured" ? "chefPick" : ch.key === "popular" ? "popular" : "isNew")}</button>;
               })}
             </div>
 
@@ -442,14 +446,14 @@ export default function ThemedMenu({
                   style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12.5, fontWeight: 600, fontFamily: t.fonts.body, color: activeAllerCount ? c.onAccent : c.sub, background: activeAllerCount ? c.accent : c.surface, border: `1px solid ${activeAllerCount ? c.accent : c.line}`, borderRadius: 999, padding: "8px 15px" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 4h18M6 9h12M10 14h4M11 19h2" /></svg>
-                  Alerjen filtresi{activeAllerCount ? ` · ${activeAllerCount}` : ""}
+                  {T("allergenFilter")}{activeAllerCount ? ` · ${activeAllerCount}` : ""}
                   <span style={{ transform: allerOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▾</span>
                 </button>
 
                 {allerOpen && (
                   <div style={{ marginTop: 12, background: c.surface, border: `1px solid ${c.line}`, borderRadius: t.radius === 0 ? 0 : 14, padding: 14 }}>
                     <p style={{ margin: "0 0 10px", fontSize: 12, color: c.sub, lineHeight: 1.5 }}>
-                      Kaçındığınız alerjenleri seçin; içeren ürünler işaretlenir.
+                      {T("allergenPanelHint")}
                     </p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                       {menuAllergens.map((a) => {
@@ -468,7 +472,7 @@ export default function ThemedMenu({
                     </div>
                     {activeAllerCount > 0 && (
                       <button type="button" onClick={clearAller} style={{ cursor: "pointer", marginTop: 12, fontSize: 11.5, fontWeight: 600, color: c.sub, background: "transparent", border: "none", textDecoration: "underline" }}>
-                        Filtreyi temizle
+                        {T("clearFilter")}
                       </button>
                     )}
                   </div>
@@ -481,7 +485,7 @@ export default function ThemedMenu({
             {/* ITEMS */}
             <section style={itemsWrap}>
               {filtered.length === 0 ? (
-                <p style={{ textAlign: "center", color: c.sub, fontSize: 13, padding: "32px 0" }}>Aramanıza uygun ürün bulunamadı.</p>
+                <p style={{ textAlign: "center", color: c.sub, fontSize: 13, padding: "32px 0" }}>{T("noResults")}</p>
               ) : (
                 filtered.map((p, i) => <Item key={p.id} p={p} index={i} last={i === filtered.length - 1} />)
               )}
@@ -499,8 +503,8 @@ export default function ThemedMenu({
               {business.phone && <div>{business.phone}</div>}
             </div>
           )}
-          <p style={{ fontSize: 11.5, color: c.faint, margin: "18px auto 0", maxWidth: 290, lineHeight: 1.6 }}>Fiyatlara KDV dahildir. Alerjen bilgisi için lütfen servis ekibimize danışın.</p>
-          <div style={{ fontSize: 9, letterSpacing: "0.24em", color: c.faint, marginTop: 18 }}>EAGLE QR İLE HAZIRLANMIŞTIR</div>
+          <p style={{ fontSize: 11.5, color: c.faint, margin: "18px auto 0", maxWidth: 290, lineHeight: 1.6 }}>{T("footerNote")}</p>
+          <div style={{ fontSize: 9, letterSpacing: "0.24em", color: c.faint, marginTop: 18 }}>{T("poweredBy")}</div>
         </footer>
       </div>
     </div>
