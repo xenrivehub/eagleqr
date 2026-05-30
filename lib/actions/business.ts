@@ -84,6 +84,7 @@ export type BusinessInfoInput = {
   about: string;
   openingHours: string;
   currency: string;
+  ratingsEnabled: boolean;
 };
 
 export async function updateBusinessInfo(
@@ -114,6 +115,7 @@ export async function updateBusinessInfo(
         about: input.about.trim() || null,
         openingHours: input.openingHours.trim() || null,
         currency,
+        ratingsEnabled: input.ratingsEnabled,
       },
       select: { slug: true },
     });

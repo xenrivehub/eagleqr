@@ -23,6 +23,7 @@ export default async function SettingsPage() {
       about: true,
       openingHours: true,
       currency: true,
+      ratingsEnabled: true,
     },
   });
   if (!business) redirect("/login");
@@ -66,6 +67,7 @@ export default async function SettingsPage() {
           openingHours={business.openingHours ?? ""}
           currency={business.currency}
           currencies={currencies}
+          ratingsEnabled={business.ratingsEnabled}
         />
       </div>
 

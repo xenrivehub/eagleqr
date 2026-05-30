@@ -109,6 +109,7 @@ export default async function CustomerMenuPage({ params }: Params) {
         languages={languages}
         currency={currency}
         ui={ui}
+        ratingsEnabled={business.ratingsEnabled}
       />
     </>
   );

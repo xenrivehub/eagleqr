@@ -13,6 +13,7 @@ import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
 import AllergenWarning from "@/components/menu/AllergenWarning";
+import StarRating from "@/components/menu/StarRating";
 
 type Params = { params: Promise<{ slug: string; productId: string }> };
 
@@ -20,7 +21,7 @@ async function getProduct(slug: string, productId: string) {
   const product = await prisma.product.findFirst({
     where: { id: productId, business: { slug } },
     include: {
-      business: { select: { name: true, type: true, themeKey: true, currency: true } },
+      business: { select: { name: true, type: true, themeKey: true, currency: true, ratingsEnabled: true } },
       category: {
         select: { id: true, name: true, translations: true, menu: { select: { id: true, slug: true } } },
       },
@@ -73,6 +74,30 @@ export default async function ProductDetailPage({ params }: Params) {
 
   const currency = await getCurrencySpec(product.business.currency);
   const ui = (await getUiStrings([lang]))[lang];
+
+  // Yıldız puanı özeti (işletme açtıysa)
+  let rating: { avg: number; count: number; mine: number } | null = null;
+  if (product.business.ratingsEnabled) {
+    const anonId = store.get("eq_anon")?.value ?? null;
+    const [agg, mineRow] = await Promise.all([
+      prisma.productRating.aggregate({
+        where: { productId: product.id },
+        _avg: { stars: true },
+        _count: { _all: true },
+      }),
+      anonId
+        ? prisma.productRating.findUnique({
+            where: { productId_anonId: { productId: product.id, anonId } },
+            select: { stars: true },
+          })
+        : Promise.resolve(null),
+    ]);
+    rating = {
+      avg: Math.round((agg._avg.stars ?? 0) * 10) / 10,
+      count: agg._count._all,
+      mine: mineRow?.stars ?? 0,
+    };
+  }
 
   const branchSlug = product.category.menu.slug;
   const backHref =
@@ -196,6 +221,16 @@ export default async function ProductDetailPage({ params }: Params) {
             {formatPrice(product.price.toFixed(2), currency)}
           </span>
         </div>
+
+        {rating && (
+          <StarRating
+            productId={product.id}
+            avg={rating.avg}
+            count={rating.count}
+            mine={rating.mine}
+            labels={{ rateThis: ui.rateThis, votes: ui.votes, thanks: ui.rateThanks }}
+          />
+        )}
 
         {dDesc && (
           <section className="mt-7">

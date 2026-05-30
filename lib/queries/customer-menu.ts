@@ -8,6 +8,7 @@ const businessSelect = {
   type: true,
   themeKey: true,
   currency: true,
+  ratingsEnabled: true,
   logoUrl: true,
   coverUrl: true,
   heroOverline: true,
@@ -47,6 +48,23 @@ export async function loadMenuProducts(menuId: string): Promise<{
     },
   });
 
+  // Ürün başına yıldız ortalaması + oy sayısı
+  const productIds = categories.flatMap((c) => c.products.map((p) => p.id));
+  const ratingRows = productIds.length
+    ? await prisma.productRating.groupBy({
+        by: ["productId"],
+        where: { productId: { in: productIds } },
+        _avg: { stars: true },
+        _count: { _all: true },
+      })
+    : [];
+  const ratingMap = new Map(
+    ratingRows.map((r) => [
+      r.productId,
+      { avg: Math.round((r._avg.stars ?? 0) * 10) / 10, count: r._count._all },
+    ]),
+  );
+
   const products: MenuProduct[] = categories.flatMap((c) =>
     c.products.map((p) => ({
       id: p.id,
@@ -61,6 +79,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
       categoryId: c.id,
       categoryName: c.name,
       translations: (p.translations as ProdTrans) ?? {},
+      rating: ratingMap.get(p.id) ?? { avg: 0, count: 0 },
       allergens: p.allergens.map((a) => ({
         code: a.allergen.code,
         label: a.allergen.label,

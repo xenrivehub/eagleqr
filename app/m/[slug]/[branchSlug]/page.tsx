@@ -69,6 +69,7 @@ export default async function BranchMenuPage({ params }: Params) {
         languages={languages}
         currency={currency}
         ui={ui}
+        ratingsEnabled={business.ratingsEnabled}
       />
     </>
   );

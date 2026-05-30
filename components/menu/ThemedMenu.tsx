@@ -47,6 +47,7 @@ export default function ThemedMenu({
   languages = [],
   currency,
   ui = {},
+  ratingsEnabled = true,
 }: {
   theme: ThemeSpec;
   business: ThemedBusiness;
@@ -58,6 +59,7 @@ export default function ThemedMenu({
   languages?: MenuLang[];
   currency: CurrencySpec;
   ui?: Record<string, UiStrings>;
+  ratingsEnabled?: boolean;
 }) {
   const c = t.colors;
   const [query, setQuery] = useState("");
@@ -180,6 +182,15 @@ export default function ThemedMenu({
       </span>
     ) : null;
 
+  // yıldız ortalaması rozeti (oy varsa ve işletme açtıysa)
+  const ratingMark = (p: MenuProduct) =>
+    ratingsEnabled && p.rating.count > 0 ? (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 700, color: c.accent }}>
+        ★ {p.rating.avg.toFixed(1)}
+        <span style={{ color: c.faint, fontWeight: 500 }}>({p.rating.count})</span>
+      </span>
+    ) : null;
+
   // alerjen uyarı rozeti — müşterinin seçtiği alerjeni içeren ürünlerde
   const warnBadge = (labels: string[]) =>
     labels.length ? (
@@ -295,7 +306,7 @@ export default function ThemedMenu({
             <span style={{ ...priceStyle, fontSize: 18, whiteSpace: "nowrap" }}>{formatPrice(p.price, currency)}</span>
           </div>
           {p.description && <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.6, color: c.sub }}>{ds(p)}</p>}
-          {warnBadge(conf)}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>{ratingMark(p)}{warnBadge(conf)}</div>
         </Link>
       );
     }
@@ -312,6 +323,7 @@ export default function ThemedMenu({
             {p.description && <p style={{ margin: "7px 0 0", fontSize: 12, lineHeight: 1.55, color: c.sub }}>{ds(p)}</p>}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
               {itemTags(p).map(tagPill)}
+              {ratingMark(p)}
               {warnBadge(conf)}
               {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
             </div>
@@ -336,6 +348,7 @@ export default function ThemedMenu({
           {p.description && <p style={{ margin: "6px 0 0", fontSize: 12.5, lineHeight: 1.5, color: c.sub, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{ds(p)}</p>}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 9, flexWrap: "wrap" }}>
             {itemTags(p).map(tagPill)}
+            {ratingMark(p)}
             {warnBadge(conf)}
             {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
           </div>
@@ -410,7 +423,7 @@ export default function ThemedMenu({
                       <ImgFrame src={p.imageUrl} h={108} />
                       <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
                       {conf.length > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: "#e0524a", marginTop: 4 }}>⚠ {conf.join(", ")}</div>}
-                      <div style={{ marginTop: 6 }}><span style={{ ...priceStyle, fontSize: 13, display: "inline-block" }}>{formatPrice(p.price, currency)}</span></div>
+                      <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}><span style={{ ...priceStyle, fontSize: 13, display: "inline-block" }}>{formatPrice(p.price, currency)}</span>{ratingMark(p)}</div>
                     </Link>
                     );
                   })}

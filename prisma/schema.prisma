@@ -102,6 +102,7 @@ model Business {
   plan         Plan     @default(STANDART)
   videoQuota   Int      @default(0) // plan dışı ekstra video hakkı (admin verir)
   arQuota      Int      @default(0) // plan dışı ekstra AR/3D hakkı (admin verir)
+  ratingsEnabled Boolean @default(true) // müşteri yıldız puanı açık mı
   coverUrl     String? // müşteri menüsü hero kapak görseli (R2)
   heroOverline String? // hero üst etiket (örn. "BUGÜN")
   heroTitle    String? // hero serif başlık
@@ -228,9 +229,27 @@ model Product {
 
   allergens ProductAllergen[]
   ratings   Rating[]
+  productRatings ProductRating[]
 
   @@index([categoryId, sortOrder])
   @@index([businessId])
+}
+
+// Anonim yıldız puanı (yorumsuz). Cihaz başına (anonId) ürün başına 1 oy,
+// güncellenebilir. ipHash spam'e karşı yumuşak hız limiti için.
+model ProductRating {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  anonId    String // cihaz çerezi (eq_anon)
+  ipHash    String? // sha256(ip + salt) — ham IP saklanmaz (KVKK)
+  stars     Int // 1-5
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, anonId])
+  @@index([productId])
+  @@index([ipHash, createdAt])
 }
 
 // ----------------------------------------------------------------------------

@@ -19,12 +19,14 @@ type Props = {
   openingHours: string;
   currency: string;
   currencies: CurrencySpec[];
+  ratingsEnabled: boolean;
 };
 
 export default function BusinessInfoForm(initial: Props) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState<string | null>(initial.logoUrl);
   const [currency, setCurrency] = useState(initial.currency);
+  const [ratingsEnabled, setRatingsEnabled] = useState(initial.ratingsEnabled);
   const currencyList = initial.currencies;
   const currentSpec =
     currencyList.find((c) => c.code === currency) ?? FALLBACK_CURRENCY;
@@ -45,6 +47,7 @@ export default function BusinessInfoForm(initial: Props) {
       about: String(f.get("about") ?? ""),
       openingHours: String(f.get("openingHours") ?? ""),
       currency,
+      ratingsEnabled,
     });
     if (res.success) {
       setStatus("saved");
@@ -119,6 +122,24 @@ export default function BusinessInfoForm(initial: Props) {
           Menüdeki fiyatların gösterileceği para birimi. Fiyatlar bu birimde
           girilir; otomatik kur dönüşümü yapılmaz.
         </p>
+      </div>
+
+      <div className="rounded-xl border border-ink/10 bg-white p-4">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={ratingsEnabled}
+            onChange={(e) => setRatingsEnabled(e.target.checked)}
+            className="mt-0.5 h-4 w-4"
+          />
+          <span>
+            <span className="block text-sm font-medium text-ink">Müşteri yıldız puanı</span>
+            <span className="mt-0.5 block text-xs text-ink/55">
+              Açıkken müşteriler ürünlere 1-5 yıldız verebilir (anonim, yorumsuz).
+              Kapatırsan menüde hiçbir yerde puan görünmez.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div>

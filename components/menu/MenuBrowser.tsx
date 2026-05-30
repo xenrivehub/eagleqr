@@ -17,6 +17,7 @@ export type MenuProduct = {
   categoryName: string;
   translations: Record<string, { name?: string; description?: string }>;
   allergens: { code: string; label: string }[];
+  rating: { avg: number; count: number };
   isFeatured: boolean;
   isNew: boolean;
   isPopular: boolean;

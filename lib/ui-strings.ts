@@ -36,6 +36,11 @@ export const UI_KEYS: UiKeyDef[] = [
   { key: "seeAll", group: "Ürün detay", tr: "Tümü", en: "See all" },
   { key: "minutesShort", group: "Ürün detay", tr: "dk", en: "min" },
 
+  // Puanlama
+  { key: "rateThis", group: "Puanlama", tr: "Bu ürünü puanla", en: "Rate this item" },
+  { key: "votes", group: "Puanlama", tr: "oy", en: "votes" },
+  { key: "rateThanks", group: "Puanlama", tr: "Puanın için teşekkürler!", en: "Thanks for your rating!" },
+
   // AR / medya
   { key: "viewInAR", group: "AR / Medya", tr: "Masamda Görüntüle", en: "View in my space" },
 
