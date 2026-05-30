@@ -89,7 +89,8 @@ model Business {
   address      String?
   about        String? // hakkında metni
   openingHours String? // açık saatler (serbest metin)
-  themeKey     String  @default("klasik") // müşteri menüsü teması (bkz. lib/themes.ts)
+  themeKey     String   @default("mineral") // müşteri menüsü teması (bkz. lib/themes.ts)
+  allowedThemes String[] @default([]) // admin'in açtığı premium temalar (free temalar her zaman açık)
   coverUrl     String? // müşteri menüsü hero kapak görseli (R2)
   heroOverline String? // hero üst etiket (örn. "BUGÜN")
   heroTitle    String? // hero serif başlık

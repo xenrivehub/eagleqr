@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { BusinessStatus, BusinessType } from "@prisma/client";
-import { setBusinessStatus, setBusinessType } from "@/lib/actions/admin";
+import { setBusinessStatus, setBusinessType, setBusinessThemeAccess } from "@/lib/actions/admin";
+import { THEMES, isThemeFree } from "@/lib/themes";
+
+const PREMIUM_THEMES = THEMES.filter((t) => !isThemeFree(t.key));
 
 export type BusinessRow = {
   id: string;
@@ -14,6 +17,7 @@ export type BusinessRow = {
   type: BusinessType;
   ownerEmail: string | null;
   productCount: number;
+  allowedThemes: string[];
 };
 
 const statusLabel: Record<BusinessStatus, string> = {
@@ -31,6 +35,8 @@ const statusClass: Record<BusinessStatus, string> = {
 export default function BusinessTable({ businesses }: { businesses: BusinessRow[] }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [themeBusy, setThemeBusy] = useState<string | null>(null);
 
   async function change(id: string, status: BusinessStatus) {
     setPendingId(id);
@@ -43,6 +49,13 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
     setPendingId(id);
     const res = await setBusinessType(id, type);
     setPendingId(null);
+    if (res.success) router.refresh();
+  }
+
+  async function toggleTheme(id: string, themeKey: string, allow: boolean) {
+    setThemeBusy(`${id}:${themeKey}`);
+    const res = await setBusinessThemeAccess(id, themeKey, allow);
+    setThemeBusy(null);
     if (res.success) router.refresh();
   }
 
@@ -70,8 +83,10 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
         <tbody className="divide-y divide-ink/5">
           {businesses.map((b) => {
             const busy = pendingId === b.id;
+            const expanded = expandedId === b.id;
             return (
-              <tr key={b.id} className="transition-colors hover:bg-cream/60">
+              <Fragment key={b.id}>
+              <tr className="transition-colors hover:bg-cream/60">
                 <td className="px-5 py-3.5">
                   <div className="font-medium text-ink">{b.name}</div>
                   <Link
@@ -110,6 +125,13 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
                 </td>
                 <td className="px-5 py-3.5">
                   <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(expanded ? null : b.id)}
+                      className="cursor-pointer rounded-full border border-ink/15 px-3 py-1.5 text-xs font-semibold text-ink/70 transition-colors hover:bg-ink/5"
+                    >
+                      Temalar{b.allowedThemes.length > 0 ? ` (${b.allowedThemes.length})` : ""}
+                    </button>
                     {b.status !== "ACTIVE" && (
                       <button
                         type="button"
@@ -133,6 +155,41 @@ export default function BusinessTable({ businesses }: { businesses: BusinessRow[
                   </div>
                 </td>
               </tr>
+              {expanded && (
+                <tr className="bg-cream/40">
+                  <td colSpan={6} className="px-5 py-4">
+                    <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-ink/50">
+                      Premium tema erişimi — açtığınız temaları işletme kullanabilir
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {PREMIUM_THEMES.map((t) => {
+                        const on = b.allowedThemes.includes(t.key);
+                        const tBusy = themeBusy === `${b.id}:${t.key}`;
+                        return (
+                          <button
+                            key={t.key}
+                            type="button"
+                            disabled={tBusy}
+                            onClick={() => toggleTheme(b.id, t.key, !on)}
+                            className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                              on
+                                ? "border-emerald-300 bg-emerald-100 text-emerald-700"
+                                : "border-ink/15 text-ink/60 hover:bg-ink/5"
+                            }`}
+                          >
+                            {on ? "✓ " : "🔒 "}
+                            {t.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2.5 text-xs text-ink/45">
+                      Mineral ve Maison her işletmede ücretsiz açıktır.
+                    </p>
+                  </td>
+                </tr>
+              )}
+              </Fragment>
             );
           })}
         </tbody>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { THEMES, type ThemeSpec } from "@/lib/themes";
+import { THEMES, isThemeUnlocked, type ThemeSpec } from "@/lib/themes";
 import { setTheme } from "@/lib/actions/business";
 
 function Preview({ t }: { t: ThemeSpec }) {
@@ -44,13 +44,26 @@ function Preview({ t }: { t: ThemeSpec }) {
   );
 }
 
-export default function ThemePicker({ current }: { current: string }) {
+export default function ThemePicker({
+  current,
+  allowed,
+}: {
+  current: string;
+  allowed: string[];
+}) {
   const router = useRouter();
   const [active, setActive] = useState(current);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
 
   async function choose(key: string) {
     if (key === active) return;
+    if (!isThemeUnlocked(key, allowed)) {
+      const t = THEMES.find((x) => x.key === key);
+      setLockedNotice(t?.name ?? key);
+      return;
+    }
+    setLockedNotice(null);
     setPendingKey(key);
     const res = await setTheme(key);
     setPendingKey(null);
@@ -61,36 +74,70 @@ export default function ThemePicker({ current }: { current: string }) {
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {THEMES.map((t) => {
-        const isActive = active === t.key;
-        const busy = pendingKey === t.key;
-        return (
+    <div>
+      {lockedNotice && (
+        <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span aria-hidden className="text-base leading-none">🔒</span>
+          <div>
+            <p className="font-semibold">“{lockedNotice}” teması kilitli</p>
+            <p className="mt-0.5 text-amber-800/90">
+              Bu temayı kullanmak için bizimle iletişime geçin — hesabınıza tanımlayalım.
+            </p>
+          </div>
           <button
-            key={t.key}
             type="button"
-            onClick={() => choose(t.key)}
-            aria-pressed={isActive}
-            className={`group cursor-pointer rounded-2xl border-2 p-3 text-left transition-all ${
-              isActive ? "border-brand shadow-md" : "border-ink/10 hover:border-ink/25"
-            }`}
+            onClick={() => setLockedNotice(null)}
+            className="ml-auto shrink-0 cursor-pointer rounded-full px-2 text-amber-700 hover:bg-amber-100"
+            aria-label="Kapat"
           >
-            <Preview t={t} />
-            <div className="mt-3 flex items-start justify-between gap-2 px-1">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-display font-semibold text-ink">{t.name}</span>
-                  {isActive && (
-                    <span className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-ink">Aktif</span>
-                  )}
-                </div>
-                <p className="mt-0.5 truncate text-xs text-ink/55">{t.description}</p>
-              </div>
-              {busy && <span className="shrink-0 text-xs text-ink/50">…</span>}
-            </div>
+            ✕
           </button>
-        );
-      })}
+        </div>
+      )}
+
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {THEMES.map((t) => {
+          const isActive = active === t.key;
+          const busy = pendingKey === t.key;
+          const unlocked = isThemeUnlocked(t.key, allowed);
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => choose(t.key)}
+              aria-pressed={isActive}
+              className={`group relative cursor-pointer rounded-2xl border-2 p-3 text-left transition-all ${
+                isActive
+                  ? "border-brand shadow-md"
+                  : "border-ink/10 hover:border-ink/25"
+              }`}
+            >
+              <div className={unlocked ? "" : "opacity-50"}>
+                <Preview t={t} />
+              </div>
+              {!unlocked && (
+                <span className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-ink/80 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
+                  🔒 Kilitli
+                </span>
+              )}
+              <div className="mt-3 flex items-start justify-between gap-2 px-1">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-display font-semibold text-ink">{t.name}</span>
+                    {isActive && (
+                      <span className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-ink">Aktif</span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 truncate text-xs text-ink/55">
+                    {unlocked ? t.description : "Premium tema — açtırmak için iletişime geçin"}
+                  </p>
+                </div>
+                {busy && <span className="shrink-0 text-xs text-ink/50">…</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

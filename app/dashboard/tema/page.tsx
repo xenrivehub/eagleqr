@@ -11,7 +11,7 @@ export default async function ThemePage() {
 
   const business = await prisma.business.findUnique({
     where: { id: session.user.businessId },
-    select: { themeKey: true, slug: true },
+    select: { themeKey: true, slug: true, allowedThemes: true },
   });
   if (!business) redirect("/login");
 
@@ -37,7 +37,7 @@ export default async function ThemePage() {
       </div>
 
       <div className="mt-8">
-        <ThemePicker current={active.key} />
+        <ThemePicker current={active.key} allowed={business.allowedThemes} />
       </div>
     </div>
   );

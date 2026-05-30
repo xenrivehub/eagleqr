@@ -274,7 +274,20 @@ export const THEMES: ThemeSpec[] = [
   },
 ];
 
-export const DEFAULT_THEME_KEY = "klasik";
+export const DEFAULT_THEME_KEY = "mineral";
+
+// Ücretsiz (herkese açık) temalar. Diğer tüm temalar kilitlidir ve yalnızca
+// admin panelinden işletmeye özel açıldığında (Business.allowedThemes) kullanılabilir.
+export const FREE_THEME_KEYS = ["mineral", "maison"] as const;
+
+export function isThemeFree(key: string): boolean {
+  return (FREE_THEME_KEYS as readonly string[]).includes(key);
+}
+
+// Bir tema işletme için kullanılabilir mi? (ücretsiz VEYA admin tarafından açılmış)
+export function isThemeUnlocked(key: string, allowedThemes: string[] = []): boolean {
+  return isThemeFree(key) || allowedThemes.includes(key);
+}
 
 export function getTheme(key: string | null | undefined): ThemeSpec {
   return THEMES.find((t) => t.key === key) ?? THEMES[0];

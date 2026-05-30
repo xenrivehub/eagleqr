@@ -22,6 +22,7 @@ export default async function AdminBusinessesPage() {
     type: b.type,
     ownerEmail: b.users[0]?.email ?? null,
     productCount: b._count.products,
+    allowedThemes: b.allowedThemes,
   }));
 
   return (

@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { ACTIVE_BRANCH_COOKIE } from "@/lib/branch-context";
-import { THEMES } from "@/lib/themes";
+import { THEMES, isThemeUnlocked } from "@/lib/themes";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -123,6 +123,17 @@ export async function setTheme(themeKey: string): Promise<ActionResult> {
   if (!businessId) return { success: false, error: "Yetkisiz erişim." };
   if (!THEMES.some((t) => t.key === themeKey)) {
     return { success: false, error: "Geçersiz tema." };
+  }
+  const current = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { allowedThemes: true },
+  });
+  if (!current) return { success: false, error: "İşletme bulunamadı." };
+  if (!isThemeUnlocked(themeKey, current.allowedThemes)) {
+    return {
+      success: false,
+      error: "Bu tema kilitli. Kullanmak için bizimle iletişime geçin.",
+    };
   }
   try {
     const business = await prisma.business.update({
