@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getTheme } from "@/lib/themes";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
-import ProductMedia from "@/components/menu/ProductMedia";
+import ProductAr from "@/components/menu/ProductAr";
 
 type Params = { params: Promise<{ slug: string; productId: string }> };
 
@@ -71,6 +71,7 @@ export default async function ProductDetailPage({ params }: Params) {
     "--color-menu-text": tc.ink,
     "--color-menu-muted": tc.sub,
     "--color-menu-gold": tc.accent,
+    "--color-menu-on-accent": tc.onAccent,
     "--color-menu-border": tc.line,
     "--font-display": theme.fonts.display,
     "--font-sans": theme.fonts.body,
@@ -101,7 +102,18 @@ export default async function ProductDetailPage({ params }: Params) {
 
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
         <div className="relative overflow-hidden rounded-3xl border border-menu-border">
-          {product.imageUrl ? (
+          {product.videoUrl ? (
+            // Ürün videosu varsa: görselin yerinde sessiz, otomatik, sürekli döner
+            <video
+              src={product.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={product.imageUrl ?? undefined}
+              className="h-64 w-full object-cover sm:h-80"
+            />
+          ) : product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={product.imageUrl} alt={product.name} className="h-64 w-full object-cover sm:h-80" />
           ) : (
@@ -131,14 +143,8 @@ export default async function ProductDetailPage({ params }: Params) {
           </div>
         </div>
 
-        <ProductMedia
-          videoUrl={product.videoUrl}
-          modelGlbUrl={product.modelGlbUrl}
-          poster={product.imageUrl}
-        />
-
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-sm text-menu-muted">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-menu-muted">
             {product.prepMinutes != null && (
               <span className="flex items-center gap-1.5">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
@@ -149,6 +155,9 @@ export default async function ProductDetailPage({ params }: Params) {
               </span>
             )}
             {product.calories != null && <span>{product.calories} kcal</span>}
+            {product.modelGlbUrl && (
+              <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} />
+            )}
           </div>
           <span className="font-display text-2xl font-bold text-menu-gold">
             ₺{product.price.toFixed(2)}
