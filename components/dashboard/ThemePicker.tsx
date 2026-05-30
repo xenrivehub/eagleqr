@@ -18,13 +18,15 @@ function Preview({ t }: { t: ThemeSpec }) {
       </div>
       {/* mini item card */}
       <div style={{ background: c.surface, border: t.cardBorder, borderRadius: t.radius, boxShadow: t.cardShadow, padding: 10, display: "flex", gap: 10 }}>
-        <div style={{ width: 38, height: 38, borderRadius: Math.min(t.radius, 10), background: c.surface2, flexShrink: 0 }} />
+        <div style={{ width: 38, height: 38, borderRadius: t.imageShape === "arch" ? "16px 16px 4px 4px" : Math.min(t.imageRadius, 10), background: c.surface2, flexShrink: 0 }} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
             <span style={{ fontFamily: t.fonts.display, fontSize: 12, fontWeight: 700, color: c.ink }}>Flat White</span>
-            <span style={t.priceFilled
-              ? { background: c.accent, color: c.onAccent, borderRadius: 999, padding: "1px 7px", fontSize: 10, fontWeight: 700 }
-              : { color: c.accent, fontSize: 11, fontWeight: 700 }}>₺85</span>
+            <span style={t.priceStyle === "boxed"
+              ? { background: c.accent, color: c.onAccent, padding: "1px 6px", fontSize: 10, fontWeight: 700 }
+              : t.priceStyle === "pill"
+                ? { background: c.accent, color: c.onAccent, borderRadius: 999, padding: "1px 7px", fontSize: 10, fontWeight: 700 }
+                : { color: c.accent, fontSize: 11, fontWeight: 700 }}>₺85</span>
           </div>
           <div style={{ height: 5, background: c.line, borderRadius: 3, marginTop: 7, width: "85%" }} />
           <div style={{ height: 5, background: c.line, borderRadius: 3, marginTop: 4, width: "55%" }} />

@@ -1,38 +1,51 @@
 // ============================================================================
 // Tema kayıt defteri (registry)
 // Yeni tema eklemek için: aşağıdaki THEMES dizisine bir ThemeSpec objesi ekle.
-// Renk/font/köşe/gölge değerlerini doldurman yeterli — sistem otomatik tanır,
-// tema seçicide görünür ve müşteri menüsünde uygulanır.
+// Renk/font + yapısal "tedavi" bayraklarını (imageShape, heroStyle, itemStyle…)
+// doldur — sistem otomatik tanır, seçicide görünür ve müşteri menüsünde uygulanır.
 // ============================================================================
 
+export type ImageShape = "rect" | "arch"; // arch = üstü kemerli (Retro)
+export type HeroStyle = "below" | "overlay" | "card" | "framed";
+export type ItemStyle = "card" | "list-thumb" | "list-number" | "list-plain";
+export type TabStyle = "underline" | "pill" | "segmented";
+export type PriceStyle = "plain" | "pill" | "boxed";
+
 export type ThemeSpec = {
-  key: string; // benzersiz anahtar (DB'de saklanır)
-  name: string; // panelde görünen ad
-  description: string; // kısa açıklama
+  key: string;
+  name: string;
+  description: string;
   mode: "light" | "dark";
   fonts: {
-    /** Google Fonts <link href> — yeni font istersen buraya ekle */
-    import: string;
-    display: string; // başlık font-family
-    body: string; // gövde font-family
+    import: string; // Google Fonts <link href>
+    display: string;
+    body: string;
   };
   colors: {
     bg: string;
     surface: string;
     surface2: string;
-    ink: string; // ana metin
-    sub: string; // ikincil metin
-    faint: string; // en silik metin
-    accent: string; // vurgu (fiyat, aktif sekme, çipler)
-    onAccent: string; // dolu vurgu üstündeki metin
-    line: string; // kenarlık / ayraç
+    ink: string;
+    sub: string;
+    faint: string;
+    accent: string;
+    onAccent: string;
+    line: string;
   };
-  radius: number; // kart köşe yarıçapı (px)
-  cardBorder: string; // kart kenarlığı (CSS border)
-  cardShadow: string; // kart gölgesi (CSS box-shadow) — "none" olabilir
-  headingSerif: boolean; // başlıklarda serif mi
-  chipFilled: boolean; // filtre çipleri/aktif sekme dolu mu (vs outline)
-  priceFilled: boolean; // fiyat dolu rozet mi (vs düz renkli metin)
+  // Yapısal tedaviler (mockup'lardaki imzaları taşır)
+  radius: number; // kart/eleman köşe yarıçapı
+  imageShape: ImageShape;
+  imageRadius: number; // görsel köşe yarıçapı (rect için)
+  heroStyle: HeroStyle;
+  itemStyle: ItemStyle;
+  tabStyle: TabStyle;
+  priceStyle: PriceStyle;
+  cardBorder: string;
+  cardShadow: string;
+  headingSerif: boolean;
+  chipFilled: boolean;
+  chefCard: boolean; // şefin seçimi kartlı mı (yoksa çıplak görsel+metin)
+  uppercase: boolean; // başlık/ürün adları büyük harf mi (Brutalist)
 };
 
 const gf = (families: string) =>
@@ -54,13 +67,15 @@ export const THEMES: ThemeSpec[] = [
       sub: "#ab9883", faint: "#7c6a52", accent: "#cda86d", onAccent: "#140d08",
       line: "rgba(242,232,217,0.12)",
     },
-    radius: 16, cardBorder: "1px solid rgba(242,232,217,0.12)", cardShadow: "none",
-    headingSerif: true, chipFilled: false, priceFilled: false,
+    radius: 16, imageShape: "rect", imageRadius: 14, heroStyle: "below",
+    itemStyle: "card", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(242,232,217,0.12)", cardShadow: "none",
+    headingSerif: true, chipFilled: false, chefCard: true, uppercase: false,
   },
   {
     key: "mineral",
     name: "Mineral",
-    description: "Minimalist açık, tek kil vurgusu",
+    description: "Minimalist açık, tek kil vurgusu, ince ayraçlar",
     mode: "light",
     fonts: {
       import: gf("family=Schibsted+Grotesk:wght@400;500;600;700"),
@@ -68,17 +83,19 @@ export const THEMES: ThemeSpec[] = [
       body: "'Schibsted Grotesk', system-ui, sans-serif",
     },
     colors: {
-      bg: "#F6F4EF", surface: "#FFFFFF", surface2: "#F0EDE6", ink: "#1C1B17",
+      bg: "#F6F4EF", surface: "#FFFFFF", surface2: "#EDEAE2", ink: "#1C1B17",
       sub: "#8C887E", faint: "#B6B2A8", accent: "#B65C3B", onAccent: "#FFFFFF",
       line: "rgba(28,27,23,0.10)",
     },
-    radius: 6, cardBorder: "1px solid rgba(28,27,23,0.10)", cardShadow: "none",
-    headingSerif: false, chipFilled: false, priceFilled: false,
+    radius: 6, imageShape: "rect", imageRadius: 6, heroStyle: "below",
+    itemStyle: "list-thumb", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(28,27,23,0.10)", cardShadow: "none",
+    headingSerif: false, chipFilled: false, chefCard: false, uppercase: false,
   },
   {
     key: "maison",
     name: "Maison",
-    description: "Lüks editöryel — krem, orman yeşili",
+    description: "Lüks editöryel — krem/yeşil, à la carte liste",
     mode: "light",
     fonts: {
       import: gf("family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@400;500;600"),
@@ -90,8 +107,10 @@ export const THEMES: ThemeSpec[] = [
       sub: "#6f6a5c", faint: "#A99F88", accent: "#2C4733", onAccent: "#F7F2E8",
       line: "rgba(44,71,51,0.22)",
     },
-    radius: 4, cardBorder: "1px solid rgba(44,71,51,0.22)", cardShadow: "none",
-    headingSerif: true, chipFilled: false, priceFilled: false,
+    radius: 2, imageShape: "rect", imageRadius: 2, heroStyle: "overlay",
+    itemStyle: "list-plain", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(44,71,51,0.22)", cardShadow: "none",
+    headingSerif: true, chipFilled: false, chefCard: false, uppercase: false,
   },
   {
     key: "pop",
@@ -108,13 +127,15 @@ export const THEMES: ThemeSpec[] = [
       sub: "#5C5468", faint: "#8a8294", accent: "#FF5A1F", onAccent: "#FFFFFF",
       line: "#1B1626",
     },
-    radius: 20, cardBorder: "2px solid #1B1626", cardShadow: "5px 5px 0 #1B1626",
-    headingSerif: false, chipFilled: true, priceFilled: true,
+    radius: 20, imageShape: "rect", imageRadius: 14, heroStyle: "card",
+    itemStyle: "card", tabStyle: "pill", priceStyle: "boxed",
+    cardBorder: "2px solid #1B1626", cardShadow: "5px 5px 0 #1B1626",
+    headingSerif: false, chipFilled: true, chefCard: true, uppercase: false,
   },
   {
     key: "terra",
     name: "Terra",
-    description: "Organik toprak tonları, sıcak",
+    description: "Organik toprak tonları, yumuşak kartlar",
     mode: "light",
     fonts: {
       import: gf("family=Spectral:wght@500;600;700&family=Karla:wght@400;500;600;700"),
@@ -126,16 +147,18 @@ export const THEMES: ThemeSpec[] = [
       sub: "#7d7264", faint: "#A99D8A", accent: "#B0623A", onAccent: "#F6F0E3",
       line: "rgba(58,46,37,0.13)",
     },
-    radius: 16, cardBorder: "1px solid rgba(58,46,37,0.13)", cardShadow: "0 6px 18px rgba(58,46,37,0.07)",
-    headingSerif: true, chipFilled: false, priceFilled: false,
+    radius: 18, imageShape: "rect", imageRadius: 14, heroStyle: "below",
+    itemStyle: "card", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(58,46,37,0.13)", cardShadow: "0 4px 18px rgba(58,46,37,0.07)",
+    headingSerif: true, chipFilled: false, chefCard: true, uppercase: false,
   },
   {
     key: "brutalist",
     name: "Neue Brutalist",
-    description: "Cesur, keskin kenarlar, yüksek kontrast",
+    description: "Cesur, keskin, numaralı liste, mono",
     mode: "light",
     fonts: {
-      import: gf("family=Archivo:wght@600;700;800&family=Space+Mono:wght@400;700"),
+      import: gf("family=Archivo:wght@600;700;800;900&family=Space+Mono:wght@400;700"),
       display: "'Archivo', system-ui, sans-serif",
       body: "'Space Mono', monospace",
     },
@@ -144,8 +167,10 @@ export const THEMES: ThemeSpec[] = [
       sub: "#55524a", faint: "#85827a", accent: "#2B27EE", onAccent: "#FFFFFF",
       line: "#121212",
     },
-    radius: 0, cardBorder: "2px solid #121212", cardShadow: "4px 4px 0 #121212",
-    headingSerif: false, chipFilled: true, priceFilled: true,
+    radius: 0, imageShape: "rect", imageRadius: 0, heroStyle: "framed",
+    itemStyle: "list-number", tabStyle: "segmented", priceStyle: "boxed",
+    cardBorder: "2px solid #121212", cardShadow: "4px 4px 0 #121212",
+    headingSerif: false, chipFilled: true, chefCard: true, uppercase: true,
   },
   {
     key: "noir",
@@ -162,13 +187,15 @@ export const THEMES: ThemeSpec[] = [
       sub: "#969DAA", faint: "#5C636F", accent: "#54E0AE", onAccent: "#14161B",
       line: "rgba(255,255,255,0.09)",
     },
-    radius: 14, cardBorder: "1px solid rgba(255,255,255,0.09)", cardShadow: "none",
-    headingSerif: false, chipFilled: false, priceFilled: false,
+    radius: 14, imageShape: "rect", imageRadius: 10, heroStyle: "overlay",
+    itemStyle: "card", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(255,255,255,0.09)", cardShadow: "none",
+    headingSerif: false, chipFilled: false, chefCard: true, uppercase: false,
   },
   {
     key: "pastel",
     name: "Soft Pastel",
-    description: "Şeker pasteller, yumuşak ve çok yuvarlak",
+    description: "Şeker pasteller, çok yuvarlak, yumuşak gölge",
     mode: "light",
     fonts: {
       import: gf("family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700"),
@@ -180,13 +207,15 @@ export const THEMES: ThemeSpec[] = [
       sub: "#9089A0", faint: "#b3adc0", accent: "#B7A6EE", onAccent: "#3a3350",
       line: "rgba(75,67,96,0.10)",
     },
-    radius: 20, cardBorder: "none", cardShadow: "0 8px 22px rgba(75,67,96,0.10)",
-    headingSerif: false, chipFilled: true, priceFilled: true,
+    radius: 22, imageShape: "rect", imageRadius: 16, heroStyle: "below",
+    itemStyle: "card", tabStyle: "pill", priceStyle: "pill",
+    cardBorder: "none", cardShadow: "0 8px 22px rgba(75,67,96,0.10)",
+    headingSerif: false, chipFilled: true, chefCard: true, uppercase: false,
   },
   {
     key: "retro",
     name: "Retro Sun",
-    description: "70'ler, sıcak hasat tonları",
+    description: "70'ler, kemer görseller, hasat tonları",
     mode: "light",
     fonts: {
       import: gf("family=Yeseva+One&family=Work+Sans:wght@400;500;600;700"),
@@ -195,16 +224,18 @@ export const THEMES: ThemeSpec[] = [
     },
     colors: {
       bg: "#F2E3C3", surface: "#FBF2DB", surface2: "#F2E6C8", ink: "#3A2A16",
-      sub: "#7C6A4E", faint: "#A8966E", accent: "#BC4A1C", onAccent: "#FBF2DB",
-      line: "rgba(58,42,22,0.15)",
+      sub: "#7C6A4E", faint: "#A8966E", accent: "#BC4A1C", onAccent: "#F2E3C3",
+      line: "rgba(217,154,43,0.45)",
     },
-    radius: 14, cardBorder: "1px solid rgba(58,42,22,0.15)", cardShadow: "0 6px 16px rgba(58,42,22,0.08)",
-    headingSerif: true, chipFilled: true, priceFilled: false,
+    radius: 18, imageShape: "arch", imageRadius: 14, heroStyle: "overlay",
+    itemStyle: "card", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1.5px solid rgba(217,154,43,0.5)", cardShadow: "none",
+    headingSerif: true, chipFilled: true, chefCard: true, uppercase: false,
   },
   {
     key: "botanical",
     name: "Botanical",
-    description: "Ferah adaçayı/spa, aydınlık",
+    description: "Ferah adaçayı/spa, ince ayraçlı liste",
     mode: "light",
     fonts: {
       import: gf("family=Newsreader:wght@400;500;600&family=Mulish:wght@400;500;600;700"),
@@ -216,13 +247,15 @@ export const THEMES: ThemeSpec[] = [
       sub: "#6C7567", faint: "#A2AC97", accent: "#3D5639", onAccent: "#F8FAF4",
       line: "rgba(61,86,57,0.16)",
     },
-    radius: 12, cardBorder: "1px solid rgba(61,86,57,0.16)", cardShadow: "none",
-    headingSerif: true, chipFilled: false, priceFilled: false,
+    radius: 12, imageShape: "rect", imageRadius: 10, heroStyle: "overlay",
+    itemStyle: "list-thumb", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(61,86,57,0.16)", cardShadow: "none",
+    headingSerif: true, chipFilled: false, chefCard: true, uppercase: false,
   },
   {
     key: "editorial",
     name: "Editorial",
-    description: "Dergi/İsviçre, tek kırmızı vurgu",
+    description: "Dergi/İsviçre, numaralı liste, tek kırmızı",
     mode: "light",
     fonts: {
       import: gf("family=Instrument+Serif:ital@0;1&family=Libre+Franklin:wght@400;500;600;700"),
@@ -234,8 +267,10 @@ export const THEMES: ThemeSpec[] = [
       sub: "#6A655D", faint: "#9A9489", accent: "#DE2418", onAccent: "#FBFAF5",
       line: "rgba(22,19,15,0.16)",
     },
-    radius: 2, cardBorder: "1px solid rgba(22,19,15,0.16)", cardShadow: "none",
-    headingSerif: true, chipFilled: false, priceFilled: false,
+    radius: 2, imageShape: "rect", imageRadius: 0, heroStyle: "below",
+    itemStyle: "list-number", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(22,19,15,0.16)", cardShadow: "none",
+    headingSerif: true, chipFilled: false, chefCard: false, uppercase: false,
   },
 ];
 
