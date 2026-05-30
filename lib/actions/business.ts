@@ -143,17 +143,75 @@ export async function setActiveBranch(menuId: string): Promise<ActionResult> {
   }
 }
 
-export async function createBranch(name: string): Promise<ActionResult> {
+export async function createBranch(
+  name: string,
+  copyFromMenuId?: string,
+): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
     const trimmed = name.trim();
     if (trimmed.length < 1) return { success: false, error: "Şube adı gerekli." };
 
     const slug = await uniqueBranchSlug(businessId, trimmed);
-    await prisma.menu.create({
+    const menu = await prisma.menu.create({
       data: { businessId, name: trimmed, slug, schedule: "ALL_DAY" },
     });
+
+    // İsteğe bağlı: mevcut bir şubenin kategori + ürünlerini kopyala
+    if (copyFromMenuId) {
+      const source = await prisma.menu.findFirst({
+        where: { id: copyFromMenuId, businessId },
+        select: { id: true },
+      });
+      if (source) {
+        const categories = await prisma.category.findMany({
+          where: { menuId: source.id },
+          orderBy: { sortOrder: "asc" },
+          include: {
+            products: {
+              orderBy: { createdAt: "asc" },
+              include: { allergens: { select: { allergenId: true } } },
+            },
+          },
+        });
+
+        for (const cat of categories) {
+          await prisma.category.create({
+            data: {
+              menuId: menu.id,
+              name: cat.name,
+              sortOrder: cat.sortOrder,
+              products: {
+                create: cat.products.map((p) => ({
+                  businessId,
+                  name: p.name,
+                  description: p.description,
+                  price: p.price,
+                  calories: p.calories,
+                  prepMinutes: p.prepMinutes,
+                  imageUrl: p.imageUrl,
+                  videoUrl: p.videoUrl,
+                  modelGlbUrl: p.modelGlbUrl,
+                  modelUsdzUrl: p.modelUsdzUrl,
+                  mediaType: p.mediaType,
+                  isSoldOut: p.isSoldOut,
+                  isFeatured: p.isFeatured,
+                  isNew: p.isNew,
+                  isPopular: p.isPopular,
+                  sortOrder: p.sortOrder,
+                  allergens: {
+                    create: p.allergens.map((a) => ({ allergenId: a.allergenId })),
+                  },
+                })),
+              },
+            },
+          });
+        }
+      }
+    }
+
     revalidatePath("/dashboard/menu");
+    revalidatePath("/dashboard/branches");
     return { success: true };
   } catch {
     return { success: false, error: "Şube oluşturulamadı." };

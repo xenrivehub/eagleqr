@@ -25,11 +25,13 @@ export default function BranchManager({ branches }: { branches: BranchView[] }) 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    const name = String(new FormData(e.currentTarget).get("name") ?? "");
+    const form = new FormData(e.currentTarget);
+    const name = String(form.get("name") ?? "");
+    const copyFrom = String(form.get("copyFrom") ?? "");
     setPending(true);
     const res = panel?.branch
       ? await updateBranch(panel.branch.id, name)
-      : await createBranch(name);
+      : await createBranch(name, copyFrom || undefined);
     setPending(false);
     if (!res.success) {
       setError(res.error);
@@ -47,6 +49,8 @@ export default function BranchManager({ branches }: { branches: BranchView[] }) 
     setConfirm(null);
     if (res.success) router.refresh();
   }
+
+  const copyable = branches.filter((b) => b.productCount > 0);
 
   return (
     <div>
@@ -135,6 +139,31 @@ export default function BranchManager({ branches }: { branches: BranchView[] }) 
               className="w-full rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
             />
           </div>
+
+          {!panel?.branch && copyable.length > 0 && (
+            <div>
+              <label htmlFor="b-copy" className="mb-1.5 block text-sm font-medium text-ink">
+                İçeriği kopyala
+              </label>
+              <select
+                id="b-copy"
+                name="copyFrom"
+                defaultValue=""
+                className="w-full cursor-pointer rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
+              >
+                <option value="">Boş başla</option>
+                {copyable.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.productCount} ürün)
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-ink/50">
+                Seçilen şubenin tüm kategori ve ürünleri yeni şubeye kopyalanır.
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => setPanel(null)} className="cursor-pointer rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/5">
               Vazgeç
