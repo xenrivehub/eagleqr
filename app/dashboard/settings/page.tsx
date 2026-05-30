@@ -1,15 +1,17 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getActiveBranch } from "@/lib/branch-context";
 import BusinessInfoForm from "@/components/dashboard/BusinessInfoForm";
 import BranchContactForm from "@/components/dashboard/BranchContactForm";
 
 export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user?.businessId) redirect("/login");
+  const businessId = session.user.businessId;
 
   const business = await prisma.business.findUnique({
-    where: { id: session.user.businessId },
+    where: { id: businessId },
     select: {
       name: true,
       type: true,
@@ -24,20 +26,20 @@ export default async function SettingsPage() {
   if (!business) redirect("/login");
 
   const isChain = business.type === "CHAIN";
-  const branches = isChain
-    ? await prisma.menu.findMany({
-        where: { businessId: session.user.businessId },
-        orderBy: { createdAt: "asc" },
+  const active = isChain ? (await getActiveBranch(businessId)).active : null;
+  const branch = active
+    ? await prisma.menu.findUnique({
+        where: { id: active.id },
         select: { id: true, name: true, phone: true, address: true, openingHours: true },
       })
-    : [];
+    : null;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
       <h1 className="font-display text-2xl font-bold text-ink">İşletme Bilgileri</h1>
       <p className="mt-2 text-ink/60">
         {isChain
-          ? "Genel marka bilgileri ve her şube için iletişim bilgilerini düzenleyin. İşletme adı dışında hepsi opsiyoneldir."
+          ? "Genel marka bilgileri tüm şubelerde geçerlidir. İletişim bilgileri aktif şubeye özeldir."
           : "İşletmenizin iletişim ve tanıtım bilgilerini düzenleyin. İşletme adı dışında hepsi opsiyoneldir."}
       </p>
 
@@ -58,26 +60,22 @@ export default async function SettingsPage() {
         />
       </div>
 
-      {isChain && (
+      {isChain && branch && (
         <div className="mt-12">
           <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-brand-dark">
-            Şube bilgileri
+            Şube bilgileri · {branch.name}
           </h2>
           <p className="mb-4 text-sm text-ink/60">
-            Her şubenin kendi telefon, adres ve çalışma saatleri olabilir.
+            Bu şubenin iletişim bilgileri. Başka şube için sol menüden şube
+            değiştirin. Boş bırakılırsa işletme geneli kullanılır.
           </p>
-          <div className="space-y-4">
-            {branches.map((b) => (
-              <BranchContactForm
-                key={b.id}
-                menuId={b.id}
-                branchName={b.name}
-                phone={b.phone ?? ""}
-                address={b.address ?? ""}
-                openingHours={b.openingHours ?? ""}
-              />
-            ))}
-          </div>
+          <BranchContactForm
+            menuId={branch.id}
+            branchName={branch.name}
+            phone={branch.phone ?? ""}
+            address={branch.address ?? ""}
+            openingHours={branch.openingHours ?? ""}
+          />
         </div>
       )}
     </div>

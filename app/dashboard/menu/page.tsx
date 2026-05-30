@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateDefaultMenu } from "@/lib/actions/menu";
+import { getActiveBranch } from "@/lib/branch-context";
 import { loadMenuForManager } from "@/lib/queries/menu";
 import MenuManager from "@/components/dashboard/MenuManager";
-import BranchManager, { type BranchView } from "@/components/dashboard/BranchManager";
 
 export default async function MenuPage() {
   const session = await auth();
@@ -17,40 +18,43 @@ export default async function MenuPage() {
   });
   if (!business) redirect("/login");
 
-  // Zincir işletme → şube listesi
+  // Zincir işletme → aktif şubenin menüsü
   if (business.type === "CHAIN") {
-    const menus = await prisma.menu.findMany({
-      where: { businessId },
-      orderBy: { createdAt: "asc" },
-      include: { _count: { select: { categories: true } } },
-    });
+    const { branches, active } = await getActiveBranch(businessId);
 
-    // ürün sayıları
-    const counts = await prisma.product.groupBy({
-      by: ["categoryId"],
-      where: { businessId },
-      _count: { _all: true },
-    });
-    const catToMenu = await prisma.category.findMany({
-      where: { menu: { businessId } },
-      select: { id: true, menuId: true },
-    });
-    const menuProductCount = new Map<string, number>();
-    for (const c of catToMenu) {
-      const n = counts.find((x) => x.categoryId === c.id)?._count._all ?? 0;
-      menuProductCount.set(c.menuId, (menuProductCount.get(c.menuId) ?? 0) + n);
+    if (!active) {
+      return (
+        <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
+          <div className="rounded-2xl border border-dashed border-ink/20 bg-white p-10 text-center">
+            <p className="font-display text-lg font-semibold text-ink">Henüz şube yok</p>
+            <p className="mt-1 text-sm text-ink/60">Menü oluşturmak için önce bir şube ekleyin.</p>
+            <Link
+              href="/dashboard/branches"
+              className="mt-5 inline-block cursor-pointer rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-ink hover:bg-brand-dark"
+            >
+              + Şube ekle
+            </Link>
+          </div>
+        </div>
+      );
     }
 
-    const branches: BranchView[] = menus.map((m) => ({
-      id: m.id,
-      name: m.name,
-      slug: m.slug,
-      productCount: menuProductCount.get(m.id) ?? 0,
-    }));
+    const { categories, allergens } = await loadMenuForManager(active.id);
 
     return (
       <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
-        <BranchManager branches={branches} />
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand-dark">
+            {active.name} · menü
+          </p>
+          <Link
+            href="/dashboard/branches"
+            className="text-sm font-medium text-ink/60 hover:text-ink"
+          >
+            Şubeleri yönet ({branches.length}) →
+          </Link>
+        </div>
+        <MenuManager menuId={active.id} categories={categories} allergens={allergens} />
       </div>
     );
   }

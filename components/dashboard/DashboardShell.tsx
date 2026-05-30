@@ -42,10 +42,12 @@ const nav = [
 export default function DashboardShell({
   businessName,
   signOutAction,
+  branchSwitcher,
   children,
 }: {
   businessName: string;
   signOutAction: () => Promise<void>;
+  branchSwitcher?: ReactNode;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -88,6 +90,7 @@ export default function DashboardShell({
         <div className="mt-2 px-2 pb-4">
           <p className="truncate text-xs text-ink/50">{businessName}</p>
         </div>
+        {branchSwitcher && <div className="mb-4">{branchSwitcher}</div>}
         {navList}
         <form action={signOutAction} className="mt-auto pt-4">
           <button
@@ -120,6 +123,7 @@ export default function DashboardShell({
 
       {open && (
         <div className="border-b border-ink/10 bg-white px-4 py-3 md:hidden">
+          {branchSwitcher && <div className="mb-3">{branchSwitcher}</div>}
           {navList}
           <form action={signOutAction} className="mt-3">
             <button

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
+import { ACTIVE_BRANCH_COOKIE } from "@/lib/branch-context";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -118,6 +120,28 @@ export async function updateBusinessInfo(
 // ---------------------------------------------------------------------------
 // Şube (menü) yönetimi — yalnızca zincir işletmeler için anlamlı
 // ---------------------------------------------------------------------------
+
+export async function setActiveBranch(menuId: string): Promise<ActionResult> {
+  try {
+    const businessId = await requireBusinessId();
+    const owned = await prisma.menu.findFirst({
+      where: { id: menuId, businessId },
+      select: { id: true },
+    });
+    if (!owned) return { success: false, error: "Şube bulunamadı." };
+
+    const store = await cookies();
+    store.set(ACTIVE_BRANCH_COOKIE, menuId, {
+      path: "/dashboard",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    revalidatePath("/dashboard", "layout");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Şube seçilemedi." };
+  }
+}
 
 export async function createBranch(name: string): Promise<ActionResult> {
   try {
