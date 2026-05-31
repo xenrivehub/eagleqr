@@ -235,14 +235,21 @@ export default function ProductForm({
           </button>
         </div>
         {variations.length === 0 ? (
-          <p className="text-xs text-ink/45">Örn. Küçük / Orta / Büyük ya da ekstra seçenekler. Boşsa sadece ana fiyat görünür.</p>
+          <p className="text-xs text-ink/45">Örn. L / Orta / Büyük (harf ya da ikon) + ekstra ücret. Boşsa sadece ana fiyat görünür.</p>
         ) : (
           <div className="space-y-2">
+            <div className="flex items-center gap-2 px-1 text-[11px] font-medium text-ink/40">
+              <span className="flex-1">Etiket (harf / ad / ikon)</span>
+              <span className="w-32">Ekstra ücret</span>
+              <span className="w-6" />
+            </div>
             {variations.map((v, i) => (
               <div key={i} className="flex items-center gap-2">
-                <input value={v.icon} onChange={(e) => updateVariation(i, { icon: e.target.value })} placeholder="🥤" maxLength={4} className={`${inputBase} w-14 text-center`} />
-                <input value={v.name} onChange={(e) => updateVariation(i, { name: e.target.value })} placeholder="Orta boy" className={`${inputBase} flex-1`} />
-                <input value={v.price} onChange={(e) => updateVariation(i, { price: e.target.value })} inputMode="decimal" placeholder="0,00" className={`${inputBase} w-24 tabular-nums`} />
+                <input value={v.name} onChange={(e) => updateVariation(i, { name: e.target.value })} placeholder="L / Büyük / 🥤" className={`${inputBase} flex-1`} />
+                <div className="relative w-32">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink/40">+{currency.symbol}</span>
+                  <input value={v.price} onChange={(e) => updateVariation(i, { price: e.target.value })} inputMode="decimal" placeholder="15" className={`${inputBase} tabular-nums`} style={{ paddingLeft: 38 }} />
+                </div>
                 <button type="button" onClick={() => removeVariation(i)} aria-label="Kaldır" className="shrink-0 cursor-pointer rounded-lg px-2 py-2 text-ink/40 hover:bg-red-50 hover:text-red-600">✕</button>
               </div>
             ))}

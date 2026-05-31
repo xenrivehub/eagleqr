@@ -296,22 +296,25 @@ export default async function ProductDetailPage({ params }: Params) {
 
         {variations.length > 0 && (
           <section className="mt-6">
-            <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
+            <h2 className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
               {ui.options}
             </h2>
-            <ul className="divide-y divide-menu-border overflow-hidden rounded-2xl border border-menu-border">
+            <div className="flex flex-wrap justify-center gap-3">
               {variations.map((v, i) => (
-                <li key={i} className="flex items-center justify-between gap-3 bg-menu-surface px-4 py-3">
-                  <span className="flex items-center gap-2 text-menu-text">
-                    {v.icon && <span aria-hidden>{v.icon}</span>}
-                    {v.name}
-                  </span>
-                  <span className="font-display font-bold text-menu-gold">
-                    {formatPrice(Number(v.price).toFixed(2), currency)}
-                  </span>
-                </li>
+                <div
+                  key={i}
+                  className="flex min-w-[88px] flex-col items-center gap-1 rounded-2xl border border-menu-border bg-menu-surface px-4 py-3 text-center"
+                >
+                  {v.icon && <span aria-hidden className="text-2xl leading-none">{v.icon}</span>}
+                  <span className="font-display text-base font-semibold text-menu-text">{v.name}</span>
+                  {Number(v.price) > 0 && (
+                    <span className="text-sm font-bold text-menu-gold">
+                      +{formatPrice(Number(v.price).toFixed(2), currency)}
+                    </span>
+                  )}
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
 
