@@ -71,6 +71,9 @@ export default function MenuManager({
   // Sunucudan yeni veri gelince (ekle/sil/düzenle sonrası) yerel durumu eşitle
   useEffect(() => setCats(categories), [categories]);
 
+  // Eşleşme seçici için tüm menü ürünleri
+  const menuProducts = cats.flatMap((c) => c.products.map((p) => ({ id: p.id, name: p.name })));
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
@@ -211,6 +214,7 @@ export default function MenuManager({
             allergens={allergens}
             media={media}
             currency={currency}
+            menuProducts={menuProducts}
             onDone={closeAndRefresh}
           />
         )}
@@ -221,6 +225,7 @@ export default function MenuManager({
             product={panel.product}
             media={media}
             currency={currency}
+            menuProducts={menuProducts}
             onDone={closeAndRefresh}
           />
         )}

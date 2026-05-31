@@ -12,6 +12,7 @@ export type ProductView = {
   imageUrl: string | null;
   videoUrl: string | null;
   modelGlbUrl: string | null;
+  pairedIds: string[];
   isFeatured: boolean;
   isNew: boolean;
   isPopular: boolean;

@@ -33,6 +33,7 @@ export const UI_KEYS: UiKeyDef[] = [
   { key: "allergenInfo", group: "Ürün detay", tr: "Alerjen Bilgisi", en: "Allergen Info" },
   { key: "productAllergenIntro", group: "Ürün detay", tr: "Bu ürün şu alerjenleri içerir:", en: "This product contains:" },
   { key: "similar", group: "Ürün detay", tr: "Benzer seçimler", en: "Similar picks" },
+  { key: "pairsWith", group: "Ürün detay", tr: "Yanında iyi gider", en: "Goes well with" },
   { key: "seeAll", group: "Ürün detay", tr: "Tümü", en: "See all" },
   { key: "minutesShort", group: "Ürün detay", tr: "dk", en: "min" },
 

@@ -26,6 +26,12 @@ async function getProduct(slug: string, productId: string) {
         select: { id: true, name: true, translations: true, menu: { select: { id: true, slug: true } } },
       },
       allergens: { include: { allergen: true } },
+      pairings: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          paired: { select: { id: true, name: true, price: true, imageUrl: true, translations: true } },
+        },
+      },
     },
   });
   if (!product) return null;
@@ -74,6 +80,16 @@ export default async function ProductDetailPage({ params }: Params) {
 
   const currency = await getCurrencySpec(product.business.currency);
   const ui = (await getUiStrings([lang]))[lang];
+
+  const pairedItems = product.pairings.map((pp) => {
+    const ptr = (pp.paired.translations as Record<string, { name?: string }>) ?? {};
+    return {
+      id: pp.paired.id,
+      name: (lang !== "tr" && ptr[lang]?.name) || pp.paired.name,
+      price: pp.paired.price,
+      imageUrl: pp.paired.imageUrl,
+    };
+  });
 
   // Yıldız puanı özeti (işletme açtıysa)
   let rating: { avg: number; count: number; mine: number } | null = null;
@@ -255,6 +271,38 @@ export default async function ProductDetailPage({ params }: Params) {
               </span>
               .
             </p>
+          </section>
+        )}
+
+        {pairedItems.length > 0 && (
+          <section className="mt-9">
+            <h2 className="mb-3 font-display text-lg font-semibold">✦ {ui.pairsWith}</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {pairedItems.map((r) => (
+                <Link
+                  key={r.id}
+                  href={`/m/${slug}/urun/${r.id}`}
+                  className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-menu-border bg-menu-surface transition-colors hover:border-menu-gold/40"
+                >
+                  {r.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={r.imageUrl} alt="" loading="lazy" className="h-24 w-full object-cover" />
+                  ) : (
+                    <div className="flex h-24 w-full items-center justify-center bg-menu-bg text-menu-gold/40">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+                        <path d="M3 11h18M5 11V7a2 2 0 0 1 2-2h2M12 5v6M7 21h10a2 2 0 0 0 2-2v-8H5v8a2 2 0 0 0 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="p-2.5">
+                    <p className="truncate font-display text-sm font-semibold">{r.name}</p>
+                    <p className="mt-0.5 font-display text-sm font-bold text-menu-gold">
+                      {formatPrice(r.price.toFixed(2), currency)}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </section>
         )}
 

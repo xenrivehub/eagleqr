@@ -103,7 +103,37 @@ export type ProductInput = {
   isFeatured?: boolean;
   isNew?: boolean;
   isPopular?: boolean;
+  pairedIds?: string[];
 };
+
+/** Ürünün "yanında iyi gider" eşleşmelerini değiştirir (aynı menü, kendisi hariç). */
+async function replacePairings(
+  productId: string,
+  businessId: string,
+  pairedIds: string[],
+): Promise<void> {
+  await prisma.productPairing.deleteMany({ where: { productId } });
+  const ids = [...new Set(pairedIds)].filter((id) => id && id !== productId);
+  if (ids.length === 0) return;
+
+  const self = await prisma.product.findFirst({
+    where: { id: productId, businessId },
+    select: { category: { select: { menuId: true } } },
+  });
+  if (!self) return;
+
+  const valid = await prisma.product.findMany({
+    where: { id: { in: ids }, category: { menuId: self.category.menuId } },
+    select: { id: true },
+  });
+  const validSet = new Set(valid.map((v) => v.id));
+  const ordered = ids.filter((id) => validSet.has(id));
+  if (ordered.length === 0) return;
+
+  await prisma.productPairing.createMany({
+    data: ordered.map((pairedId, i) => ({ productId, pairedId, sortOrder: i })),
+  });
+}
 
 /**
  * Video / AR yetkisini doğrular. excludeProductId: düzenlemede kendi medyasını
@@ -203,7 +233,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     const mediaError = await assertMediaAllowed(businessId, input, null);
     if (mediaError) return { success: false, error: mediaError };
 
-    await prisma.product.create({
+    const created = await prisma.product.create({
       data: {
         ...parsed.data,
         categoryId: input.categoryId,
@@ -215,7 +245,9 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
           create: input.allergenIds.map((allergenId) => ({ allergenId })),
         },
       },
+      select: { id: true },
     });
+    if (input.pairedIds) await replacePairings(created.id, businessId, input.pairedIds);
     revalidatePath("/dashboard/menu");
     return { success: true };
   } catch {
@@ -261,6 +293,7 @@ export async function updateProduct(
         },
       },
     });
+    if (input.pairedIds) await replacePairings(id, businessId, input.pairedIds);
     revalidatePath("/dashboard/menu");
     return { success: true };
   } catch {

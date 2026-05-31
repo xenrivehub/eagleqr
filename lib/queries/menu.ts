@@ -13,7 +13,10 @@ export async function loadMenuForManager(menuId: string): Promise<{
       include: {
         products: {
           orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-          include: { allergens: { select: { allergenId: true } } },
+          include: {
+            allergens: { select: { allergenId: true } },
+            pairings: { orderBy: { sortOrder: "asc" }, select: { pairedId: true } },
+          },
         },
       },
     }),
@@ -35,6 +38,7 @@ export async function loadMenuForManager(menuId: string): Promise<{
       imageUrl: p.imageUrl,
       videoUrl: p.videoUrl,
       modelGlbUrl: p.modelGlbUrl,
+      pairedIds: p.pairings.map((x) => x.pairedId),
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,

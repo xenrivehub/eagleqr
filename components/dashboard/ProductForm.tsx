@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import type { AllergenOption, ProductView } from "./types";
 import { createProduct, updateProduct, type ProductInput } from "@/lib/actions/menu";
-import { generateDescription } from "@/lib/actions/ai";
+import { generateDescription, suggestPairings } from "@/lib/actions/ai";
 import type { MediaEntitlements } from "@/lib/plans";
 import type { CurrencySpec } from "@/lib/currency";
 import ImageUpload from "./ImageUpload";
@@ -18,6 +18,7 @@ export default function ProductForm({
   product,
   media,
   currency,
+  menuProducts,
   onDone,
 }: {
   categoryId: string;
@@ -25,6 +26,7 @@ export default function ProductForm({
   product?: ProductView;
   media: MediaEntitlements;
   currency: CurrencySpec;
+  menuProducts: { id: string; name: string }[];
   onDone: () => void;
 }) {
   const [selected, setSelected] = useState<string[]>(product?.allergenIds ?? []);
@@ -55,6 +57,44 @@ export default function ProductForm({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiText, setAiText] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  // Eşleşen ürünler ("yanında iyi gider")
+  const [pairedIds, setPairedIds] = useState<string[]>(product?.pairedIds ?? []);
+  const [pairQuery, setPairQuery] = useState("");
+  const [pairBusy, setPairBusy] = useState(false);
+  const [pairError, setPairError] = useState<string | null>(null);
+  const nameById = new Map(menuProducts.map((p) => [p.id, p.name]));
+  const selfId = product?.id;
+
+  function addPair(id: string) {
+    setPairedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setPairQuery("");
+  }
+  function removePair(id: string) {
+    setPairedIds((prev) => prev.filter((x) => x !== id));
+  }
+
+  async function suggestPairs() {
+    const name = nameRef.current?.value ?? "";
+    setPairError(null);
+    if (name.trim().length < 2) {
+      setPairError("Önce ürün adını girin.");
+      return;
+    }
+    setPairBusy(true);
+    const res = await suggestPairings(name, categoryId, pairedIds);
+    setPairBusy(false);
+    if (res.success) setPairedIds((prev) => [...new Set([...prev, ...res.items.map((i) => i.id)])]);
+    else setPairError(res.error);
+  }
+
+  const pairCandidates = menuProducts.filter(
+    (p) =>
+      p.id !== selfId &&
+      !pairedIds.includes(p.id) &&
+      (pairQuery.trim() === "" ||
+        p.name.toLocaleLowerCase("tr").includes(pairQuery.trim().toLocaleLowerCase("tr"))),
+  );
 
   async function suggestDescription() {
     const name = nameRef.current?.value ?? "";
@@ -95,6 +135,7 @@ export default function ProductForm({
       isFeatured,
       isNew,
       isPopular,
+      pairedIds,
     };
 
     setPending(true);
@@ -271,6 +312,66 @@ export default function ProductForm({
             );
           })}
         </div>
+      </fieldset>
+
+      <fieldset>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <legend className="text-sm font-medium text-ink">Yanında iyi gider</legend>
+          <button
+            type="button"
+            onClick={suggestPairs}
+            disabled={pairBusy}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-3 py-1 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
+          >
+            <span aria-hidden>✨</span>
+            {pairBusy ? "Öneriliyor…" : "AI ile öner"}
+          </button>
+        </div>
+
+        {pairedIds.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {pairedIds.map((id) => (
+              <span key={id} className="inline-flex items-center gap-1.5 rounded-full border border-brand bg-brand-soft px-3 py-1.5 text-xs font-medium text-ink">
+                {nameById.get(id) ?? "—"}
+                <button type="button" onClick={() => removePair(id)} aria-label="Kaldır" className="cursor-pointer text-ink/50 hover:text-red-600">
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {menuProducts.filter((p) => p.id !== selfId).length === 0 ? (
+          <p className="text-xs text-ink/45">Menüde başka ürün yok.</p>
+        ) : (
+          <>
+            <input
+              value={pairQuery}
+              onChange={(e) => setPairQuery(e.target.value)}
+              placeholder="Ürün ara ve ekle…"
+              className={inputBase}
+            />
+            {pairQuery.trim() !== "" && (
+              <div className="mt-1.5 max-h-40 overflow-y-auto rounded-xl border border-ink/10">
+                {pairCandidates.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-ink/45">Eşleşen ürün yok.</p>
+                ) : (
+                  pairCandidates.slice(0, 20).map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => addPair(p.id)}
+                      className="block w-full cursor-pointer px-3 py-2 text-left text-sm text-ink hover:bg-cream"
+                    >
+                      {p.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
+        {pairError && <p className="mt-1.5 text-xs text-red-600">{pairError}</p>}
       </fieldset>
 
       <div className="flex justify-end gap-3 pt-2">
