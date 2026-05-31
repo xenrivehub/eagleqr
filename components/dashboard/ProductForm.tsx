@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import type { AllergenOption, ProductView } from "./types";
 import { createProduct, updateProduct, type ProductInput } from "@/lib/actions/menu";
+import { generateDescription } from "@/lib/actions/ai";
 import type { MediaEntitlements } from "@/lib/plans";
 import type { CurrencySpec } from "@/lib/currency";
 import ImageUpload from "./ImageUpload";
@@ -47,6 +48,28 @@ export default function ProductForm({
   const [isPopular, setIsPopular] = useState(product?.isPopular ?? false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  // Açıklama (AI önerisi input'a yazabilsin diye kontrollü)
+  const [description, setDescription] = useState(product?.description ?? "");
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function suggestDescription() {
+    const name = nameRef.current?.value ?? "";
+    setAiError(null);
+    setAiText(null);
+    if (name.trim().length < 2) {
+      setAiError("Önce ürün adını girin.");
+      return;
+    }
+    setAiBusy(true);
+    const res = await generateDescription(name, categoryId);
+    setAiBusy(false);
+    if (res.success) setAiText(res.text);
+    else setAiError(res.error);
+  }
 
   function toggle(id: string) {
     setSelected((prev) =>
@@ -116,7 +139,7 @@ export default function ProductForm({
         <label htmlFor="p-name" className="mb-1.5 block text-sm font-medium text-ink">
           Ürün adı <span className="text-red-600">*</span>
         </label>
-        <input id="p-name" name="name" required defaultValue={product?.name} placeholder="Örn. Latte" className={inputBase} />
+        <input ref={nameRef} id="p-name" name="name" required defaultValue={product?.name} placeholder="Örn. Latte" className={inputBase} />
       </div>
 
       <div>
@@ -127,10 +150,63 @@ export default function ProductForm({
       </div>
 
       <div>
-        <label htmlFor="p-desc" className="mb-1.5 block text-sm font-medium text-ink">
-          Açıklama
-        </label>
-        <textarea id="p-desc" name="description" rows={3} defaultValue={product?.description ?? ""} placeholder="Kısa açıklama" className={inputBase} />
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <label htmlFor="p-desc" className="block text-sm font-medium text-ink">
+            Açıklama
+          </label>
+          <button
+            type="button"
+            onClick={suggestDescription}
+            disabled={aiBusy}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-3 py-1 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
+          >
+            <span aria-hidden>✨</span>
+            {aiBusy ? "Öneriliyor…" : "AI ile açıklama öner"}
+          </button>
+        </div>
+
+        <textarea
+          id="p-desc"
+          name="description"
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Kısa açıklama"
+          className={inputBase}
+        />
+
+        {aiError && <p className="mt-1.5 text-xs text-red-600">{aiError}</p>}
+
+        {aiText && (
+          <div className="mt-2 rounded-xl border border-brand/40 bg-brand-soft/30 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-dark">✨ AI önerisi</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink">{aiText}</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => { setDescription(aiText); setAiText(null); }}
+                className="cursor-pointer rounded-full bg-brand px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-brand-dark"
+              >
+                Kullan
+              </button>
+              <button
+                type="button"
+                onClick={suggestDescription}
+                disabled={aiBusy}
+                className="cursor-pointer rounded-full border border-ink/15 px-3.5 py-1.5 text-xs font-semibold text-ink hover:bg-ink/5 disabled:opacity-50"
+              >
+                Yeniden öner
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiText(null)}
+                className="cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold text-ink/60 hover:bg-ink/5"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

@@ -268,6 +268,67 @@ export async function updateProduct(
   }
 }
 
+export async function reorderCategories(
+  menuId: string,
+  orderedIds: string[],
+): Promise<ActionResult> {
+  try {
+    const businessId = await requireBusinessId();
+    const menu = await prisma.menu.findFirst({
+      where: { id: menuId, businessId },
+      select: { id: true },
+    });
+    if (!menu) return { success: false, error: "Menü bulunamadı." };
+
+    // Yalnızca bu menüye ait kategorileri sırala
+    const owned = await prisma.category.findMany({
+      where: { menuId, id: { in: orderedIds } },
+      select: { id: true },
+    });
+    const ownedIds = new Set(owned.map((c) => c.id));
+
+    await prisma.$transaction(
+      orderedIds
+        .filter((id) => ownedIds.has(id))
+        .map((id, index) =>
+          prisma.category.update({ where: { id }, data: { sortOrder: index } }),
+        ),
+    );
+    revalidatePath("/dashboard/menu");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Sıralama kaydedilemedi." };
+  }
+}
+
+export async function reorderProducts(
+  categoryId: string,
+  orderedIds: string[],
+): Promise<ActionResult> {
+  try {
+    const businessId = await requireBusinessId();
+    await assertCategoryOwned(categoryId, businessId);
+
+    const owned = await prisma.product.findMany({
+      where: { categoryId, id: { in: orderedIds } },
+      select: { id: true },
+    });
+    const ownedIds = new Set(owned.map((p) => p.id));
+
+    await prisma.$transaction(
+      orderedIds
+        .filter((id) => ownedIds.has(id))
+        .map((id, index) =>
+          prisma.product.update({ where: { id }, data: { sortOrder: index } }),
+        ),
+    );
+    revalidatePath("/dashboard/menu");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Sıralama kaydedilemedi." };
+  }
+}
+
 export async function deleteProduct(id: string): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();

@@ -42,7 +42,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
     orderBy: { sortOrder: "asc" },
     include: {
       products: {
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         include: { allergens: { include: { allergen: true } } },
       },
     },

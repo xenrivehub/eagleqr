@@ -230,9 +230,23 @@ model Product {
   allergens ProductAllergen[]
   ratings   Rating[]
   productRatings ProductRating[]
+  pairings  ProductPairing[] @relation("PairFrom") // bu ürünün önerdiği eşleşmeler
+  pairedBy  ProductPairing[] @relation("PairTo")
 
   @@index([categoryId, sortOrder])
   @@index([businessId])
+}
+
+// "Yanında iyi gider" — ürünler arası yönlü eşleşme (tek yön).
+model ProductPairing {
+  productId String
+  pairedId  String
+  sortOrder Int     @default(0)
+  product   Product @relation("PairFrom", fields: [productId], references: [id], onDelete: Cascade)
+  paired    Product @relation("PairTo", fields: [pairedId], references: [id], onDelete: Cascade)
+
+  @@id([productId, pairedId])
+  @@index([productId])
 }
 
 // Anonim yıldız puanı (yorumsuz). Cihaz başına (anonId) ürün başına 1 oy,

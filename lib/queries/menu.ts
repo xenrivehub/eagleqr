@@ -12,7 +12,7 @@ export async function loadMenuForManager(menuId: string): Promise<{
       orderBy: { sortOrder: "asc" },
       include: {
         products: {
-          orderBy: { createdAt: "asc" },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           include: { allergens: { select: { allergenId: true } } },
         },
       },
