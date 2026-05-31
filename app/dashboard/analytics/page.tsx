@@ -5,13 +5,17 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveBranch } from "@/lib/branch-context";
 
-const DAYS = 14;
+// Türkiye UTC+3 (DST yok) — UTC zaman damgasını yerel saate çevir
+const TR_OFFSET_MS = 3 * 3600_000;
+const WEEKDAYS = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
-function dayKey(d: Date) {
-  return d.toISOString().slice(0, 10);
+function localParts(ts: Date) {
+  const d = new Date(ts.getTime() + TR_OFFSET_MS);
+  const wd = (d.getUTCDay() + 6) % 7; // 0=Pzt
+  return { wd, hour: d.getUTCHours(), dayKey: d.toISOString().slice(0, 10) };
 }
 
-type Params = { searchParams: Promise<{ scope?: string }> };
+type Params = { searchParams: Promise<{ scope?: string; range?: string }> };
 
 export default async function AnalyticsPage({ searchParams }: Params) {
   const session = await auth();
@@ -24,8 +28,9 @@ export default async function AnalyticsPage({ searchParams }: Params) {
   });
   const isChain = business?.type === "CHAIN";
 
-  const { scope: scopeParam } = await searchParams;
+  const { scope: scopeParam, range: rangeParam } = await searchParams;
   const showAll = !isChain || scopeParam === "all";
+  const RANGE = [7, 30, 90].includes(Number(rangeParam)) ? Number(rangeParam) : 30;
 
   let activeBranch: { id: string; name: string } | null = null;
   let branches: { id: string; name: string }[] = [];
@@ -35,90 +40,85 @@ export default async function AnalyticsPage({ searchParams }: Params) {
     activeBranch = res.active ? { id: res.active.id, name: res.active.name } : null;
   }
 
-  // Filtre kapsamı
   const where: Prisma.ScanEventWhereInput =
-    !showAll && activeBranch
-      ? { businessId, menuId: activeBranch.id }
-      : { businessId };
+    !showAll && activeBranch ? { businessId, menuId: activeBranch.id } : { businessId };
 
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86400_000);
-  const since = new Date(now.getTime() - DAYS * 86400_000);
+  const since = new Date(now.getTime() - RANGE * 86400_000);
 
-  const [totalScans, weekScans, totalViews, recentScans, topRaw] =
-    await Promise.all([
-      prisma.scanEvent.count({ where: { ...where, type: "SCAN" } }),
-      prisma.scanEvent.count({ where: { ...where, type: "SCAN", ts: { gte: weekAgo } } }),
-      prisma.scanEvent.count({ where: { ...where, type: "VIEW" } }),
-      prisma.scanEvent.findMany({
-        where: { ...where, type: "SCAN", ts: { gte: since } },
-        select: { ts: true },
-      }),
-      prisma.scanEvent.groupBy({
-        by: ["productId"],
-        where: { ...where, type: "VIEW", productId: { not: null } },
-        _count: { productId: true },
-        orderBy: { _count: { productId: "desc" } },
-        take: 5,
-      }),
-    ]);
+  const [rangeViews, scanTs, viewByProduct] = await Promise.all([
+    prisma.scanEvent.count({ where: { ...where, type: "VIEW", ts: { gte: since } } }),
+    prisma.scanEvent.findMany({
+      where: { ...where, type: "SCAN", ts: { gte: since } },
+      select: { ts: true },
+    }),
+    prisma.scanEvent.groupBy({
+      by: ["productId"],
+      where: { ...where, type: "VIEW", productId: { not: null }, ts: { gte: since } },
+      _count: { productId: true },
+    }),
+  ]);
 
-  const perBranch =
-    isChain && showAll
-      ? await Promise.all(
-          branches.map(async (b) => {
-            const [s, v] = await Promise.all([
-              prisma.scanEvent.count({ where: { businessId, menuId: b.id, type: "SCAN" } }),
-              prisma.scanEvent.count({ where: { businessId, menuId: b.id, type: "VIEW" } }),
-            ]);
-            return { ...b, scans: s, views: v };
-          }),
-        )
-      : [];
+  const rangeScans = scanTs.length;
+  const interest = rangeScans > 0 ? Math.round((rangeViews / rangeScans) * 100) : 0;
 
+  // Günlük seri
   const buckets = new Map<string, number>();
-  for (let i = DAYS - 1; i >= 0; i--) {
-    buckets.set(dayKey(new Date(now.getTime() - i * 86400_000)), 0);
+  for (let i = RANGE - 1; i >= 0; i--) {
+    buckets.set(new Date(now.getTime() - i * 86400_000 + TR_OFFSET_MS).toISOString().slice(0, 10), 0);
   }
-  for (const ev of recentScans) {
-    const k = dayKey(ev.ts);
-    if (buckets.has(k)) buckets.set(k, (buckets.get(k) ?? 0) + 1);
+  // Isı haritası 7×24
+  const heat: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+  for (const ev of scanTs) {
+    const { wd, hour, dayKey } = localParts(ev.ts);
+    if (buckets.has(dayKey)) buckets.set(dayKey, (buckets.get(dayKey) ?? 0) + 1);
+    heat[wd][hour] += 1;
   }
   const series = [...buckets.entries()];
-  const maxVal = Math.max(1, ...series.map(([, v]) => v));
+  const maxDaily = Math.max(1, ...series.map(([, v]) => v));
+  const maxHeat = Math.max(1, ...heat.flat());
 
-  const productIds = topRaw.map((t) => t.productId).filter(Boolean) as string[];
+  // Ürün + kategori popülerlik
+  const prodWhere: Prisma.ProductWhereInput =
+    !showAll && activeBranch
+      ? { businessId, category: { menuId: activeBranch.id } }
+      : { businessId };
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-    select: { id: true, name: true },
+    where: prodWhere,
+    select: { id: true, name: true, category: { select: { name: true } } },
   });
-  const nameById = new Map(products.map((p) => [p.id, p.name]));
-  const topViewed = topRaw.map((t) => ({
-    name: nameById.get(t.productId as string) ?? "—",
-    count: t._count.productId,
-  }));
+  const prodInfo = new Map(products.map((p) => [p.id, { name: p.name, category: p.category.name }]));
 
-  const stats = [
-    { label: "Toplam tarama", value: totalScans },
-    { label: "Son 7 gün tarama", value: weekScans },
-    { label: "Ürün görüntüleme", value: totalViews },
-  ];
-  const hasData = totalScans > 0 || totalViews > 0;
+  const productPop = viewByProduct
+    .map((v) => ({
+      id: v.productId as string,
+      name: prodInfo.get(v.productId as string)?.name ?? "—",
+      category: prodInfo.get(v.productId as string)?.category ?? "—",
+      count: v._count.productId,
+    }))
+    .filter((p) => prodInfo.has(p.id))
+    .sort((a, b) => b.count - a.count);
+  const maxProd = Math.max(1, ...productPop.map((p) => p.count));
 
-  const scopeTab = (all: boolean, label: string) => {
-    const isActive = showAll === all;
-    const href = all ? "/dashboard/analytics?scope=all" : "/dashboard/analytics";
-    return (
-      <Link
-        href={href}
-        className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-          isActive ? "bg-ink text-cream" : "border border-ink/15 text-ink/60 hover:bg-ink/5"
-        }`}
-      >
-        {label}
-      </Link>
-    );
-  };
+  const catMap = new Map<string, number>();
+  for (const p of productPop) catMap.set(p.category, (catMap.get(p.category) ?? 0) + p.count);
+  const categoryPop = [...catMap.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  const maxCat = Math.max(1, ...categoryPop.map((c) => c.count));
+
+  const hasData = rangeScans > 0 || rangeViews > 0;
+
+  const tab = (active: boolean, href: string, label: string) => (
+    <Link
+      href={href}
+      className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+        active ? "bg-ink text-cream" : "border border-ink/15 text-ink/60 hover:bg-ink/5"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+  const rangeHref = (r: number) =>
+    `/dashboard/analytics?range=${r}${isChain && showAll ? "&scope=all" : ""}`;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
@@ -131,12 +131,16 @@ export default async function AnalyticsPage({ searchParams }: Params) {
           : "Menünüzün tarama ve görüntülenme istatistikleri."}
       </p>
 
-      {isChain && activeBranch && (
-        <div className="mt-6 flex flex-wrap gap-2">
-          {scopeTab(false, activeBranch.name)}
-          {scopeTab(true, "Tüm işletme")}
-        </div>
-      )}
+      <div className="mt-6 flex flex-wrap items-center gap-2">
+        {isChain && activeBranch && (
+          <>
+            {tab(!showAll, `/dashboard/analytics?range=${RANGE}`, activeBranch.name)}
+            {tab(showAll, `/dashboard/analytics?range=${RANGE}&scope=all`, "Tüm işletme")}
+            <span className="mx-1 h-5 w-px bg-ink/10" />
+          </>
+        )}
+        {[7, 30, 90].map((r) => tab(RANGE === r, rangeHref(r), `${r} gün`))}
+      </div>
 
       {!hasData ? (
         <div className="mt-8 rounded-2xl border border-dashed border-ink/20 bg-white p-12 text-center">
@@ -145,74 +149,127 @@ export default async function AnalyticsPage({ searchParams }: Params) {
         </div>
       ) : (
         <>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {stats.map((s) => (
-              <div key={s.label} className="rounded-2xl border border-ink/10 bg-white p-5">
-                <div className="font-display text-3xl font-bold tabular-nums text-ink">{s.value}</div>
-                <div className="mt-1 text-sm text-ink/60">{s.label}</div>
-              </div>
-            ))}
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Stat label={`Tarama (${RANGE} gün)`} value={rangeScans} />
+            <Stat label={`Görüntüleme (${RANGE} gün)`} value={rangeViews} />
+            <Stat label="İlgi oranı" value={`%${interest}`} hint="görüntüleme / tarama" />
           </div>
 
-          <div className="mt-6 rounded-2xl border border-ink/10 bg-white p-5">
-            <h2 className="font-display text-lg font-semibold text-ink">
-              Günlük tarama (son {DAYS} gün)
-            </h2>
-            <div className="mt-5 flex items-end gap-1.5" style={{ height: 160 }}>
+          {/* Günlük tarama */}
+          <Card title={`Günlük tarama (${RANGE} gün)`}>
+            <div className="flex items-end gap-[3px]" style={{ height: 150 }}>
               {series.map(([day, val]) => (
-                <div key={day} className="flex flex-1 flex-col items-center justify-end gap-1">
-                  <span className="text-[10px] tabular-nums text-ink/50">{val}</span>
+                <div key={day} className="flex flex-1 flex-col items-center justify-end gap-1" title={`${day}: ${val}`}>
                   <div
                     className="w-full rounded-t bg-brand"
-                    style={{ height: `${(val / maxVal) * 120}px`, minHeight: val > 0 ? 4 : 2, opacity: val > 0 ? 1 : 0.25 }}
-                    title={`${day}: ${val} tarama`}
+                    style={{ height: `${(val / maxDaily) * 120}px`, minHeight: 2, opacity: val > 0 ? 1 : 0.2 }}
                   />
-                  <span className="text-[9px] tabular-nums text-ink/40">
-                    {day.slice(8, 10)}.{day.slice(5, 7)}
-                  </span>
                 </div>
               ))}
             </div>
-          </div>
+            <div className="mt-1 flex justify-between text-[10px] tabular-nums text-ink/40">
+              <span>{series[0]?.[0].slice(5)}</span>
+              <span>{series[series.length - 1]?.[0].slice(5)}</span>
+            </div>
+          </Card>
 
-          {perBranch.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-ink/10 bg-white p-5">
-              <h2 className="font-display text-lg font-semibold text-ink">Şube bazında</h2>
-              <ul className="mt-4 space-y-2.5">
-                {perBranch.map((b) => (
-                  <li key={b.id} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-ink">{b.name}</span>
-                    <span className="tabular-nums text-ink/60">
-                      {b.scans} tarama · {b.views} görüntüleme
-                    </span>
+          {/* Yoğunluk ısı haritası */}
+          <Card title="Yoğunluk ısı haritası (gün × saat)">
+            <p className="mb-3 text-xs text-ink/50">En yoğun tarama saatleriniz (yerel saat).</p>
+            <div className="overflow-x-auto">
+              <div className="min-w-[560px]">
+                <div className="flex">
+                  <div className="w-9 shrink-0" />
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <div key={h} className="flex-1 text-center text-[8px] tabular-nums text-ink/40">
+                      {h % 3 === 0 ? h : ""}
+                    </div>
+                  ))}
+                </div>
+                {heat.map((row, wd) => (
+                  <div key={wd} className="mt-[3px] flex items-center">
+                    <div className="w-9 shrink-0 text-[10px] font-medium text-ink/50">{WEEKDAYS[wd]}</div>
+                    {row.map((val, h) => (
+                      <div key={h} className="flex-1 px-[1.5px]">
+                        <div
+                          className="h-4 rounded-[3px]"
+                          title={`${WEEKDAYS[wd]} ${h}:00 — ${val} tarama`}
+                          style={{
+                            background: val > 0 ? "var(--color-brand, #e0a82e)" : "rgba(0,0,0,0.05)",
+                            opacity: val > 0 ? 0.25 + 0.75 * (val / maxHeat) : 1,
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Kategori popülerlik */}
+          {categoryPop.length > 0 && (
+            <Card title="Kategori bazında görüntülenme">
+              <ul className="space-y-2.5">
+                {categoryPop.map((c) => (
+                  <li key={c.name}>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="truncate text-ink">{c.name}</span>
+                      <span className="shrink-0 tabular-nums text-ink/55">{c.count}</span>
+                    </div>
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-ink/5">
+                      <div className="h-full rounded-full bg-brand" style={{ width: `${(c.count / maxCat) * 100}%` }} />
+                    </div>
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
           )}
 
-          <div className="mt-6 rounded-2xl border border-ink/10 bg-white p-5">
-            <h2 className="font-display text-lg font-semibold text-ink">
-              En çok görüntülenen ürünler
-            </h2>
-            {topViewed.length === 0 ? (
-              <p className="mt-3 text-sm text-ink/50">Henüz ürün görüntülemesi yok.</p>
+          {/* Tüm ürünler popülerlik */}
+          <Card title="Ürün popülerliği (görüntülenme)">
+            {productPop.length === 0 ? (
+              <p className="text-sm text-ink/50">Henüz ürün görüntülemesi yok.</p>
             ) : (
-              <ul className="mt-4 space-y-2.5">
-                {topViewed.map((p, i) => (
-                  <li key={p.name + i} className="flex items-center gap-3">
-                    <span className="w-5 shrink-0 text-sm font-bold text-ink/40">{i + 1}</span>
-                    <span className="flex-1 truncate text-sm text-ink">{p.name}</span>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums text-brand-dark">
-                      {p.count} görüntüleme
-                    </span>
+              <ul className="max-h-96 space-y-2 overflow-y-auto pr-1">
+                {productPop.map((p, i) => (
+                  <li key={p.id} className="flex items-center gap-3">
+                    <span className="w-6 shrink-0 text-sm font-bold tabular-nums text-ink/30">{i + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span className="truncate text-ink">{p.name}</span>
+                        <span className="shrink-0 font-semibold tabular-nums text-brand-dark">{p.count}</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink/5">
+                        <div className="h-full rounded-full bg-brand/70" style={{ width: `${(p.count / maxProd) * 100}%` }} />
+                      </div>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
         </>
       )}
+    </div>
+  );
+}
+
+function Stat({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white p-5">
+      <div className="font-display text-3xl font-bold tabular-nums text-ink">{value}</div>
+      <div className="mt-1 text-sm text-ink/60">{label}</div>
+      {hint && <div className="text-xs text-ink/40">{hint}</div>}
+    </div>
+  );
+}
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-6 rounded-2xl border border-ink/10 bg-white p-5">
+      <h2 className="mb-4 font-display text-lg font-semibold text-ink">{title}</h2>
+      {children}
     </div>
   );
 }
