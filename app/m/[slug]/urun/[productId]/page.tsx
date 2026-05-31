@@ -96,6 +96,10 @@ export default async function ProductDetailPage({ params }: Params) {
     : null;
   const campaignPrice = campActive && product.campaignPrice ? product.campaignPrice : null;
 
+  const variations = ((product.variations as { name: string; icon?: string; price: number }[]) ?? []).filter(
+    (v) => v && v.name,
+  );
+
   const pairedItems = product.pairings.map((pp) => {
     const ptr = (pp.paired.translations as Record<string, { name?: string }>) ?? {};
     return {
@@ -205,8 +209,13 @@ export default async function ProductDetailPage({ params }: Params) {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-menu-bg via-menu-bg/20 to-transparent" />
-          {(badges.length > 0 || campaign) && (
+          {(badges.length > 0 || campaign || product.isSoldOut) && (
             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+              {product.isSoldOut && (
+                <span className="rounded-full bg-menu-text px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-menu-bg">
+                  {ui.soldOut}
+                </span>
+              )}
               {campaign && (
                 <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: campaign.color }}>
                   {campaign.label}
@@ -268,6 +277,27 @@ export default async function ProductDetailPage({ params }: Params) {
             </span>
           )}
         </div>
+
+        {variations.length > 0 && (
+          <section className="mt-6">
+            <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-menu-gold">
+              {ui.options}
+            </h2>
+            <ul className="divide-y divide-menu-border overflow-hidden rounded-2xl border border-menu-border">
+              {variations.map((v, i) => (
+                <li key={i} className="flex items-center justify-between gap-3 bg-menu-surface px-4 py-3">
+                  <span className="flex items-center gap-2 text-menu-text">
+                    {v.icon && <span aria-hidden>{v.icon}</span>}
+                    {v.name}
+                  </span>
+                  <span className="font-display font-bold text-menu-gold">
+                    {formatPrice(Number(v.price).toFixed(2), currency)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {rating && (
           <StarRating

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { isCampaignActive } from "@/lib/campaign";
+import { isCampaignActive, isWithinWindow } from "@/lib/campaign";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import type { MenuBusiness } from "@/components/menu/MenuView";
 
@@ -18,13 +18,17 @@ const businessSelect = {
   phone: true,
   address: true,
   openingHours: true,
+  mapUrl: true,
+  socialLinks: true,
 } as const;
 
 export async function getMenuBusiness(slug: string) {
-  return prisma.business.findUnique({
+  const b = await prisma.business.findUnique({
     where: { slug },
     select: businessSelect,
   });
+  if (!b) return null;
+  return { ...b, socialLinks: (b.socialLinks as Record<string, string>) ?? {} };
 }
 
 export type MenuBusinessWithType = MenuBusiness & {
@@ -69,8 +73,10 @@ export async function loadMenuProducts(menuId: string): Promise<{
     ]),
   );
 
-  const products: MenuProduct[] = categories.flatMap((c) =>
-    c.products.map((p) => {
+  const products: MenuProduct[] = categories
+    .filter((c) => isWithinWindow(c.availStart, c.availEnd))
+    .flatMap((c) =>
+    c.products.filter((p) => isWithinWindow(p.availStart, p.availEnd)).map((p) => {
       const campActive =
         p.campaign && p.campaign.enabled && isCampaignActive(p.campaignStart, p.campaignEnd);
       return {
@@ -99,6 +105,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
           }
         : null,
       campaignPrice: campActive && p.campaignPrice ? p.campaignPrice.toFixed(2) : null,
+      isSoldOut: p.isSoldOut,
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,
@@ -107,7 +114,11 @@ export async function loadMenuProducts(menuId: string): Promise<{
   );
 
   const categoryList = categories
-    .filter((c) => c.products.length > 0)
+    .filter(
+      (c) =>
+        isWithinWindow(c.availStart, c.availEnd) &&
+        c.products.some((p) => isWithinWindow(p.availStart, p.availEnd)),
+    )
     .map((c) => ({ id: c.id, name: c.name, translations: (c.translations as CatTrans) ?? {} }));
 
   return { products, categoryList };

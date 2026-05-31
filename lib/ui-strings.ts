@@ -16,6 +16,7 @@ export const UI_KEYS: UiKeyDef[] = [
   { key: "isNew", group: "Menü", tr: "Yeni", en: "New" },
   { key: "curatedByHand", group: "Menü", tr: "EL İLE DERLENDİ", en: "HAND-PICKED" },
   { key: "deals", group: "Menü", tr: "Fırsatlar", en: "Deals" },
+  { key: "soldOut", group: "Menü", tr: "Tükendi", en: "Sold out" },
   { key: "searchPlaceholder", group: "Menü", tr: "Yemek, malzeme veya kategori ara…", en: "Search dishes, ingredients or categories…" },
   { key: "noResults", group: "Menü", tr: "Aramanıza uygun ürün bulunamadı.", en: "No items match your search." },
   { key: "selectBranch", group: "Menü", tr: "Şube seçin", en: "Select a branch" },
@@ -34,6 +35,7 @@ export const UI_KEYS: UiKeyDef[] = [
   { key: "allergenInfo", group: "Ürün detay", tr: "Alerjen Bilgisi", en: "Allergen Info" },
   { key: "productAllergenIntro", group: "Ürün detay", tr: "Bu ürün şu alerjenleri içerir:", en: "This product contains:" },
   { key: "similar", group: "Ürün detay", tr: "Benzer seçimler", en: "Similar picks" },
+  { key: "options", group: "Ürün detay", tr: "Seçenekler", en: "Options" },
   { key: "pairsWith", group: "Ürün detay", tr: "Yanında iyi gider", en: "Goes well with" },
   { key: "seeAll", group: "Ürün detay", tr: "Tümü", en: "See all" },
   { key: "minutesShort", group: "Ürün detay", tr: "dk", en: "min" },
@@ -49,6 +51,7 @@ export const UI_KEYS: UiKeyDef[] = [
   // Alt bilgi
   { key: "footerNote", group: "Alt bilgi", tr: "Fiyatlara KDV dahildir.", en: "Prices include VAT." },
   { key: "poweredBy", group: "Alt bilgi", tr: "EAGLE QR İLE HAZIRLANMIŞTIR", en: "POWERED BY EAGLE QR" },
+  { key: "directions", group: "Alt bilgi", tr: "Yol tarifi", en: "Directions" },
 ];
 
 export type UiStrings = Record<string, string>;

@@ -33,6 +33,7 @@ import {
   deleteProduct,
   reorderCategories,
   reorderProducts,
+  toggleSoldOut,
 } from "@/lib/actions/menu";
 import { formatPrice, type CurrencySpec } from "@/lib/currency";
 
@@ -107,6 +108,16 @@ export default function MenuManager({
     const next = arrayMove(cats, oldIndex, newIndex);
     setCats(next);
     reorderCategories(menuId, next.map((c) => c.id));
+  }
+
+  function toggleStock(productId: string) {
+    setCats((prev) =>
+      prev.map((c) => ({
+        ...c,
+        products: c.products.map((p) => (p.id === productId ? { ...p, isSoldOut: !p.isSoldOut } : p)),
+      })),
+    );
+    toggleSoldOut(productId);
   }
 
   function onProductDragEnd(categoryId: string, { active, over }: DragEndEvent) {
@@ -192,6 +203,7 @@ export default function MenuManager({
                   onAddProduct={() => setPanel({ kind: "product-new", categoryId: category.id })}
                   onEditProduct={(product) => setPanel({ kind: "product-edit", categoryId: category.id, product })}
                   onDeleteProduct={(product) => setConfirm({ kind: "product", id: product.id, name: product.name })}
+                  onToggleProductStock={(product) => toggleStock(product.id)}
                   onProductDragEnd={(e) => onProductDragEnd(category.id, e)}
                 />
               ))}
@@ -260,6 +272,7 @@ function SortableCategory({
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
+  onToggleProductStock,
   onProductDragEnd,
 }: {
   category: CategoryView;
@@ -270,6 +283,7 @@ function SortableCategory({
   onAddProduct: () => void;
   onEditProduct: (p: ProductView) => void;
   onDeleteProduct: (p: ProductView) => void;
+  onToggleProductStock: (p: ProductView) => void;
   onProductDragEnd: (e: DragEndEvent) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -292,6 +306,11 @@ function SortableCategory({
             <span className="ml-2 text-sm font-normal text-ink/40">
               {category.products.length} ürün
             </span>
+            {(category.availStart || category.availEnd) && (
+              <span className="ml-2 rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-medium text-ink/50">
+                ⏰ {category.availStart || "…"}–{category.availEnd || "…"}
+              </span>
+            )}
           </h2>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -313,6 +332,7 @@ function SortableCategory({
                   currency={currency}
                   onEdit={() => onEditProduct(product)}
                   onDelete={() => onDeleteProduct(product)}
+                  onToggleStock={() => onToggleProductStock(product)}
                 />
               ))}
             </SortableContext>
@@ -338,11 +358,13 @@ function SortableProduct({
   currency,
   onEdit,
   onDelete,
+  onToggleStock,
 }: {
   product: ProductView;
   currency: CurrencySpec;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleStock: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: product.id,
@@ -376,12 +398,32 @@ function SortableProduct({
           </span>
         )}
         <div className="min-w-0">
-          <p className="truncate font-medium text-ink">{product.name}</p>
+          <p className={`truncate font-medium text-ink ${product.isSoldOut ? "line-through opacity-50" : ""}`}>
+            {product.name}
+            {product.variations.length > 0 && (
+              <span className="ml-2 text-xs font-normal text-ink/40">+{product.variations.length} seçenek</span>
+            )}
+            {(product.availStart || product.availEnd) && (
+              <span className="ml-2 text-xs font-normal text-ink/40">⏰ {product.availStart || "…"}–{product.availEnd || "…"}</span>
+            )}
+          </p>
           {product.description && <p className="truncate text-sm text-ink/50">{product.description}</p>}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-3">
-        <span className="font-display font-semibold text-ink tabular-nums">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={onToggleStock}
+          className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            product.isSoldOut
+              ? "bg-red-100 text-red-700 hover:bg-red-200"
+              : "border border-ink/15 text-ink/50 hover:bg-ink/5"
+          }`}
+          title={product.isSoldOut ? "Stokta yok — tıkla, stoğa al" : "Stokta var — tıkla, tükendi yap"}
+        >
+          {product.isSoldOut ? "Stokta yok" : "Stokta"}
+        </button>
+        <span className={`font-display font-semibold tabular-nums ${product.isSoldOut ? "text-ink/40" : "text-ink"}`}>
           {formatPrice(product.price, currency)}
         </span>
         <IconButton label="Ürünü düzenle" onClick={onEdit} icon="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />

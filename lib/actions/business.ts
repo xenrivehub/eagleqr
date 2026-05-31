@@ -85,7 +85,11 @@ export type BusinessInfoInput = {
   openingHours: string;
   currency: string;
   ratingsEnabled: boolean;
+  mapUrl: string;
+  social: Record<string, string>;
 };
+
+const SOCIAL_KEYS = ["instagram", "tiktok", "facebook", "x", "youtube", "website"];
 
 export async function updateBusinessInfo(
   input: BusinessInfoInput,
@@ -103,6 +107,12 @@ export async function updateBusinessInfo(
   });
   const currency = curRow?.code ?? "TRY";
 
+  const social: Record<string, string> = {};
+  for (const k of SOCIAL_KEYS) {
+    const v = (input.social?.[k] ?? "").trim();
+    if (v) social[k] = v;
+  }
+
   try {
     const business = await prisma.business.update({
       where: { id: businessId },
@@ -116,6 +126,8 @@ export async function updateBusinessInfo(
         openingHours: input.openingHours.trim() || null,
         currency,
         ratingsEnabled: input.ratingsEnabled,
+        mapUrl: input.mapUrl.trim() || null,
+        socialLinks: social,
       },
       select: { slug: true },
     });

@@ -15,6 +15,8 @@ export default function CategoryForm({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [availStart, setAvailStart] = useState(category?.availStart ?? "");
+  const [availEnd, setAvailEnd] = useState(category?.availEnd ?? "");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,8 +25,8 @@ export default function CategoryForm({
 
     setPending(true);
     const result = category
-      ? await updateCategory(category.id, name)
-      : await createCategory(menuId, name);
+      ? await updateCategory(category.id, name, availStart || null, availEnd || null)
+      : await createCategory(menuId, name, availStart || null, availEnd || null);
     if (!result.success) {
       setError(result.error);
       setPending(false);
@@ -52,6 +54,15 @@ export default function CategoryForm({
           placeholder="Örn. Sıcak İçecekler"
           className="w-full rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
         />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink">Servis saatleri (opsiyonel)</label>
+        <div className="flex items-center gap-2">
+          <input type="time" value={availStart} onChange={(e) => setAvailStart(e.target.value)} className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm" />
+          <span className="text-ink/40">–</span>
+          <input type="time" value={availEnd} onChange={(e) => setAvailEnd(e.target.value)} className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm" />
+        </div>
+        <p className="mt-1 text-xs text-ink/45">Bu kategori sadece bu saatler arasında müşteriye görünür (örn. kahvaltı 07:00–11:00). Boşsa hep açık.</p>
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <button type="button" onClick={onDone} className="cursor-pointer rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/5">

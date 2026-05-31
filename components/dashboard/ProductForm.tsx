@@ -66,6 +66,24 @@ export default function ProductForm({
   const [campaignEnd, setCampaignEnd] = useState(product?.campaignEnd ?? "");
   const [campaignPrice, setCampaignPrice] = useState(product?.campaignPrice ?? "");
 
+  // Servis saatleri (görünürlük penceresi)
+  const [availStart, setAvailStart] = useState(product?.availStart ?? "");
+  const [availEnd, setAvailEnd] = useState(product?.availEnd ?? "");
+
+  // Varyasyonlar [{ icon, name, price }]
+  const [variations, setVariations] = useState<{ name: string; icon: string; price: string }[]>(
+    product?.variations ?? [],
+  );
+  function addVariation() {
+    setVariations((v) => [...v, { name: "", icon: "", price: "" }]);
+  }
+  function updateVariation(i: number, patch: Partial<{ name: string; icon: string; price: string }>) {
+    setVariations((v) => v.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  }
+  function removeVariation(i: number) {
+    setVariations((v) => v.filter((_, idx) => idx !== i));
+  }
+
   // Eşleşen ürünler ("yanında iyi gider")
   const [pairedIds, setPairedIds] = useState<string[]>(product?.pairedIds ?? []);
   const [pairQuery, setPairQuery] = useState("");
@@ -148,6 +166,9 @@ export default function ProductForm({
       campaignStart: campaignId ? campaignStart || null : null,
       campaignEnd: campaignId ? campaignEnd || null : null,
       campaignPrice: campaignId ? campaignPrice || null : null,
+      availStart: availStart || null,
+      availEnd: availEnd || null,
+      variations,
     };
 
     setPending(true);
@@ -201,6 +222,29 @@ export default function ProductForm({
         </label>
         <input id="p-price" name="price" required inputMode="decimal" defaultValue={product?.price} placeholder="0,00" className={`${inputBase} tabular-nums`} />
       </div>
+
+      <fieldset>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <legend className="text-sm font-medium text-ink">Varyasyonlar (boy / seçenek)</legend>
+          <button type="button" onClick={addVariation} className="cursor-pointer rounded-full border border-ink/15 px-3 py-1 text-xs font-semibold text-ink hover:bg-ink/5">
+            + Ekle
+          </button>
+        </div>
+        {variations.length === 0 ? (
+          <p className="text-xs text-ink/45">Örn. Küçük / Orta / Büyük ya da ekstra seçenekler. Boşsa sadece ana fiyat görünür.</p>
+        ) : (
+          <div className="space-y-2">
+            {variations.map((v, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input value={v.icon} onChange={(e) => updateVariation(i, { icon: e.target.value })} placeholder="🥤" maxLength={4} className={`${inputBase} w-14 text-center`} />
+                <input value={v.name} onChange={(e) => updateVariation(i, { name: e.target.value })} placeholder="Orta boy" className={`${inputBase} flex-1`} />
+                <input value={v.price} onChange={(e) => updateVariation(i, { price: e.target.value })} inputMode="decimal" placeholder="0,00" className={`${inputBase} w-24 tabular-nums`} />
+                <button type="button" onClick={() => removeVariation(i)} aria-label="Kaldır" className="shrink-0 cursor-pointer rounded-lg px-2 py-2 text-ink/40 hover:bg-red-50 hover:text-red-600">✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </fieldset>
 
       <div>
         <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -378,6 +422,16 @@ export default function ProductForm({
             );
           })}
         </div>
+      </fieldset>
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-ink">Servis saatleri (opsiyonel)</legend>
+        <div className="flex items-center gap-2">
+          <input type="time" value={availStart} onChange={(e) => setAvailStart(e.target.value)} className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm" />
+          <span className="text-ink/40">–</span>
+          <input type="time" value={availEnd} onChange={(e) => setAvailEnd(e.target.value)} className="rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm" />
+        </div>
+        <p className="mt-1 text-xs text-ink/45">Bu ürün sadece bu saatler arasında müşteriye görünür. Boşsa hep açık. (Kampanya saatlerinden ayrıdır.)</p>
       </fieldset>
 
       <fieldset>

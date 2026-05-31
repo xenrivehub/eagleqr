@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import type { ThemeSpec } from "@/lib/themes";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
@@ -25,6 +25,8 @@ export type ThemedBusiness = {
   phone: string | null;
   address: string | null;
   openingHours: string | null;
+  mapUrl: string | null;
+  socialLinks: Record<string, string>;
 };
 
 type Chip = "featured" | "new" | "popular";
@@ -35,6 +37,16 @@ const chipDefs: { key: Chip; label: string }[] = [
 ];
 
 const PRODUCT_ICON = "M3 11h18M5 11V7a2 2 0 0 1 2-2h2M12 5v6M7 21h10a2 2 0 0 0 2-2v-8H5v8a2 2 0 0 0 2 2z";
+
+const SOCIAL_ORDER = ["instagram", "tiktok", "facebook", "x", "youtube", "website"];
+const SOCIAL_ICONS: Record<string, ReactNode> = {
+  instagram: (<><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17" cy="7" r="1" fill="currentColor" stroke="none" /></>),
+  facebook: (<path d="M15 3h-2a4 4 0 0 0-4 4v3H6v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h2z" fill="currentColor" stroke="none" />),
+  youtube: (<><rect x="2" y="6" width="20" height="12" rx="4" /><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none" /></>),
+  x: (<path d="M4 4l16 16M20 4 4 20" />),
+  tiktok: (<path d="M9 19a3 3 0 1 0 3-3V4c1 2.2 3 3 5 3" />),
+  website: (<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18" /></>),
+};
 
 export default function ThemedMenu({
   theme: t,
@@ -181,6 +193,20 @@ export default function ThemedMenu({
         {campLabel(p)}
       </span>
     ) : null;
+  const soldOutBadge = (p: MenuProduct) =>
+    p.isSoldOut ? (
+      <span style={{ display: "inline-block", background: c.ink, color: c.bg, fontSize: 9.5, fontWeight: 800, letterSpacing: "0.04em", borderRadius: 999, padding: "2px 9px" }}>
+        {T("soldOut")}
+      </span>
+    ) : null;
+  // kampanya + tükendi rozet satırı (varsa)
+  const topBadges = (p: MenuProduct, mt = 0) =>
+    p.campaign || p.isSoldOut ? (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6, marginTop: mt }}>
+        {campaignBadge(p)}
+        {soldOutBadge(p)}
+      </div>
+    ) : null;
 
   // fiyat (kampanya indirimi varsa eski fiyat üstü çizili)
   const PriceTag = ({ p, size = 14 }: { p: MenuProduct; size?: number }) => {
@@ -323,13 +349,13 @@ export default function ThemedMenu({
     const href = `/m/${slug}/urun/${p.id}`;
     const nameStyle = display({ fontSize: t.itemStyle === "list-plain" ? 20 : 15.5, fontWeight: 700, lineHeight: 1.15 });
     const conf = conflicts(p);
-    const dim: CSSProperties = conf.length ? { opacity: 0.5 } : {};
+    const dim: CSSProperties = conf.length || p.isSoldOut ? { opacity: 0.5 } : {};
 
     if (t.itemStyle === "list-plain") {
       // à la carte: ad ...... fiyat
       return (
         <Link href={href} style={{ display: "block", padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim }}>
-          {p.campaign && <div style={{ marginBottom: 8 }}>{campaignBadge(p)}</div>}
+          {topBadges(p)}
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span style={nameStyle}>{nm(p)}{mediaMark(p)}</span>
             <span style={{ flex: 1, borderBottom: `1px dotted ${c.line}`, margin: "0 4px", transform: "translateY(-5px)" }} />
@@ -346,7 +372,7 @@ export default function ThemedMenu({
         <Link href={href} style={{ display: "flex", gap: 14, padding: "16px 2px", borderBottom: `${t.cardBorder.startsWith("2") ? "2px" : "1px"} solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim }}>
           <div style={{ flex: "0 0 26px", fontFamily: t.fonts.display, fontSize: 20, color: c.accent, lineHeight: 1, paddingTop: 2 }}>{String(index + 1).padStart(2, "0")}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {p.campaign && <div style={{ marginBottom: 6 }}>{campaignBadge(p)}</div>}
+            {topBadges(p)}
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
               <span style={display({ fontSize: 18, fontWeight: 800, lineHeight: 1.05 })}>{nm(p)}{mediaMark(p)}</span>
               <Price p={p} />
@@ -372,7 +398,7 @@ export default function ThemedMenu({
       <Link href={href} style={wrapperStyle}>
         <div style={{ flex: "0 0 78px" }}><ImgFrame src={p.imageUrl} h={78} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          {p.campaign && <div style={{ marginBottom: 6 }}>{campaignBadge(p)}</div>}
+          {topBadges(p)}
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
             <span style={nameStyle}>{nm(p)}{mediaMark(p)}</span>
             <Price p={p} />
@@ -470,9 +496,9 @@ export default function ThemedMenu({
                   {featured.map((p) => {
                     const conf = conflicts(p);
                     return (
-                    <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 160, flex: "0 0 160px", textDecoration: "none", color: c.ink, ...(conf.length ? { opacity: 0.5 } : {}), ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
+                    <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 160, flex: "0 0 160px", textDecoration: "none", color: c.ink, ...(conf.length || p.isSoldOut ? { opacity: 0.5 } : {}), ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
                       <ImgFrame src={p.imageUrl} h={108} />
-                      {p.campaign && <div style={{ marginTop: 8 }}>{campaignBadge(p)}</div>}
+                      {topBadges(p, 8)}
                       <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
                       {conf.length > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: "#e0524a", marginTop: 4 }}>⚠ {conf.join(", ")}</div>}
                       <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}><PriceTag p={p} size={13} />{ratingMark(p)}</div>
@@ -568,6 +594,30 @@ export default function ThemedMenu({
               {business.phone && <div>{business.phone}</div>}
             </div>
           )}
+
+          {(() => {
+            const mapHref =
+              business.mapUrl ||
+              (business.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.address)}` : null);
+            const socials = SOCIAL_ORDER.filter((k) => business.socialLinks?.[k]);
+            if (!mapHref && socials.length === 0) return null;
+            return (
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "center", gap: 10, marginTop: 16 }}>
+                {mapHref && (
+                  <a href={mapHref} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: c.ink, textDecoration: "none", border: `1px solid ${c.line}`, borderRadius: 999, padding: "7px 14px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                    {T("directions")}
+                  </a>
+                )}
+                {socials.map((k) => (
+                  <a key={k} href={business.socialLinks[k]} target="_blank" rel="noopener noreferrer" aria-label={k} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 999, border: `1px solid ${c.line}`, color: c.sub }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>{SOCIAL_ICONS[k]}</svg>
+                  </a>
+                ))}
+              </div>
+            );
+          })()}
+
           <p style={{ fontSize: 11.5, color: c.faint, margin: "18px auto 0", maxWidth: 290, lineHeight: 1.6 }}>{T("footerNote")}</p>
           <div style={{ fontSize: 9, letterSpacing: "0.24em", color: c.faint, marginTop: 18 }}>{T("poweredBy")}</div>
         </footer>

@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
 import { isValidTime } from "@/lib/campaign";
 
+function cleanTime(t?: string | null): string | null {
+  return t && isValidTime(t) ? t.trim() : null;
+}
+
 type ActionResult = { success: true } | { success: false; error: string };
 
 type CampaignData = {
@@ -66,6 +70,8 @@ async function assertCategoryOwned(categoryId: string, businessId: string) {
 export async function createCategory(
   menuId: string,
   name: string,
+  availStart?: string | null,
+  availEnd?: string | null,
 ): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
@@ -78,7 +84,9 @@ export async function createCategory(
     });
     if (!menu) return { success: false, error: "Menü bulunamadı." };
 
-    await prisma.category.create({ data: { menuId: menu.id, name: trimmed } });
+    await prisma.category.create({
+      data: { menuId: menu.id, name: trimmed, availStart: cleanTime(availStart), availEnd: cleanTime(availEnd) },
+    });
     revalidatePath("/dashboard/menu");
     revalidatePath(`/dashboard/menu/${menuId}`);
     return { success: true };
@@ -90,6 +98,8 @@ export async function createCategory(
 export async function updateCategory(
   id: string,
   name: string,
+  availStart?: string | null,
+  availEnd?: string | null,
 ): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
@@ -97,7 +107,10 @@ export async function updateCategory(
     const trimmed = name.trim();
     if (trimmed.length < 1) return { success: false, error: "Kategori adı gerekli." };
 
-    await prisma.category.update({ where: { id }, data: { name: trimmed } });
+    await prisma.category.update({
+      where: { id },
+      data: { name: trimmed, availStart: cleanTime(availStart), availEnd: cleanTime(availEnd) },
+    });
     revalidatePath("/dashboard/menu");
     return { success: true };
   } catch {
@@ -136,7 +149,25 @@ export type ProductInput = {
   campaignStart?: string | null;
   campaignEnd?: string | null;
   campaignPrice?: string | null;
+  availStart?: string | null;
+  availEnd?: string | null;
+  variations?: { name: string; icon?: string; price: string | number }[];
 };
+
+function sanitizeVariations(
+  raw?: { name: string; icon?: string; price: string | number }[],
+): { name: string; icon: string; price: number }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { name: string; icon: string; price: number }[] = [];
+  for (const v of raw.slice(0, 30)) {
+    const name = (v?.name ?? "").trim();
+    if (!name) continue;
+    const n = Number(String(v.price).replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) continue;
+    out.push({ name, icon: (v.icon ?? "").trim().slice(0, 8), price: n });
+  }
+  return out;
+}
 
 /** Ürünün "yanında iyi gider" eşleşmelerini değiştirir (aynı menü, kendisi hariç). */
 async function replacePairings(
@@ -269,6 +300,9 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
       data: {
         ...parsed.data,
         ...(await campaignData(input)),
+        availStart: cleanTime(input.availStart),
+        availEnd: cleanTime(input.availEnd),
+        variations: sanitizeVariations(input.variations),
         categoryId: input.categoryId,
         businessId,
         imageUrl: input.imageUrl || null,
@@ -317,6 +351,9 @@ export async function updateProduct(
       data: {
         ...parsed.data,
         ...(await campaignData(input)),
+        availStart: cleanTime(input.availStart),
+        availEnd: cleanTime(input.availEnd),
+        variations: sanitizeVariations(input.variations),
         categoryId: input.categoryId,
         imageUrl: input.imageUrl ?? null,
         videoUrl: input.videoUrl ?? null,
@@ -393,6 +430,25 @@ export async function reorderProducts(
     return { success: true };
   } catch {
     return { success: false, error: "Sıralama kaydedilemedi." };
+  }
+}
+
+export async function toggleSoldOut(id: string): Promise<ActionResult> {
+  try {
+    const businessId = await requireBusinessId();
+    const owned = await prisma.product.findFirst({
+      where: { id, businessId },
+      select: { id: true, isSoldOut: true },
+    });
+    if (!owned) return { success: false, error: "Ürün bulunamadı." };
+    await prisma.product.update({
+      where: { id },
+      data: { isSoldOut: !owned.isSoldOut },
+    });
+    revalidatePath("/dashboard/menu");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Güncellenemedi." };
   }
 }
 

@@ -20,6 +20,7 @@ export type MenuProduct = {
   rating: { avg: number; count: number };
   campaign: { color: string; label: string; translations: Record<string, string> } | null;
   campaignPrice: string | null;
+  isSoldOut: boolean;
   isFeatured: boolean;
   isNew: boolean;
   isPopular: boolean;

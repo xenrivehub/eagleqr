@@ -20,13 +20,26 @@ type Props = {
   currency: string;
   currencies: CurrencySpec[];
   ratingsEnabled: boolean;
+  mapUrl: string;
+  social: Record<string, string>;
 };
+
+const SOCIALS: { key: string; label: string; placeholder: string }[] = [
+  { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/..." },
+  { key: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@..." },
+  { key: "facebook", label: "Facebook", placeholder: "https://facebook.com/..." },
+  { key: "x", label: "X (Twitter)", placeholder: "https://x.com/..." },
+  { key: "youtube", label: "YouTube", placeholder: "https://youtube.com/@..." },
+  { key: "website", label: "Web sitesi", placeholder: "https://..." },
+];
 
 export default function BusinessInfoForm(initial: Props) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState<string | null>(initial.logoUrl);
   const [currency, setCurrency] = useState(initial.currency);
   const [ratingsEnabled, setRatingsEnabled] = useState(initial.ratingsEnabled);
+  const [mapUrl, setMapUrl] = useState(initial.mapUrl);
+  const [social, setSocial] = useState<Record<string, string>>(initial.social ?? {});
   const currencyList = initial.currencies;
   const currentSpec =
     currencyList.find((c) => c.code === currency) ?? FALLBACK_CURRENCY;
@@ -48,6 +61,8 @@ export default function BusinessInfoForm(initial: Props) {
       openingHours: String(f.get("openingHours") ?? ""),
       currency,
       ratingsEnabled,
+      mapUrl,
+      social,
     });
     if (res.success) {
       setStatus("saved");
@@ -98,6 +113,29 @@ export default function BusinessInfoForm(initial: Props) {
         <label htmlFor="b-hours" className="mb-1.5 block text-sm font-medium text-ink">Açık saatler</label>
         <input id="b-hours" name="openingHours" defaultValue={initial.openingHours} placeholder="Örn. Her gün 08:00 - 23:00" className={inputBase} />
       </div>
+
+      <div>
+        <label htmlFor="b-map" className="mb-1.5 block text-sm font-medium text-ink">Harita / konum linki</label>
+        <input id="b-map" value={mapUrl} onChange={(e) => setMapUrl(e.target.value)} placeholder="Google Maps linki (yapıştırın)" className={inputBase} />
+        <p className="mt-1 text-xs text-ink/45">Müşteri menüde "Yol tarifi" butonuyla buraya yönlenir. Boşsa adresten arama yapılır.</p>
+      </div>
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-ink">Sosyal medya</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {SOCIALS.map((s) => (
+            <label key={s.key} className="text-xs font-medium text-ink/60">
+              {s.label}
+              <input
+                value={social[s.key] ?? ""}
+                onChange={(e) => setSocial((p) => ({ ...p, [s.key]: e.target.value }))}
+                placeholder={s.placeholder}
+                className={`${inputBase} mt-1`}
+              />
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <div>
         <label htmlFor="b-currency" className="mb-1.5 block text-sm font-medium text-ink">Para birimi</label>

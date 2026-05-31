@@ -24,6 +24,8 @@ export default async function SettingsPage() {
       openingHours: true,
       currency: true,
       ratingsEnabled: true,
+      mapUrl: true,
+      socialLinks: true,
     },
   });
   if (!business) redirect("/login");
@@ -68,6 +70,8 @@ export default async function SettingsPage() {
           currency={business.currency}
           currencies={currencies}
           ratingsEnabled={business.ratingsEnabled}
+          mapUrl={business.mapUrl ?? ""}
+          social={(business.socialLinks as Record<string, string>) ?? {}}
         />
       </div>
 

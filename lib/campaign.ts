@@ -35,6 +35,11 @@ export function isCampaignActive(start: string | null, end: string | null): bool
   return lo <= hi ? mins >= lo && mins <= hi : mins >= lo || mins <= hi;
 }
 
+/** Servis saatleri için: şu an açık mı? (kampanya aktiflik mantığıyla aynı) */
+export const isWithinWindow = isCampaignActive;
+
+export type Variation = { name: string; icon?: string; price: number };
+
 /** Aktif dile göre kampanya etiketi (yoksa TR'ye düşer). */
 export function campaignLabel(c: CampaignInfo, lang: string): string {
   return (lang !== "tr" && c.translations?.[lang]) || c.label;

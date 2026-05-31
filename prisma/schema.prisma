@@ -95,6 +95,8 @@ model Business {
   address      String?
   about        String? // hakkında metni
   openingHours String? // açık saatler (serbest metin)
+  mapUrl       String? // Google Maps linki (yol tarifi)
+  socialLinks  Json     @default("{}") // { instagram, tiktok, facebook, x, youtube, website }
   currency     String   @default("TRY") // görüntüleme para birimi (ISO 4217, bkz. lib/currency.ts)
   themeKey     String   @default("mineral") // müşteri menüsü teması (bkz. lib/themes.ts)
   allowedThemes String[] @default([]) // admin'in açtığı premium temalar (free temalar her zaman açık)
@@ -196,6 +198,8 @@ model Category {
   name      String
   sortOrder Int    @default(0)
   translations Json @default("{}") // { en: { name }, de: { name } }
+  availStart String? // servis başlangıç "HH:MM" (boşsa hep açık)
+  availEnd   String? // servis bitiş "HH:MM"
 
   products Product[]
 
@@ -230,6 +234,9 @@ model Product {
   campaignStart String? // "HH:MM" — boşsa hep aktif
   campaignEnd   String? // "HH:MM"
   campaignPrice Decimal? @db.Decimal(10, 2) // kampanya fiyatı; varsa eski fiyat üstü çizili gösterilir
+  availStart   String? // servis başlangıç "HH:MM" (boşsa hep açık)
+  availEnd     String? // servis bitiş "HH:MM"
+  variations   Json     @default("[]") // [{ name, icon, price }]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

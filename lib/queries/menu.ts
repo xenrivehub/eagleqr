@@ -26,6 +26,8 @@ export async function loadMenuForManager(menuId: string): Promise<{
   const categories: CategoryView[] = categoriesRaw.map((c) => ({
     id: c.id,
     name: c.name,
+    availStart: c.availStart,
+    availEnd: c.availEnd,
     products: c.products.map((p) => ({
       id: p.id,
       name: p.name,
@@ -43,6 +45,14 @@ export async function loadMenuForManager(menuId: string): Promise<{
       campaignStart: p.campaignStart,
       campaignEnd: p.campaignEnd,
       campaignPrice: p.campaignPrice ? p.campaignPrice.toFixed(2) : null,
+      availStart: p.availStart,
+      availEnd: p.availEnd,
+      variations: ((p.variations as { name: string; icon?: string; price: number }[]) ?? []).map((v) => ({
+        name: v.name,
+        icon: v.icon ?? "",
+        price: String(v.price),
+      })),
+      isSoldOut: p.isSoldOut,
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,

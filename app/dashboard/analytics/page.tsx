@@ -109,6 +109,7 @@ export default async function AnalyticsPage({ searchParams }: Params) {
 
   const tab = (active: boolean, href: string, label: string) => (
     <Link
+      key={href}
       href={href}
       className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
         active ? "bg-ink text-cream" : "border border-ink/15 text-ink/60 hover:bg-ink/5"

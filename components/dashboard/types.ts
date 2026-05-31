@@ -17,6 +17,10 @@ export type ProductView = {
   campaignStart: string | null;
   campaignEnd: string | null;
   campaignPrice: string | null;
+  availStart: string | null;
+  availEnd: string | null;
+  variations: { name: string; icon: string; price: string }[];
+  isSoldOut: boolean;
   isFeatured: boolean;
   isNew: boolean;
   isPopular: boolean;
@@ -25,5 +29,7 @@ export type ProductView = {
 export type CategoryView = {
   id: string;
   name: string;
+  availStart: string | null;
+  availEnd: string | null;
   products: ProductView[];
 };
