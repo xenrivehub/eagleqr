@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
 import { isValidTime } from "@/lib/campaign";
 
@@ -12,16 +13,25 @@ function cleanTime(t?: string | null): string | null {
 
 type ActionResult = { success: true } | { success: false; error: string };
 
+function cleanDate(t?: string | null): string | null {
+  return t && /^\d{4}-\d{2}-\d{2}$/.test(t) ? t.trim() : null;
+}
+
 type CampaignData = {
   campaignId: string | null;
   campaignStart: string | null;
   campaignEnd: string | null;
+  campaignDateStart: string | null;
+  campaignDateEnd: string | null;
   campaignPrice: number | null;
 };
 
 /** Kampanya alanlarını doğrular (geçerli/açık kampanya, HH:MM, fiyat). */
 async function campaignData(input: ProductInput): Promise<CampaignData> {
-  const none: CampaignData = { campaignId: null, campaignStart: null, campaignEnd: null, campaignPrice: null };
+  const none: CampaignData = {
+    campaignId: null, campaignStart: null, campaignEnd: null,
+    campaignDateStart: null, campaignDateEnd: null, campaignPrice: null,
+  };
   if (!input.campaignId) return none;
   const c = await prisma.campaign.findFirst({
     where: { id: input.campaignId, enabled: true },
@@ -29,14 +39,19 @@ async function campaignData(input: ProductInput): Promise<CampaignData> {
   });
   if (!c) return none;
 
-  const start = input.campaignStart && isValidTime(input.campaignStart) ? input.campaignStart.trim() : null;
-  const end = input.campaignEnd && isValidTime(input.campaignEnd) ? input.campaignEnd.trim() : null;
   let price: number | null = null;
   if (input.campaignPrice) {
     const n = Number(String(input.campaignPrice).replace(",", "."));
     if (Number.isFinite(n) && n >= 0) price = n;
   }
-  return { campaignId: c.id, campaignStart: start, campaignEnd: end, campaignPrice: price };
+  return {
+    campaignId: c.id,
+    campaignStart: cleanTime(input.campaignStart),
+    campaignEnd: cleanTime(input.campaignEnd),
+    campaignDateStart: cleanDate(input.campaignDateStart),
+    campaignDateEnd: cleanDate(input.campaignDateEnd),
+    campaignPrice: price,
+  };
 }
 
 async function requireBusinessId(): Promise<string> {
@@ -67,15 +82,59 @@ async function assertCategoryOwned(categoryId: string, businessId: string) {
   if (!category) throw new Error("Kategori bulunamadı");
 }
 
+export type CategoryInput = {
+  name: string;
+  availStart?: string | null;
+  availEnd?: string | null;
+  campaignId?: string | null;
+  campaignStart?: string | null;
+  campaignEnd?: string | null;
+  campaignDateStart?: string | null;
+  campaignDateEnd?: string | null;
+  campaignDiscType?: string | null;
+  campaignDiscValue?: string | null;
+};
+
+async function categoryCampaignData(input: CategoryInput) {
+  const none = {
+    campaignId: null as string | null,
+    campaignStart: null as string | null,
+    campaignEnd: null as string | null,
+    campaignDateStart: null as string | null,
+    campaignDateEnd: null as string | null,
+    campaignDiscType: null as string | null,
+    campaignDiscValue: null as number | null,
+  };
+  if (!input.campaignId) return none;
+  const c = await prisma.campaign.findFirst({
+    where: { id: input.campaignId, enabled: true },
+    select: { id: true },
+  });
+  if (!c) return none;
+  const type = input.campaignDiscType === "fixed" || input.campaignDiscType === "percent" ? input.campaignDiscType : null;
+  let value: number | null = null;
+  if (input.campaignDiscValue) {
+    const n = Number(String(input.campaignDiscValue).replace(",", "."));
+    if (Number.isFinite(n) && n >= 0) value = type === "percent" ? Math.min(100, n) : n;
+  }
+  return {
+    campaignId: c.id,
+    campaignStart: cleanTime(input.campaignStart),
+    campaignEnd: cleanTime(input.campaignEnd),
+    campaignDateStart: cleanDate(input.campaignDateStart),
+    campaignDateEnd: cleanDate(input.campaignDateEnd),
+    campaignDiscType: value !== null ? type : null,
+    campaignDiscValue: value,
+  };
+}
+
 export async function createCategory(
   menuId: string,
-  name: string,
-  availStart?: string | null,
-  availEnd?: string | null,
+  input: CategoryInput,
 ): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
-    const trimmed = name.trim();
+    const trimmed = input.name.trim();
     if (trimmed.length < 1) return { success: false, error: "Kategori adı gerekli." };
 
     const menu = await prisma.menu.findFirst({
@@ -85,7 +144,13 @@ export async function createCategory(
     if (!menu) return { success: false, error: "Menü bulunamadı." };
 
     await prisma.category.create({
-      data: { menuId: menu.id, name: trimmed, availStart: cleanTime(availStart), availEnd: cleanTime(availEnd) },
+      data: {
+        menuId: menu.id,
+        name: trimmed,
+        availStart: cleanTime(input.availStart),
+        availEnd: cleanTime(input.availEnd),
+        ...(await categoryCampaignData(input)),
+      },
     });
     revalidatePath("/dashboard/menu");
     revalidatePath(`/dashboard/menu/${menuId}`);
@@ -97,19 +162,22 @@ export async function createCategory(
 
 export async function updateCategory(
   id: string,
-  name: string,
-  availStart?: string | null,
-  availEnd?: string | null,
+  input: CategoryInput,
 ): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
     await assertCategoryOwned(id, businessId);
-    const trimmed = name.trim();
+    const trimmed = input.name.trim();
     if (trimmed.length < 1) return { success: false, error: "Kategori adı gerekli." };
 
     await prisma.category.update({
       where: { id },
-      data: { name: trimmed, availStart: cleanTime(availStart), availEnd: cleanTime(availEnd) },
+      data: {
+        name: trimmed,
+        availStart: cleanTime(input.availStart),
+        availEnd: cleanTime(input.availEnd),
+        ...(await categoryCampaignData(input)),
+      },
     });
     revalidatePath("/dashboard/menu");
     return { success: true };
@@ -148,6 +216,8 @@ export type ProductInput = {
   campaignId?: string | null;
   campaignStart?: string | null;
   campaignEnd?: string | null;
+  campaignDateStart?: string | null;
+  campaignDateEnd?: string | null;
   campaignPrice?: string | null;
   availStart?: string | null;
   availEnd?: string | null;
@@ -430,6 +500,78 @@ export async function reorderProducts(
     return { success: true };
   } catch {
     return { success: false, error: "Sıralama kaydedilemedi." };
+  }
+}
+
+export type BulkPriceOpts = {
+  scope: string; // "all" | categoryId
+  op: "discount" | "increase";
+  method: "percent" | "fixed";
+  value: number;
+  includeVariations: boolean;
+};
+export type BulkPriceReport =
+  | { ok: true; count: number; sample: { name: string; oldP: number; newP: number }[]; committed: boolean }
+  | { ok: false; error: string };
+
+function applyBulk(base: number, op: string, method: string, value: number): number {
+  const delta = method === "percent" ? (base * value) / 100 : value;
+  const raw = op === "discount" ? base - delta : base + delta;
+  return Math.max(0, Math.round(raw));
+}
+
+export async function bulkUpdatePrices(
+  menuId: string,
+  opts: BulkPriceOpts,
+  commit: boolean,
+): Promise<BulkPriceReport> {
+  try {
+    const businessId = await requireBusinessId();
+    const menu = await prisma.menu.findFirst({ where: { id: menuId, businessId }, select: { id: true } });
+    if (!menu) return { ok: false, error: "Menü bulunamadı." };
+    if (opts.op !== "discount" && opts.op !== "increase") return { ok: false, error: "Geçersiz işlem." };
+    if (opts.method !== "percent" && opts.method !== "fixed") return { ok: false, error: "Geçersiz yöntem." };
+    if (!Number.isFinite(opts.value) || opts.value <= 0) return { ok: false, error: "Geçerli bir değer girin." };
+
+    const where: Prisma.ProductWhereInput =
+      opts.scope === "all"
+        ? { category: { menuId } }
+        : { categoryId: opts.scope, category: { menuId } };
+
+    const products = await prisma.product.findMany({
+      where,
+      select: { id: true, name: true, price: true, variations: true },
+    });
+    if (products.length === 0) return { ok: false, error: "Etkilenecek ürün yok." };
+
+    const sample = products.slice(0, 5).map((p) => ({
+      name: p.name,
+      oldP: Number(p.price),
+      newP: applyBulk(Number(p.price), opts.op, opts.method, opts.value),
+    }));
+
+    if (commit) {
+      for (const p of products) {
+        const newPrice = applyBulk(Number(p.price), opts.op, opts.method, opts.value);
+        const data: Prisma.ProductUpdateInput = { price: newPrice };
+        if (opts.includeVariations) {
+          const vars = (p.variations as { name: string; icon?: string; price: number }[]) ?? [];
+          if (vars.length > 0) {
+            data.variations = vars.map((v) => ({
+              name: v.name,
+              icon: v.icon ?? "",
+              price: applyBulk(Number(v.price), opts.op, opts.method, opts.value),
+            }));
+          }
+        }
+        await prisma.product.update({ where: { id: p.id }, data });
+      }
+      revalidatePath("/dashboard/menu");
+    }
+
+    return { ok: true, count: products.length, sample, committed: commit };
+  } catch {
+    return { ok: false, error: "Fiyatlar güncellenemedi." };
   }
 }
 

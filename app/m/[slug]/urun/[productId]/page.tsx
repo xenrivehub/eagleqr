@@ -9,7 +9,7 @@ import { allergenLabel } from "@/lib/allergen-i18n";
 import { formatPrice } from "@/lib/currency";
 import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
-import { isCampaignActive } from "@/lib/campaign";
+import { isCampaignLive, applyDiscount } from "@/lib/campaign";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
@@ -24,7 +24,13 @@ async function getProduct(slug: string, productId: string) {
     include: {
       business: { select: { name: true, type: true, themeKey: true, currency: true, ratingsEnabled: true } },
       category: {
-        select: { id: true, name: true, translations: true, menu: { select: { id: true, slug: true } } },
+        select: {
+          id: true, name: true, translations: true,
+          campaignStart: true, campaignEnd: true, campaignDateStart: true, campaignDateEnd: true,
+          campaignDiscType: true, campaignDiscValue: true,
+          campaign: { select: { label: true, color: true, translations: true, enabled: true } },
+          menu: { select: { id: true, slug: true } },
+        },
       },
       allergens: { include: { allergen: true } },
       campaign: { select: { label: true, color: true, translations: true, enabled: true } },
@@ -83,18 +89,28 @@ export default async function ProductDetailPage({ params }: Params) {
   const currency = await getCurrencySpec(product.business.currency);
   const ui = (await getUiStrings([lang]))[lang];
 
-  // Kampanya (aktifse)
-  const campActive =
-    product.campaign?.enabled && isCampaignActive(product.campaignStart, product.campaignEnd);
-  const campaign = campActive
-    ? {
-        color: product.campaign!.color,
-        label:
-          (lang !== "tr" && (product.campaign!.translations as Record<string, string>)?.[lang]) ||
-          product.campaign!.label,
-      }
-    : null;
-  const campaignPrice = campActive && product.campaignPrice ? product.campaignPrice : null;
+  // Kampanya: ürün kendi kampanyası öncelikli, yoksa kategori kampanyası
+  const trLabel = (c: { label: string; translations: unknown }) =>
+    (lang !== "tr" && (c.translations as Record<string, string>)?.[lang]) || c.label;
+  let campaign: { color: string; label: string } | null = null;
+  let campaignPrice: number | null = null;
+  const prodLive =
+    product.campaign?.enabled &&
+    isCampaignLive(product.campaignStart, product.campaignEnd, product.campaignDateStart, product.campaignDateEnd);
+  if (prodLive) {
+    campaign = { color: product.campaign!.color, label: trLabel(product.campaign!) };
+    campaignPrice = product.campaignPrice ? Number(product.campaignPrice) : null;
+  } else {
+    const cat = product.category;
+    const cc = cat.campaign;
+    if (
+      cc?.enabled && cat.campaignDiscType && cat.campaignDiscValue != null &&
+      isCampaignLive(cat.campaignStart, cat.campaignEnd, cat.campaignDateStart, cat.campaignDateEnd)
+    ) {
+      campaign = { color: cc.color, label: trLabel(cc) };
+      campaignPrice = applyDiscount(Number(product.price), cat.campaignDiscType as "percent" | "fixed", Number(cat.campaignDiscValue));
+    }
+  }
 
   const variations = ((product.variations as { name: string; icon?: string; price: number }[]) ?? []).filter(
     (v) => v && v.name,

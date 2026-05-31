@@ -200,6 +200,15 @@ model Category {
   translations Json @default("{}") // { en: { name }, de: { name } }
   availStart String? // servis başlangıç "HH:MM" (boşsa hep açık)
   availEnd   String? // servis bitiş "HH:MM"
+  // Kategori kampanyası (tüm ürünlere zamanlı indirim + rozet)
+  campaignId        String?
+  campaign          Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  campaignStart     String? // saat "HH:MM"
+  campaignEnd       String?
+  campaignDateStart String? // tarih "YYYY-MM-DD"
+  campaignDateEnd   String?
+  campaignDiscType  String? // "percent" | "fixed"
+  campaignDiscValue Decimal? @db.Decimal(10, 2)
 
   products Product[]
 
@@ -233,6 +242,8 @@ model Product {
   campaign      Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   campaignStart String? // "HH:MM" — boşsa hep aktif
   campaignEnd   String? // "HH:MM"
+  campaignDateStart String? // "YYYY-MM-DD"
+  campaignDateEnd   String?
   campaignPrice Decimal? @db.Decimal(10, 2) // kampanya fiyatı; varsa eski fiyat üstü çizili gösterilir
   availStart   String? // servis başlangıç "HH:MM" (boşsa hep açık)
   availEnd     String? // servis bitiş "HH:MM"
@@ -400,7 +411,8 @@ model Campaign {
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
 
-  products Product[]
+  products   Product[]
+  categories Category[]
 }
 
 // Para birimleri — admin panelinden eklenir/açılır. İşletme birini seçer.

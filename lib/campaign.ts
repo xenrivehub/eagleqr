@@ -38,6 +38,34 @@ export function isCampaignActive(start: string | null, end: string | null): bool
 /** Servis saatleri için: şu an açık mı? (kampanya aktiflik mantığıyla aynı) */
 export const isWithinWindow = isCampaignActive;
 
+/** TR yerel tarih "YYYY-MM-DD". */
+function trToday(): string {
+  return new Date(Date.now() + TR_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+/** Kampanya şu an canlı mı? Hem tarih aralığı hem saat aralığı geçmeli. */
+export function isCampaignLive(
+  timeStart: string | null,
+  timeEnd: string | null,
+  dateStart: string | null,
+  dateEnd: string | null,
+): boolean {
+  const today = trToday();
+  if (dateStart && today < dateStart) return false;
+  if (dateEnd && today > dateEnd) return false;
+  return isCampaignActive(timeStart, timeEnd);
+}
+
+/** İndirim/zam uygula (tam sayıya yuvarla, negatif olmaz). */
+export function applyDiscount(
+  base: number,
+  type: "percent" | "fixed",
+  value: number,
+): number {
+  const delta = type === "percent" ? (base * value) / 100 : value;
+  return Math.max(0, Math.round(base - delta));
+}
+
 export type Variation = { name: string; icon?: string; price: number };
 
 /** Aktif dile göre kampanya etiketi (yoksa TR'ye düşer). */

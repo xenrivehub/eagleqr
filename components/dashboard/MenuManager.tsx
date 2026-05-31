@@ -28,6 +28,7 @@ import CategoryForm from "./CategoryForm";
 import ProductForm from "./ProductForm";
 import TranslateMenu, { type TargetLang } from "./TranslateMenu";
 import BulkImport from "./BulkImport";
+import BulkPrice from "./BulkPrice";
 import {
   deleteCategory,
   deleteProduct,
@@ -42,7 +43,8 @@ type Panel =
   | { kind: "category-edit"; category: CategoryView }
   | { kind: "product-new"; categoryId: string }
   | { kind: "product-edit"; categoryId: string; product: ProductView }
-  | { kind: "import" };
+  | { kind: "import" }
+  | { kind: "bulk-price" };
 
 type Confirm =
   | { kind: "category"; id: string; name: string }
@@ -141,7 +143,9 @@ export default function MenuManager({
           ? "Yeni Ürün"
           : panel?.kind === "import"
             ? "Toplu İçe Aktar (CSV)"
-            : "Ürünü Düzenle";
+            : panel?.kind === "bulk-price"
+              ? "Toplu Fiyat Güncelleme"
+              : "Ürünü Düzenle";
 
   return (
     <div>
@@ -163,6 +167,16 @@ export default function MenuManager({
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
             </svg>
             Toplu içe aktar
+          </button>
+          <button
+            type="button"
+            onClick={() => setPanel({ kind: "bulk-price" })}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Toplu fiyat
           </button>
           <button
             type="button"
@@ -217,10 +231,18 @@ export default function MenuManager({
           <BulkImport menuId={menuId} onImported={closeAndRefresh} />
         )}
         {panel?.kind === "category-new" && (
-          <CategoryForm menuId={menuId} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} campaigns={campaigns} onDone={closeAndRefresh} />
         )}
         {panel?.kind === "category-edit" && (
-          <CategoryForm menuId={menuId} category={panel.category} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} category={panel.category} campaigns={campaigns} onDone={closeAndRefresh} />
+        )}
+        {panel?.kind === "bulk-price" && (
+          <BulkPrice
+            menuId={menuId}
+            currency={currency}
+            categories={cats.map((c) => ({ id: c.id, name: c.name }))}
+            onDone={closeAndRefresh}
+          />
         )}
         {panel?.kind === "product-new" && (
           <ProductForm

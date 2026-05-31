@@ -16,6 +16,8 @@ export type ProductView = {
   campaignId: string | null;
   campaignStart: string | null;
   campaignEnd: string | null;
+  campaignDateStart: string | null;
+  campaignDateEnd: string | null;
   campaignPrice: string | null;
   availStart: string | null;
   availEnd: string | null;
@@ -31,5 +33,12 @@ export type CategoryView = {
   name: string;
   availStart: string | null;
   availEnd: string | null;
+  campaignId: string | null;
+  campaignStart: string | null;
+  campaignEnd: string | null;
+  campaignDateStart: string | null;
+  campaignDateEnd: string | null;
+  campaignDiscType: string | null;
+  campaignDiscValue: string | null;
   products: ProductView[];
 };

@@ -64,6 +64,8 @@ export default function ProductForm({
   const [campaignId, setCampaignId] = useState<string | null>(product?.campaignId ?? null);
   const [campaignStart, setCampaignStart] = useState(product?.campaignStart ?? "");
   const [campaignEnd, setCampaignEnd] = useState(product?.campaignEnd ?? "");
+  const [campaignDateStart, setCampaignDateStart] = useState(product?.campaignDateStart ?? "");
+  const [campaignDateEnd, setCampaignDateEnd] = useState(product?.campaignDateEnd ?? "");
   const [campaignPrice, setCampaignPrice] = useState(product?.campaignPrice ?? "");
 
   // Servis saatleri (görünürlük penceresi)
@@ -165,6 +167,8 @@ export default function ProductForm({
       campaignId,
       campaignStart: campaignId ? campaignStart || null : null,
       campaignEnd: campaignId ? campaignEnd || null : null,
+      campaignDateStart: campaignId ? campaignDateStart || null : null,
+      campaignDateEnd: campaignId ? campaignDateEnd || null : null,
       campaignPrice: campaignId ? campaignPrice || null : null,
       availStart: availStart || null,
       availEnd: availEnd || null,
@@ -392,8 +396,16 @@ export default function ProductForm({
               <label className="mb-1 block text-xs font-medium text-ink/60">Kampanya fiyatı ({currency.symbol})</label>
               <input inputMode="decimal" value={campaignPrice} onChange={(e) => setCampaignPrice(e.target.value)} placeholder="indirimli" className={`${inputBase} tabular-nums`} />
             </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink/60">Tarih başlangıç</label>
+              <input type="date" value={campaignDateStart} onChange={(e) => setCampaignDateStart(e.target.value)} className={inputBase} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink/60">Tarih bitiş</label>
+              <input type="date" value={campaignDateEnd} onChange={(e) => setCampaignDateEnd(e.target.value)} className={inputBase} />
+            </div>
             <p className="text-xs text-ink/45 sm:col-span-3">
-              Saat aralığı boşsa rozet hep görünür (örn. Happy Hour için 17:00–19:00).
+              Saat/tarih aralığı boşsa hep görünür (örn. Happy Hour 17:00–19:00).
               Kampanya fiyatı girersen eski fiyat üstü çizili gösterilir.
             </p>
           </div>

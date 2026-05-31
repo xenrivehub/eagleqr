@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { isCampaignActive, isWithinWindow } from "@/lib/campaign";
+import { isCampaignLive, isWithinWindow, applyDiscount } from "@/lib/campaign";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import type { MenuBusiness } from "@/components/menu/MenuView";
 
@@ -46,6 +46,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
     where: { menuId },
     orderBy: { sortOrder: "asc" },
     include: {
+      campaign: { select: { label: true, color: true, translations: true, enabled: true } },
       products: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
         include: {
@@ -75,10 +76,37 @@ export async function loadMenuProducts(menuId: string): Promise<{
 
   const products: MenuProduct[] = categories
     .filter((c) => isWithinWindow(c.availStart, c.availEnd))
-    .flatMap((c) =>
-    c.products.filter((p) => isWithinWindow(p.availStart, p.availEnd)).map((p) => {
-      const campActive =
-        p.campaign && p.campaign.enabled && isCampaignActive(p.campaignStart, p.campaignEnd);
+    .flatMap((c) => {
+      // Kategori kampanyası (aktifse) — ürünün kendi kampanyası yoksa uygulanır
+      const cc = c.campaign;
+      const catCamp =
+        cc && cc.enabled && c.campaignDiscType && c.campaignDiscValue != null &&
+        isCampaignLive(c.campaignStart, c.campaignEnd, c.campaignDateStart, c.campaignDateEnd)
+          ? {
+              color: cc.color,
+              label: cc.label,
+              translations: (cc.translations as Record<string, string>) ?? {},
+              discType: c.campaignDiscType as "percent" | "fixed",
+              discValue: Number(c.campaignDiscValue),
+            }
+          : null;
+      return c.products.filter((p) => isWithinWindow(p.availStart, p.availEnd)).map((p) => {
+      const prodLive =
+        p.campaign && p.campaign.enabled &&
+        isCampaignLive(p.campaignStart, p.campaignEnd, p.campaignDateStart, p.campaignDateEnd);
+      let campaign: { color: string; label: string; translations: Record<string, string> } | null = null;
+      let campaignPrice: string | null = null;
+      if (prodLive) {
+        campaign = {
+          color: p.campaign!.color,
+          label: p.campaign!.label,
+          translations: (p.campaign!.translations as Record<string, string>) ?? {},
+        };
+        campaignPrice = p.campaignPrice ? p.campaignPrice.toFixed(2) : null;
+      } else if (catCamp) {
+        campaign = { color: catCamp.color, label: catCamp.label, translations: catCamp.translations };
+        campaignPrice = applyDiscount(Number(p.price), catCamp.discType, catCamp.discValue).toFixed(2);
+      }
       return {
       id: p.id,
       name: p.name,
@@ -97,21 +125,15 @@ export async function loadMenuProducts(menuId: string): Promise<{
         code: a.allergen.code,
         label: a.allergen.label,
       })),
-      campaign: campActive
-        ? {
-            color: p.campaign!.color,
-            label: p.campaign!.label,
-            translations: (p.campaign!.translations as Record<string, string>) ?? {},
-          }
-        : null,
-      campaignPrice: campActive && p.campaignPrice ? p.campaignPrice.toFixed(2) : null,
+      campaign,
+      campaignPrice,
       isSoldOut: p.isSoldOut,
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,
       };
-    }),
-  );
+      });
+    });
 
   const categoryList = categories
     .filter(
