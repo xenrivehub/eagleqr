@@ -17,11 +17,42 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const business = await prisma.business.findUnique({
     where: { slug },
-    select: { name: true },
+    select: {
+      name: true, logoUrl: true, coverUrl: true,
+      seoTitle: true, seoDescription: true, seoKeywords: true,
+    },
   });
+  if (!business) return { title: "Menü" };
+
+  const title = business.seoTitle || `${business.name} — Menü | Dijital QR Menü`;
+  const description =
+    business.seoDescription ||
+    `${business.name} dijital menüsü. QR ile açın; güncel fiyatlar, fotoğraflı ürünler, alerjen bilgisi ve çok dilli menü.`;
+  const keywords = business.seoKeywords
+    ? business.seoKeywords.split(",").map((k) => k.trim()).filter(Boolean)
+    : ["qr menü", "dijital menü", business.name, "menü", "restoran menü"];
+  const image = business.coverUrl || business.logoUrl || undefined;
+
   return {
-    title: business ? `${business.name} — Menü` : "Menü",
-    description: business ? `${business.name} dijital menüsü` : undefined,
+    title,
+    description,
+    keywords,
+    alternates: { canonical: `/m/${slug}` },
+    robots: { index: true, follow: true },
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: `/m/${slug}`,
+      siteName: business.name,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
 }
 
@@ -96,8 +127,21 @@ export default async function CustomerMenuPage({ params }: Params) {
   ]);
   const ui = await getUiStrings(["tr", ...languages.map((l) => l.code)]);
 
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: business.name,
+    ...(business.coverUrl || business.logoUrl ? { image: business.coverUrl || business.logoUrl } : {}),
+    ...(business.address ? { address: business.address } : {}),
+    ...(business.phone ? { telephone: business.phone } : {}),
+    url: `/m/${slug}`,
+    hasMenu: `/m/${slug}`,
+    servesCuisine: "Çeşitli",
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
       <ThemedMenu
         theme={theme}

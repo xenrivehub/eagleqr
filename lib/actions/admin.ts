@@ -143,6 +143,28 @@ export async function setPlanLimit(
   }
 }
 
+// İşletme SEO ayarları
+export async function setBusinessSeo(
+  id: string,
+  seo: { title: string; description: string; keywords: string },
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.business.update({
+      where: { id },
+      data: {
+        seoTitle: seo.title.trim() || null,
+        seoDescription: seo.description.trim() || null,
+        seoKeywords: seo.keywords.trim() || null,
+      },
+    });
+    revalidatePath("/admin/seo");
+    return { success: true };
+  } catch {
+    return { success: false, error: "SEO kaydedilemedi." };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Kampanya etiketleri (dinamik)
 // ---------------------------------------------------------------------------

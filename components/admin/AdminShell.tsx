@@ -14,6 +14,7 @@ const nav = [
   { href: "/admin/currencies", label: "Para Birimleri", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" },
   { href: "/admin/ui-strings", label: "Arayüz Metinleri", icon: "M4 7V4h16v3M9 20h6M12 4v16" },
   { href: "/admin/campaigns", label: "Kampanya Etiketleri", icon: "M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" },
+  { href: "/admin/seo", label: "SEO Ayarları", icon: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5" },
 ];
 
 export default function AdminShell({

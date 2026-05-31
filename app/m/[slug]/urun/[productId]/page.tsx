@@ -58,9 +58,21 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug, productId } = await params;
   const data = await getProduct(slug, productId);
   if (!data) return { title: "Ürün" };
+  const p = data.product;
+  const title = `${p.name} — ${p.business.name}`;
+  const description = p.description ?? `${p.name} · ${p.business.name} menüsü`;
+  const img = p.imageUrl ?? undefined;
   return {
-    title: `${data.product.name} — ${data.product.business.name}`,
-    description: data.product.description ?? undefined,
+    title,
+    description,
+    alternates: { canonical: `/m/${slug}/urun/${productId}` },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: img ? [{ url: img }] : undefined,
+    },
+    twitter: { card: "summary_large_image", title, description, images: img ? [img] : undefined },
   };
 }
 

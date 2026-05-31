@@ -97,6 +97,10 @@ model Business {
   openingHours String? // açık saatler (serbest metin)
   mapUrl       String? // Google Maps linki (yol tarifi)
   socialLinks  Json     @default("{}") // { instagram, tiktok, facebook, x, youtube, website }
+  // SEO (admin panelinden ayarlanır)
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String?
   currency     String   @default("TRY") // görüntüleme para birimi (ISO 4217, bkz. lib/currency.ts)
   themeKey     String   @default("mineral") // müşteri menüsü teması (bkz. lib/themes.ts)
   allowedThemes String[] @default([]) // admin'in açtığı premium temalar (free temalar her zaman açık)
