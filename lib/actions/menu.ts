@@ -4,8 +4,36 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
+import { isValidTime } from "@/lib/campaign";
 
 type ActionResult = { success: true } | { success: false; error: string };
+
+type CampaignData = {
+  campaignId: string | null;
+  campaignStart: string | null;
+  campaignEnd: string | null;
+  campaignPrice: number | null;
+};
+
+/** Kampanya alanlarını doğrular (geçerli/açık kampanya, HH:MM, fiyat). */
+async function campaignData(input: ProductInput): Promise<CampaignData> {
+  const none: CampaignData = { campaignId: null, campaignStart: null, campaignEnd: null, campaignPrice: null };
+  if (!input.campaignId) return none;
+  const c = await prisma.campaign.findFirst({
+    where: { id: input.campaignId, enabled: true },
+    select: { id: true },
+  });
+  if (!c) return none;
+
+  const start = input.campaignStart && isValidTime(input.campaignStart) ? input.campaignStart.trim() : null;
+  const end = input.campaignEnd && isValidTime(input.campaignEnd) ? input.campaignEnd.trim() : null;
+  let price: number | null = null;
+  if (input.campaignPrice) {
+    const n = Number(String(input.campaignPrice).replace(",", "."));
+    if (Number.isFinite(n) && n >= 0) price = n;
+  }
+  return { campaignId: c.id, campaignStart: start, campaignEnd: end, campaignPrice: price };
+}
 
 async function requireBusinessId(): Promise<string> {
   const session = await auth();
@@ -104,6 +132,10 @@ export type ProductInput = {
   isNew?: boolean;
   isPopular?: boolean;
   pairedIds?: string[];
+  campaignId?: string | null;
+  campaignStart?: string | null;
+  campaignEnd?: string | null;
+  campaignPrice?: string | null;
 };
 
 /** Ürünün "yanında iyi gider" eşleşmelerini değiştirir (aynı menü, kendisi hariç). */
@@ -236,6 +268,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     const created = await prisma.product.create({
       data: {
         ...parsed.data,
+        ...(await campaignData(input)),
         categoryId: input.categoryId,
         businessId,
         imageUrl: input.imageUrl || null,
@@ -283,6 +316,7 @@ export async function updateProduct(
       where: { id },
       data: {
         ...parsed.data,
+        ...(await campaignData(input)),
         categoryId: input.categoryId,
         imageUrl: input.imageUrl ?? null,
         videoUrl: input.videoUrl ?? null,

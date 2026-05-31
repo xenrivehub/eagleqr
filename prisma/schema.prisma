@@ -224,6 +224,12 @@ model Product {
   modelGlbUrl String? // R2: 3D model (web / Android AR)
   modelUsdzUrl String? // R2: 3D model (iOS AR)
   translations Json    @default("{}") // { en: { name, description }, de: {...} }
+  // Kampanya (opsiyonel)
+  campaignId    String?
+  campaign      Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  campaignStart String? // "HH:MM" — boşsa hep aktif
+  campaignEnd   String? // "HH:MM"
+  campaignPrice Decimal? @db.Decimal(10, 2) // kampanya fiyatı; varsa eski fiyat üstü çizili gösterilir
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -235,6 +241,7 @@ model Product {
 
   @@index([categoryId, sortOrder])
   @@index([businessId])
+  @@index([campaignId])
 }
 
 // "Yanında iyi gider" — ürünler arası yönlü eşleşme (tek yön).
@@ -374,6 +381,19 @@ model UiTranslation {
 
   @@id([lang, key])
   @@index([lang])
+}
+
+// Kampanya etiketleri — admin panelinden eklenir/açılır. İşletme ürüne atar.
+model Campaign {
+  id           String   @id @default(cuid())
+  label        String // Türkçe/temel etiket: "Happy Hour"
+  color        String   @default("#ea580c") // rozet rengi (hex)
+  translations Json     @default("{}") // { en: "Happy Hour", de: "..." }
+  enabled      Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  products Product[]
 }
 
 // Para birimleri — admin panelinden eklenir/açılır. İşletme birini seçer.

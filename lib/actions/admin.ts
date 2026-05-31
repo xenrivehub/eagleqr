@@ -144,6 +144,73 @@ export async function setPlanLimit(
 }
 
 // ---------------------------------------------------------------------------
+// Kampanya etiketleri (dinamik)
+// ---------------------------------------------------------------------------
+
+export async function addCampaign(label: string, color: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!label.trim()) return { success: false, error: "Etiket adı gerekli." };
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) return { success: false, error: "Geçersiz renk." };
+    const max = await prisma.campaign.aggregate({ _max: { sortOrder: true } });
+    await prisma.campaign.create({
+      data: { label: label.trim(), color, sortOrder: (max._max.sortOrder ?? 0) + 1 },
+    });
+    revalidatePath("/admin/campaigns");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kampanya eklenemedi." };
+  }
+}
+
+export async function updateCampaign(
+  id: string,
+  label: string,
+  color: string,
+  translations: Record<string, string>,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!label.trim()) return { success: false, error: "Etiket adı gerekli." };
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) return { success: false, error: "Geçersiz renk." };
+    const clean: Record<string, string> = {};
+    for (const [k, v] of Object.entries(translations)) {
+      if (v && v.trim()) clean[k] = v.trim();
+    }
+    await prisma.campaign.update({
+      where: { id },
+      data: { label: label.trim(), color, translations: clean },
+    });
+    revalidatePath("/admin/campaigns");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kampanya güncellenemedi." };
+  }
+}
+
+export async function toggleCampaign(id: string, enabled: boolean): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.campaign.update({ where: { id }, data: { enabled } });
+    revalidatePath("/admin/campaigns");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kampanya güncellenemedi." };
+  }
+}
+
+export async function deleteCampaign(id: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    await prisma.campaign.delete({ where: { id } });
+    revalidatePath("/admin/campaigns");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kampanya silinemedi." };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Para birimleri (dinamik)
 // ---------------------------------------------------------------------------
 

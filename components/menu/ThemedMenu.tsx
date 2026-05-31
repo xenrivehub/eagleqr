@@ -108,6 +108,7 @@ export default function ThemedMenu({
   const activeAllerCount = allerReady ? allerSel.length : 0;
 
   const featured = products.filter((p) => p.isFeatured).slice(0, 6);
+  const deals = products.filter((p) => p.campaign);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("tr");
@@ -171,7 +172,35 @@ export default function ThemedMenu({
   const itemTags = (p: MenuProduct) =>
     [p.isFeatured && T("chefPick"), p.isPopular && T("popular"), p.isNew && T("isNew")].filter(Boolean) as string[];
 
-  const Price = ({ p }: { p: MenuProduct }) => <span style={{ ...priceStyle, fontSize: 14, whiteSpace: "nowrap" }}>{formatPrice(p.price, currency)}</span>;
+  // kampanya etiketi (aktif dile göre)
+  const campLabel = (p: MenuProduct) =>
+    p.campaign ? (activeLang !== "tr" && p.campaign.translations?.[activeLang]) || p.campaign.label : "";
+  const campaignBadge = (p: MenuProduct) =>
+    p.campaign ? (
+      <span style={{ display: "inline-block", background: p.campaign.color, color: "#fff", fontSize: 9.5, fontWeight: 800, letterSpacing: "0.04em", borderRadius: 999, padding: "2px 9px" }}>
+        {campLabel(p)}
+      </span>
+    ) : null;
+
+  // fiyat (kampanya indirimi varsa eski fiyat üstü çizili)
+  const PriceTag = ({ p, size = 14 }: { p: MenuProduct; size?: number }) => {
+    const sale = p.campaign && p.campaignPrice;
+    const main = (
+      <span style={{ ...priceStyle, fontSize: size, whiteSpace: "nowrap" }}>
+        {formatPrice(sale ? p.campaignPrice! : p.price, currency)}
+      </span>
+    );
+    if (!sale) return main;
+    return (
+      <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6 }}>
+        <span style={{ fontSize: size - 3, color: c.faint, textDecoration: "line-through", whiteSpace: "nowrap" }}>
+          {formatPrice(p.price, currency)}
+        </span>
+        {main}
+      </span>
+    );
+  };
+  const Price = ({ p }: { p: MenuProduct }) => <PriceTag p={p} size={14} />;
 
   // video / AR işareti — ürün adının yanına küçük rozet
   const mediaMark = (p: MenuProduct) =>
@@ -300,10 +329,11 @@ export default function ThemedMenu({
       // à la carte: ad ...... fiyat
       return (
         <Link href={href} style={{ display: "block", padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim }}>
+          {p.campaign && <div style={{ marginBottom: 8 }}>{campaignBadge(p)}</div>}
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span style={nameStyle}>{nm(p)}{mediaMark(p)}</span>
             <span style={{ flex: 1, borderBottom: `1px dotted ${c.line}`, margin: "0 4px", transform: "translateY(-5px)" }} />
-            <span style={{ ...priceStyle, fontSize: 18, whiteSpace: "nowrap" }}>{formatPrice(p.price, currency)}</span>
+            <PriceTag p={p} size={18} />
           </div>
           {p.description && <p style={{ margin: "8px 0 0", fontSize: 12.5, lineHeight: 1.6, color: c.sub }}>{ds(p)}</p>}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>{ratingMark(p)}{warnBadge(conf)}</div>
@@ -316,6 +346,7 @@ export default function ThemedMenu({
         <Link href={href} style={{ display: "flex", gap: 14, padding: "16px 2px", borderBottom: `${t.cardBorder.startsWith("2") ? "2px" : "1px"} solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim }}>
           <div style={{ flex: "0 0 26px", fontFamily: t.fonts.display, fontSize: 20, color: c.accent, lineHeight: 1, paddingTop: 2 }}>{String(index + 1).padStart(2, "0")}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
+            {p.campaign && <div style={{ marginBottom: 6 }}>{campaignBadge(p)}</div>}
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
               <span style={display({ fontSize: 18, fontWeight: 800, lineHeight: 1.05 })}>{nm(p)}{mediaMark(p)}</span>
               <Price p={p} />
@@ -341,6 +372,7 @@ export default function ThemedMenu({
       <Link href={href} style={wrapperStyle}>
         <div style={{ flex: "0 0 78px" }}><ImgFrame src={p.imageUrl} h={78} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
+          {p.campaign && <div style={{ marginBottom: 6 }}>{campaignBadge(p)}</div>}
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
             <span style={nameStyle}>{nm(p)}{mediaMark(p)}</span>
             <Price p={p} />
@@ -408,6 +440,25 @@ export default function ThemedMenu({
           </div>
         ) : (
           <>
+            {/* FIRSATLAR (kampanya) */}
+            {deals.length > 0 && (
+              <section style={{ marginBottom: 32 }}>
+                <h3 style={display({ margin: "0 0 16px", fontSize: 18, fontWeight: 700 })}>🔥 {T("deals")}</h3>
+                <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
+                  {deals.map((p) => (
+                    <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 170, flex: "0 0 170px", textDecoration: "none", color: c.ink, position: "relative", ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
+                      <div style={{ position: "relative" }}>
+                        <ImgFrame src={p.imageUrl} h={108} />
+                        <div style={{ position: "absolute", top: 8, left: 8 }}>{campaignBadge(p)}</div>
+                      </div>
+                      <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
+                      <div style={{ marginTop: 6 }}><PriceTag p={p} size={13} /></div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* CHEF PICKS */}
             {featured.length > 0 && (
               <section style={{ marginBottom: 32 }}>
@@ -421,9 +472,10 @@ export default function ThemedMenu({
                     return (
                     <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 160, flex: "0 0 160px", textDecoration: "none", color: c.ink, ...(conf.length ? { opacity: 0.5 } : {}), ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
                       <ImgFrame src={p.imageUrl} h={108} />
+                      {p.campaign && <div style={{ marginTop: 8 }}>{campaignBadge(p)}</div>}
                       <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
                       {conf.length > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: "#e0524a", marginTop: 4 }}>⚠ {conf.join(", ")}</div>}
-                      <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}><span style={{ ...priceStyle, fontSize: 13, display: "inline-block" }}>{formatPrice(p.price, currency)}</span>{ratingMark(p)}</div>
+                      <div style={{ marginTop: 6, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}><PriceTag p={p} size={13} />{ratingMark(p)}</div>
                     </Link>
                     );
                   })}

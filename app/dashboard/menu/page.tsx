@@ -8,6 +8,7 @@ import { loadMenuForManager } from "@/lib/queries/menu";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
+import { getEnabledCampaigns } from "@/lib/queries/campaigns";
 import MenuManager from "@/components/dashboard/MenuManager";
 
 export default async function MenuPage() {
@@ -42,11 +43,12 @@ export default async function MenuPage() {
       );
     }
 
-    const [{ categories, allergens }, media, languages, currency] = await Promise.all([
+    const [{ categories, allergens }, media, languages, currency, campaigns] = await Promise.all([
       loadMenuForManager(active.id),
       getMediaEntitlements(businessId),
       getEnabledLanguages(),
       getCurrencySpec(business.currency),
+      getEnabledCampaigns(),
     ]);
 
     return (
@@ -62,23 +64,24 @@ export default async function MenuPage() {
             Şubeleri yönet ({branches.length}) →
           </Link>
         </div>
-        <MenuManager menuId={active.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} />
+        <MenuManager menuId={active.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} campaigns={campaigns} />
       </div>
     );
   }
 
   // Tekil işletme → tek menü
   const menu = await getOrCreateDefaultMenu(businessId);
-  const [{ categories, allergens }, media, languages, currency] = await Promise.all([
+  const [{ categories, allergens }, media, languages, currency, campaigns] = await Promise.all([
     loadMenuForManager(menu.id),
     getMediaEntitlements(businessId),
     getEnabledLanguages(),
     getCurrencySpec(business.currency),
+    getEnabledCampaigns(),
   ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
-      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} />
+      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} campaigns={campaigns} />
     </div>
   );
 }

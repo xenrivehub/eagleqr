@@ -19,6 +19,7 @@ export default function ProductForm({
   media,
   currency,
   menuProducts,
+  campaigns,
   onDone,
 }: {
   categoryId: string;
@@ -27,6 +28,7 @@ export default function ProductForm({
   media: MediaEntitlements;
   currency: CurrencySpec;
   menuProducts: { id: string; name: string }[];
+  campaigns: { id: string; label: string; color: string }[];
   onDone: () => void;
 }) {
   const [selected, setSelected] = useState<string[]>(product?.allergenIds ?? []);
@@ -57,6 +59,12 @@ export default function ProductForm({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiText, setAiText] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  // Kampanya
+  const [campaignId, setCampaignId] = useState<string | null>(product?.campaignId ?? null);
+  const [campaignStart, setCampaignStart] = useState(product?.campaignStart ?? "");
+  const [campaignEnd, setCampaignEnd] = useState(product?.campaignEnd ?? "");
+  const [campaignPrice, setCampaignPrice] = useState(product?.campaignPrice ?? "");
 
   // Eşleşen ürünler ("yanında iyi gider")
   const [pairedIds, setPairedIds] = useState<string[]>(product?.pairedIds ?? []);
@@ -136,6 +144,10 @@ export default function ProductForm({
       isNew,
       isPopular,
       pairedIds,
+      campaignId,
+      campaignStart: campaignId ? campaignStart || null : null,
+      campaignEnd: campaignId ? campaignEnd || null : null,
+      campaignPrice: campaignId ? campaignPrice || null : null,
     };
 
     setPending(true);
@@ -288,6 +300,60 @@ export default function ProductForm({
             </button>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium text-ink">Kampanya</legend>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setCampaignId(null)}
+            className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              campaignId === null ? "border-ink bg-ink text-cream" : "border-ink/15 text-ink/60 hover:bg-ink/5"
+            }`}
+          >
+            Yok
+          </button>
+          {campaigns.map((c) => {
+            const on = campaignId === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCampaignId(c.id)}
+                className="cursor-pointer rounded-full border px-3 py-1.5 text-xs font-bold transition-all"
+                style={
+                  on
+                    ? { background: c.color, color: "#fff", borderColor: c.color }
+                    : { borderColor: c.color, color: c.color }
+                }
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {campaignId && (
+          <div className="mt-3 grid gap-3 rounded-xl border border-ink/10 bg-cream/50 p-3 sm:grid-cols-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink/60">Başlangıç saati</label>
+              <input type="time" value={campaignStart} onChange={(e) => setCampaignStart(e.target.value)} className={inputBase} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink/60">Bitiş saati</label>
+              <input type="time" value={campaignEnd} onChange={(e) => setCampaignEnd(e.target.value)} className={inputBase} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-ink/60">Kampanya fiyatı ({currency.symbol})</label>
+              <input inputMode="decimal" value={campaignPrice} onChange={(e) => setCampaignPrice(e.target.value)} placeholder="indirimli" className={`${inputBase} tabular-nums`} />
+            </div>
+            <p className="text-xs text-ink/45 sm:col-span-3">
+              Saat aralığı boşsa rozet hep görünür (örn. Happy Hour için 17:00–19:00).
+              Kampanya fiyatı girersen eski fiyat üstü çizili gösterilir.
+            </p>
+          </div>
+        )}
       </fieldset>
 
       <fieldset>

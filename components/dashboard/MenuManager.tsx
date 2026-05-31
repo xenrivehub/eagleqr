@@ -54,6 +54,7 @@ export default function MenuManager({
   media,
   languages,
   currency,
+  campaigns,
 }: {
   menuId: string;
   categories: CategoryView[];
@@ -61,6 +62,7 @@ export default function MenuManager({
   media: MediaEntitlements;
   languages: TargetLang[];
   currency: CurrencySpec;
+  campaigns: { id: string; label: string; color: string }[];
 }) {
   const router = useRouter();
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -215,6 +217,7 @@ export default function MenuManager({
             media={media}
             currency={currency}
             menuProducts={menuProducts}
+            campaigns={campaigns}
             onDone={closeAndRefresh}
           />
         )}
@@ -226,6 +229,7 @@ export default function MenuManager({
             media={media}
             currency={currency}
             menuProducts={menuProducts}
+            campaigns={campaigns}
             onDone={closeAndRefresh}
           />
         )}

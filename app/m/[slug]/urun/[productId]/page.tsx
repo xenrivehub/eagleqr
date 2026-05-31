@@ -9,6 +9,7 @@ import { allergenLabel } from "@/lib/allergen-i18n";
 import { formatPrice } from "@/lib/currency";
 import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
+import { isCampaignActive } from "@/lib/campaign";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
@@ -26,6 +27,7 @@ async function getProduct(slug: string, productId: string) {
         select: { id: true, name: true, translations: true, menu: { select: { id: true, slug: true } } },
       },
       allergens: { include: { allergen: true } },
+      campaign: { select: { label: true, color: true, translations: true, enabled: true } },
       pairings: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -80,6 +82,19 @@ export default async function ProductDetailPage({ params }: Params) {
 
   const currency = await getCurrencySpec(product.business.currency);
   const ui = (await getUiStrings([lang]))[lang];
+
+  // Kampanya (aktifse)
+  const campActive =
+    product.campaign?.enabled && isCampaignActive(product.campaignStart, product.campaignEnd);
+  const campaign = campActive
+    ? {
+        color: product.campaign!.color,
+        label:
+          (lang !== "tr" && (product.campaign!.translations as Record<string, string>)?.[lang]) ||
+          product.campaign!.label,
+      }
+    : null;
+  const campaignPrice = campActive && product.campaignPrice ? product.campaignPrice : null;
 
   const pairedItems = product.pairings.map((pp) => {
     const ptr = (pp.paired.translations as Record<string, { name?: string }>) ?? {};
@@ -190,8 +205,13 @@ export default async function ProductDetailPage({ params }: Params) {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-menu-bg via-menu-bg/20 to-transparent" />
-          {badges.length > 0 && (
+          {(badges.length > 0 || campaign) && (
             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+              {campaign && (
+                <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white" style={{ background: campaign.color }}>
+                  {campaign.label}
+                </span>
+              )}
               {badges.map((b) => (
                 <span key={b} className="rounded-full bg-menu-bg/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-menu-gold backdrop-blur">
                   {b}
@@ -233,9 +253,20 @@ export default async function ProductDetailPage({ params }: Params) {
               <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} label={ui.viewInAR} />
             )}
           </div>
-          <span className="font-display text-2xl font-bold text-menu-gold">
-            {formatPrice(product.price.toFixed(2), currency)}
-          </span>
+          {campaignPrice ? (
+            <span className="flex items-baseline gap-2">
+              <span className="font-display text-base text-menu-muted line-through">
+                {formatPrice(product.price.toFixed(2), currency)}
+              </span>
+              <span className="font-display text-2xl font-bold text-menu-gold">
+                {formatPrice(campaignPrice.toFixed(2), currency)}
+              </span>
+            </span>
+          ) : (
+            <span className="font-display text-2xl font-bold text-menu-gold">
+              {formatPrice(product.price.toFixed(2), currency)}
+            </span>
+          )}
         </div>
 
         {rating && (

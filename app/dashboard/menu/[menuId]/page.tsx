@@ -6,6 +6,7 @@ import { loadMenuForManager } from "@/lib/queries/menu";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
+import { getEnabledCampaigns } from "@/lib/queries/campaigns";
 import MenuManager from "@/components/dashboard/MenuManager";
 
 type Params = { params: Promise<{ menuId: string }> };
@@ -25,11 +26,12 @@ export default async function BranchMenuPage({ params }: Params) {
     where: { id: session.user.businessId },
     select: { currency: true },
   });
-  const [{ categories, allergens }, media, languages, currency] = await Promise.all([
+  const [{ categories, allergens }, media, languages, currency, campaigns] = await Promise.all([
     loadMenuForManager(menu.id),
     getMediaEntitlements(session.user.businessId),
     getEnabledLanguages(),
     getCurrencySpec(biz?.currency),
+    getEnabledCampaigns(),
   ]);
 
   return (
@@ -49,7 +51,7 @@ export default async function BranchMenuPage({ params }: Params) {
         </p>
         <h2 className="font-display text-xl font-bold text-ink">{menu.name}</h2>
       </div>
-      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} />
+      <MenuManager menuId={menu.id} categories={categories} allergens={allergens} media={media} languages={languages} currency={currency} campaigns={campaigns} />
     </div>
   );
 }

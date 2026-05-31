@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { isCampaignActive } from "@/lib/campaign";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import type { MenuBusiness } from "@/components/menu/MenuView";
 
@@ -43,7 +44,10 @@ export async function loadMenuProducts(menuId: string): Promise<{
     include: {
       products: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-        include: { allergens: { include: { allergen: true } } },
+        include: {
+          allergens: { include: { allergen: true } },
+          campaign: { select: { label: true, color: true, translations: true, enabled: true } },
+        },
       },
     },
   });
@@ -66,7 +70,10 @@ export async function loadMenuProducts(menuId: string): Promise<{
   );
 
   const products: MenuProduct[] = categories.flatMap((c) =>
-    c.products.map((p) => ({
+    c.products.map((p) => {
+      const campActive =
+        p.campaign && p.campaign.enabled && isCampaignActive(p.campaignStart, p.campaignEnd);
+      return {
       id: p.id,
       name: p.name,
       description: p.description,
@@ -84,10 +91,19 @@ export async function loadMenuProducts(menuId: string): Promise<{
         code: a.allergen.code,
         label: a.allergen.label,
       })),
+      campaign: campActive
+        ? {
+            color: p.campaign!.color,
+            label: p.campaign!.label,
+            translations: (p.campaign!.translations as Record<string, string>) ?? {},
+          }
+        : null,
+      campaignPrice: campActive && p.campaignPrice ? p.campaignPrice.toFixed(2) : null,
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,
-    })),
+      };
+    }),
   );
 
   const categoryList = categories
