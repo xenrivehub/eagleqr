@@ -3,6 +3,7 @@ import Link from "next/link";
 import Navbar from "@/components/site/Navbar";
 import Footer from "@/components/site/Footer";
 import Faq from "@/components/landing/Faq";
+import Pricing from "@/components/landing/Pricing";
 import Stats from "@/components/landing/Stats";
 import Reveal from "@/components/site/Reveal";
 
@@ -54,42 +55,6 @@ const features = [
     title: "Çok Dil & KVKK",
     desc: "10 dile kadar menü, KVKK/GDPR uyumlu veri yaklaşımı ve 2FA korumalı panel.",
     icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z",
-  },
-];
-
-const tiers = [
-  {
-    name: "Standart",
-    desc: "Tek lokasyonlu küçük işletmeler için.",
-    features: [
-      "Sınırsız görsel ürün",
-      "2 ücretsiz tema (Mineral & Maison)",
-      "Menü editörü & QR kod",
-      "Çok dil desteği & temel analitik",
-    ],
-    featured: false,
-  },
-  {
-    name: "Pro",
-    desc: "Büyüyen işletmeler için en popüler paket.",
-    features: [
-      "Standart'taki her şey",
-      "Videolu ürünler",
-      "+1 premium tema hakkı",
-      "Gelişmiş analitik & heatmap",
-    ],
-    featured: true,
-  },
-  {
-    name: "Max",
-    desc: "Premium deneyim isteyen işletmeler için.",
-    features: [
-      "Pro'daki her şey",
-      "AR / 3D ürünler (model-viewer)",
-      "Tüm temalara erişim",
-      "Çoklu şube & öncelikli destek",
-    ],
-    featured: false,
   },
 ];
 
@@ -283,70 +248,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing — Yakında */}
+        {/* Pricing */}
         <section id="fiyatlandirma" className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-dark">
-              Fiyatlandırma
-            </p>
-            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-              İşletmenize uygun paketi seçin
-            </h2>
-            <p className="mt-3 text-ink/60">
-              Fiyatlandırma yakında açıklanacak. Erken erişim için ücretsiz
-              denemeyle başlayabilirsiniz.
-            </p>
-          </Reveal>
-          <div className="mt-12 grid items-start gap-6 md:grid-cols-3">
-            {tiers.map((tier, i) => (
-              <Reveal key={tier.name} delay={i * 100}>
-                <div
-                  className={`relative rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                    tier.featured
-                      ? "border-transparent bg-ink text-cream shadow-xl md:-translate-y-2"
-                      : "border-ink/10 bg-white text-ink"
-                  }`}
-                >
-                  {tier.featured && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-brand px-3 py-1 text-xs font-bold text-ink">
-                      En Popüler
-                    </span>
-                  )}
-                  <h3 className="font-display text-lg font-semibold">{tier.name}</h3>
-                  <p
-                    className={`mt-1 text-sm ${tier.featured ? "text-cream/70" : "text-ink/60"}`}
-                  >
-                    {tier.desc}
-                  </p>
-                  <div className="mt-5">
-                    <span className="font-display text-3xl font-bold">Yakında</span>
-                  </div>
-                  <Link
-                    href="/register"
-                    className={`mt-5 block rounded-full px-4 py-2.5 text-center text-sm font-semibold transition-all hover:scale-[1.02] active:scale-95 ${focusRing} ${
-                      tier.featured
-                        ? "bg-brand text-ink hover:bg-brand-dark"
-                        : "border border-ink/15 text-ink hover:bg-ink/5"
-                    }`}
-                  >
-                    Ücretsiz Başla
-                  </Link>
-                  <ul className="mt-6 space-y-3 text-sm">
-                    {tier.features.map((feat) => (
-                      <li key={feat} className="flex items-start gap-2">
-                        <Check className="mt-0.5 shrink-0 text-brand-dark" />
-                        <span
-                          className={tier.featured ? "text-cream/80" : "text-ink/70"}
-                        >
-                          {feat}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <Pricing />
         </section>
 
         {/* FAQ */}

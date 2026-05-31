@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { getMediaEntitlements } from "@/lib/queries/entitlements";
+import { hasFeature } from "@/lib/queries/plan-features";
 import { isValidTime } from "@/lib/campaign";
 
 function cleanTime(t?: string | null): string | null {
@@ -27,12 +28,13 @@ type CampaignData = {
 };
 
 /** Kampanya alanlarını doğrular (geçerli/açık kampanya, HH:MM, fiyat). */
-async function campaignData(input: ProductInput): Promise<CampaignData> {
+async function campaignData(input: ProductInput, businessId: string): Promise<CampaignData> {
   const none: CampaignData = {
     campaignId: null, campaignStart: null, campaignEnd: null,
     campaignDateStart: null, campaignDateEnd: null, campaignPrice: null,
   };
   if (!input.campaignId) return none;
+  if (!(await hasFeature(businessId, "campaigns"))) return none;
   const c = await prisma.campaign.findFirst({
     where: { id: input.campaignId, enabled: true },
     select: { id: true },
@@ -95,7 +97,7 @@ export type CategoryInput = {
   campaignDiscValue?: string | null;
 };
 
-async function categoryCampaignData(input: CategoryInput) {
+async function categoryCampaignData(input: CategoryInput, businessId: string) {
   const none = {
     campaignId: null as string | null,
     campaignStart: null as string | null,
@@ -106,6 +108,7 @@ async function categoryCampaignData(input: CategoryInput) {
     campaignDiscValue: null as number | null,
   };
   if (!input.campaignId) return none;
+  if (!(await hasFeature(businessId, "campaigns"))) return none;
   const c = await prisma.campaign.findFirst({
     where: { id: input.campaignId, enabled: true },
     select: { id: true },
@@ -149,7 +152,7 @@ export async function createCategory(
         name: trimmed,
         availStart: cleanTime(input.availStart),
         availEnd: cleanTime(input.availEnd),
-        ...(await categoryCampaignData(input)),
+        ...(await categoryCampaignData(input, businessId)),
       },
     });
     revalidatePath("/dashboard/menu");
@@ -176,7 +179,7 @@ export async function updateCategory(
         name: trimmed,
         availStart: cleanTime(input.availStart),
         availEnd: cleanTime(input.availEnd),
-        ...(await categoryCampaignData(input)),
+        ...(await categoryCampaignData(input, businessId)),
       },
     });
     revalidatePath("/dashboard/menu");
@@ -369,7 +372,7 @@ export async function createProduct(input: ProductInput): Promise<ActionResult> 
     const created = await prisma.product.create({
       data: {
         ...parsed.data,
-        ...(await campaignData(input)),
+        ...(await campaignData(input, businessId)),
         availStart: cleanTime(input.availStart),
         availEnd: cleanTime(input.availEnd),
         variations: sanitizeVariations(input.variations),
@@ -420,7 +423,7 @@ export async function updateProduct(
       where: { id },
       data: {
         ...parsed.data,
-        ...(await campaignData(input)),
+        ...(await campaignData(input, businessId)),
         availStart: cleanTime(input.availStart),
         availEnd: cleanTime(input.availEnd),
         variations: sanitizeVariations(input.variations),
@@ -529,6 +532,9 @@ export async function bulkUpdatePrices(
     const businessId = await requireBusinessId();
     const menu = await prisma.menu.findFirst({ where: { id: menuId, businessId }, select: { id: true } });
     if (!menu) return { ok: false, error: "Menü bulunamadı." };
+    if (!(await hasFeature(businessId, "bulkPrice"))) {
+      return { ok: false, error: "Toplu fiyat yönetimi planınızda kapalı." };
+    }
     if (opts.op !== "discount" && opts.op !== "increase") return { ok: false, error: "Geçersiz işlem." };
     if (opts.method !== "percent" && opts.method !== "fixed") return { ok: false, error: "Geçersiz yöntem." };
     if (!Number.isFinite(opts.value) || opts.value <= 0) return { ok: false, error: "Geçerli bir değer girin." };

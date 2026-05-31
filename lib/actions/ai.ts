@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { hasFeature } from "@/lib/queries/plan-features";
 
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -26,6 +27,9 @@ export async function generateDescription(
   const session = await auth();
   const businessId = session?.user?.businessId;
   if (!businessId) return { success: false, error: "Yetkisiz erişim." };
+  if (!(await hasFeature(businessId, "ai"))) {
+    return { success: false, error: "AI önerileri planınızda kapalı." };
+  }
 
   const productName = name.trim();
   if (productName.length < 2) {
@@ -100,6 +104,9 @@ export async function suggestPairings(
   const session = await auth();
   const businessId = session?.user?.businessId;
   if (!businessId) return { success: false, error: "Yetkisiz erişim." };
+  if (!(await hasFeature(businessId, "ai"))) {
+    return { success: false, error: "AI önerileri planınızda kapalı." };
+  }
   const productName = name.trim();
   if (productName.length < 2) return { success: false, error: "Önce ürün adını girin." };
   if (!process.env.OPENROUTER_API_KEY) {

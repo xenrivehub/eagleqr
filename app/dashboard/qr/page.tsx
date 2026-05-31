@@ -12,7 +12,7 @@ export default async function QrPage() {
 
   const business = await prisma.business.findUnique({
     where: { id: businessId },
-    select: { name: true, slug: true, type: true },
+    select: { name: true, slug: true, type: true, logoUrl: true },
   });
   if (!business) redirect("/login");
 
@@ -42,6 +42,7 @@ export default async function QrPage() {
             path={`/m/${business.slug}/${active.slug}`}
             slug={`${business.slug}-${active.slug}`}
             businessName={`${business.name} · ${active.name}`}
+            logoUrl={business.logoUrl}
           />
         </div>
       </div>
@@ -56,7 +57,7 @@ export default async function QrPage() {
         Menünüzün QR kodunu indirip masalarınızda kullanın.
       </p>
       <div className="mt-8">
-        <QrCode path={`/m/${business.slug}`} slug={business.slug} businessName={business.name} />
+        <QrCode path={`/m/${business.slug}`} slug={business.slug} businessName={business.name} logoUrl={business.logoUrl} />
       </div>
     </div>
   );

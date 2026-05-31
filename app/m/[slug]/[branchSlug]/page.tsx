@@ -5,8 +5,10 @@ import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
+import { cookies } from "next/headers";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
+import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
 
 type Params = { params: Promise<{ slug: string; branchSlug: string }> };
 
@@ -39,6 +41,23 @@ export default async function BranchMenuPage({ params }: Params) {
   if (!data) notFound();
 
   const { business, menu } = data;
+  const theme0 = getTheme(business.themeKey);
+  if (business.maintenanceMode) {
+    const mLang = (await cookies()).get("eq_lang")?.value ?? "tr";
+    const mui = (await getUiStrings([mLang]))[mLang];
+    return (
+      <>
+        <link rel="stylesheet" href={theme0.fonts.import} />
+        <MaintenanceScreen
+          theme={theme0}
+          name={business.name}
+          logoUrl={business.logoUrl}
+          title={mui.maintenanceTitle}
+          message={business.maintenanceMessage || mui.maintenanceHint}
+        />
+      </>
+    );
+  }
   const [{ products, categoryList }, languages, currency] = await Promise.all([
     loadMenuProducts(menu.id),
     getEnabledLanguages(),

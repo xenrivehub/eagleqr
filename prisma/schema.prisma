@@ -101,6 +101,9 @@ model Business {
   seoTitle       String?
   seoDescription String?
   seoKeywords    String?
+  // Bakım modu — açıkken müşteri menüsü yerine bilgilendirme ekranı
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String?
   currency     String   @default("TRY") // görüntüleme para birimi (ISO 4217, bkz. lib/currency.ts)
   themeKey     String   @default("mineral") // müşteri menüsü teması (bkz. lib/themes.ts)
   allowedThemes String[] @default([]) // admin'in açtığı premium temalar (free temalar her zaman açık)
@@ -438,6 +441,7 @@ model PlanLimit {
   plan       Plan     @id
   videoLimit Int      @default(0) // bu planla kaç ürüne video eklenebilir
   arLimit    Int      @default(0) // bu planla kaç ürüne AR/3D eklenebilir
+  features   Json     @default("{}") // plan bazlı özellik bayrakları, bkz. lib/plan-features.ts
   updatedAt  DateTime @updatedAt
 }
 

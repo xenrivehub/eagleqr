@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { THEMES, isThemeFree } from "@/lib/themes";
 import { PLANS, type Plan } from "@/lib/plans";
+import { FEATURE_KEYS } from "@/lib/plan-features";
 import type { BusinessStatus, BusinessType } from "@prisma/client";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -140,6 +141,31 @@ export async function setPlanLimit(
     return { success: true };
   } catch {
     return { success: false, error: "Limit güncellenemedi." };
+  }
+}
+
+// Plan bazlı özellik bayrakları (toplu fiyat, AI, kampanya...) — bkz. lib/plan-features.ts
+export async function setPlanFeatures(
+  plan: Plan,
+  features: Record<string, boolean>,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    if (!PLANS.includes(plan)) return { success: false, error: "Geçersiz plan." };
+    // Yalnızca bilinen anahtarları, boolean olarak sakla
+    const clean: Record<string, boolean> = {};
+    for (const key of FEATURE_KEYS) {
+      clean[key] = features[key] === true;
+    }
+    await prisma.planLimit.upsert({
+      where: { plan },
+      create: { plan, features: clean },
+      update: { features: clean },
+    });
+    revalidatePath("/admin/plans");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Özellikler güncellenemedi." };
   }
 }
 

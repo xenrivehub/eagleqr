@@ -26,6 +26,8 @@ export default async function SettingsPage() {
       ratingsEnabled: true,
       mapUrl: true,
       socialLinks: true,
+      maintenanceMode: true,
+      maintenanceMessage: true,
     },
   });
   if (!business) redirect("/login");
@@ -72,6 +74,8 @@ export default async function SettingsPage() {
           ratingsEnabled={business.ratingsEnabled}
           mapUrl={business.mapUrl ?? ""}
           social={(business.socialLinks as Record<string, string>) ?? {}}
+          maintenanceMode={business.maintenanceMode}
+          maintenanceMessage={business.maintenanceMessage ?? ""}
         />
       </div>
 

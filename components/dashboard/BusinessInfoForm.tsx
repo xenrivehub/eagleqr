@@ -22,6 +22,8 @@ type Props = {
   ratingsEnabled: boolean;
   mapUrl: string;
   social: Record<string, string>;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
 };
 
 const SOCIALS: { key: string; label: string; placeholder: string }[] = [
@@ -40,6 +42,8 @@ export default function BusinessInfoForm(initial: Props) {
   const [ratingsEnabled, setRatingsEnabled] = useState(initial.ratingsEnabled);
   const [mapUrl, setMapUrl] = useState(initial.mapUrl);
   const [social, setSocial] = useState<Record<string, string>>(initial.social ?? {});
+  const [maintenanceMode, setMaintenanceMode] = useState(initial.maintenanceMode);
+  const [maintenanceMessage, setMaintenanceMessage] = useState(initial.maintenanceMessage);
   const currencyList = initial.currencies;
   const currentSpec =
     currencyList.find((c) => c.code === currency) ?? FALLBACK_CURRENCY;
@@ -63,6 +67,8 @@ export default function BusinessInfoForm(initial: Props) {
       ratingsEnabled,
       mapUrl,
       social,
+      maintenanceMode,
+      maintenanceMessage,
     });
     if (res.success) {
       setStatus("saved");
@@ -178,6 +184,27 @@ export default function BusinessInfoForm(initial: Props) {
             </span>
           </span>
         </label>
+      </div>
+
+      <div className={`rounded-xl border p-4 ${maintenanceMode ? "border-amber-300 bg-amber-50" : "border-ink/10 bg-white"}`}>
+        <label className="flex cursor-pointer items-start gap-3">
+          <input type="checkbox" checked={maintenanceMode} onChange={(e) => setMaintenanceMode(e.target.checked)} className="mt-0.5 h-4 w-4" />
+          <span>
+            <span className="block text-sm font-medium text-ink">Bakım modu</span>
+            <span className="mt-0.5 block text-xs text-ink/55">
+              Açıkken müşteriler menü yerine bir bilgilendirme ekranı görür. Menüde
+              düzenleme yaparken geçici olarak açabilirsiniz.
+            </span>
+          </span>
+        </label>
+        {maintenanceMode && (
+          <input
+            value={maintenanceMessage}
+            onChange={(e) => setMaintenanceMessage(e.target.value)}
+            placeholder="Örn. Menümüz güncelleniyor, kısa süre sonra tekrar deneyin."
+            className={`${inputBase} mt-3`}
+          />
+        )}
       </div>
 
       <div>

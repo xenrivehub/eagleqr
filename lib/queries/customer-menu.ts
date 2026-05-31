@@ -20,6 +20,8 @@ const businessSelect = {
   openingHours: true,
   mapUrl: true,
   socialLinks: true,
+  maintenanceMode: true,
+  maintenanceMessage: true,
 } as const;
 
 export async function getMenuBusiness(slug: string) {

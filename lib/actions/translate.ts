@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { translateItems, isTranslationConfigured } from "@/lib/translate";
+import { hasFeature } from "@/lib/queries/plan-features";
 
 type ActionResult = { success: true; count: number } | { success: false; error: string };
 
@@ -26,6 +27,9 @@ export async function translateMenu(
 ): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
+    if (!(await hasFeature(businessId, "aiTranslation"))) {
+      return { success: false, error: "AI çevirisi planınızda kapalı." };
+    }
     if (!isTranslationConfigured()) {
       return { success: false, error: "Çeviri yapılandırılmadı (OPENROUTER_API_KEY eksik)." };
     }

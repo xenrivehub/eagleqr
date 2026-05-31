@@ -9,6 +9,7 @@ import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
+import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
 import TrackView from "@/components/menu/TrackView";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -63,6 +64,24 @@ export default async function CustomerMenuPage({ params }: Params) {
 
   const theme = getTheme(business.themeKey);
   const c = theme.colors;
+
+  // Bakım modu → tüm işletme için bilgilendirme ekranı
+  if (business.maintenanceMode) {
+    const mLang = (await cookies()).get("eq_lang")?.value ?? "tr";
+    const mui = (await getUiStrings([mLang]))[mLang];
+    return (
+      <>
+        <link rel="stylesheet" href={theme.fonts.import} />
+        <MaintenanceScreen
+          theme={theme}
+          name={business.name}
+          logoUrl={business.logoUrl}
+          title={mui.maintenanceTitle}
+          message={business.maintenanceMessage || mui.maintenanceHint}
+        />
+      </>
+    );
+  }
 
   // Zincir işletme → şube seçici (tema renkleriyle)
   if (business.type === "CHAIN") {

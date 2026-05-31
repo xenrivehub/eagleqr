@@ -87,6 +87,8 @@ export type BusinessInfoInput = {
   ratingsEnabled: boolean;
   mapUrl: string;
   social: Record<string, string>;
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
 };
 
 const SOCIAL_KEYS = ["instagram", "tiktok", "facebook", "x", "youtube", "website"];
@@ -128,6 +130,8 @@ export async function updateBusinessInfo(
         ratingsEnabled: input.ratingsEnabled,
         mapUrl: input.mapUrl.trim() || null,
         socialLinks: social,
+        maintenanceMode: input.maintenanceMode,
+        maintenanceMessage: input.maintenanceMessage.trim() || null,
       },
       select: { slug: true },
     });

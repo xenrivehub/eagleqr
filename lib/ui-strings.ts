@@ -17,6 +17,8 @@ export const UI_KEYS: UiKeyDef[] = [
   { key: "curatedByHand", group: "Menü", tr: "EL İLE DERLENDİ", en: "HAND-PICKED" },
   { key: "deals", group: "Menü", tr: "Fırsatlar", en: "Deals" },
   { key: "soldOut", group: "Menü", tr: "Tükendi", en: "Sold out" },
+  { key: "maintenanceTitle", group: "Menü", tr: "Menümüz güncelleniyor", en: "Our menu is being updated" },
+  { key: "maintenanceHint", group: "Menü", tr: "Kısa süre sonra tekrar deneyin.", en: "Please check back shortly." },
   { key: "searchPlaceholder", group: "Menü", tr: "Yemek, malzeme veya kategori ara…", en: "Search dishes, ingredients or categories…" },
   { key: "noResults", group: "Menü", tr: "Aramanıza uygun ürün bulunamadı.", en: "No items match your search." },
   { key: "selectBranch", group: "Menü", tr: "Şube seçin", en: "Select a branch" },
