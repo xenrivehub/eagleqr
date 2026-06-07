@@ -7,6 +7,8 @@ export type ProductView = {
   description: string | null;
   calories: number | null;
   prepMinutes: number | null;
+  weight: string | null;
+  portion: string | null;
   categoryId: string;
   allergenIds: string[];
   imageUrl: string | null;

@@ -116,6 +116,8 @@ export async function loadMenuProducts(menuId: string): Promise<{
       price: p.price.toFixed(2),
       calories: p.calories,
       prepMinutes: p.prepMinutes,
+      weight: p.weight,
+      portion: p.portion,
       imageUrl: p.imageUrl,
       hasVideo: !!p.videoUrl,
       hasAr: !!p.modelGlbUrl,

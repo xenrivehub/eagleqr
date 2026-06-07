@@ -42,6 +42,8 @@ export async function loadMenuForManager(menuId: string): Promise<{
       description: p.description,
       calories: p.calories,
       prepMinutes: p.prepMinutes,
+      weight: p.weight,
+      portion: p.portion,
       categoryId: c.id,
       allergenIds: p.allergens.map((a) => a.allergenId),
       imageUrl: p.imageUrl,

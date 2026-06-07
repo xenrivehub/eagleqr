@@ -207,6 +207,8 @@ export type ProductInput = {
   description?: string;
   calories?: string;
   prepMinutes?: string;
+  weight?: string;
+  portion?: string;
   categoryId: string;
   allergenIds: string[];
   imageUrl?: string | null;
@@ -310,6 +312,8 @@ type ParsedProduct =
         price: number;
         calories: number | null;
         prepMinutes: number | null;
+        weight: string | null;
+        portion: string | null;
         description: string | null;
         isFeatured: boolean;
         isNew: boolean;
@@ -350,6 +354,8 @@ function parseProduct(input: ProductInput): ParsedProduct {
       price,
       calories: cal.value,
       prepMinutes: prep.value,
+      weight: input.weight?.trim() || null,
+      portion: input.portion?.trim() || null,
       description: input.description?.trim() || null,
       isFeatured: Boolean(input.isFeatured),
       isNew: Boolean(input.isNew),

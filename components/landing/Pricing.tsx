@@ -3,76 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Reveal from "@/components/site/Reveal";
+import type { PricingConfig } from "@/lib/pricing-config";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-cream";
-
-type Tier = {
-  name: string;
-  tagline: string;
-  monthly: number;
-  yearlyMonthly: number;
-  yearlyTotal: number;
-  features: string[];
-  featured: boolean;
-  highlight?: string;
-};
-
-const tiers: Tier[] = [
-  {
-    name: "Standart",
-    tagline: "Temel ve şık — bütçe odaklı küçük işletmeler ve kafeler için.",
-    monthly: 399,
-    yearlyMonthly: 299,
-    yearlyTotal: 3588,
-    features: [
-      "Sınırsız kategori ve ürün",
-      "2 ücretsiz tema (Mineral & Maison)",
-      "Gelişmiş QR oluşturucu (renk, çerçeve, logo)",
-      "Akıllı alerjen filtresi",
-      "Anonim yıldız puanlaması",
-      "Temel analitik (tarama & görüntüleme)",
-      "Tek tıkla 'Tükendi' & anlık fiyat değişimi",
-    ],
-    featured: false,
-  },
-  {
-    name: "Pro",
-    tagline: "Büyüyen ve akıllı işletmeler — video ve AI gücüyle satışı katlayın.",
-    monthly: 899,
-    yearlyMonthly: 699,
-    yearlyTotal: 8388,
-    features: [
-      "Standart'taki her şey",
-      "Video menü desteği (sessiz, otomatik döngü)",
-      "AI açıklama yazımı & 'Yanında iyi gider' önerisi",
-      "Tek tıkla AI çevirisi (RTL + dil seçici)",
-      "+1 premium tema & gelişmiş stiller",
-      "Akıllı kampanya & servis saatleri (Happy Hour)",
-      "Gelişmiş analitik (ısı haritası, ilgi oranı)",
-      "Toplu fiyat yönetimi (zam / indirim)",
-    ],
-    featured: true,
-  },
-  {
-    name: "Max",
-    tagline: "Premium ve deneyim odaklı — sosyal medyada fark yaratan mekanlar için.",
-    monthly: 2499,
-    yearlyMonthly: 1899,
-    yearlyTotal: 22788,
-    features: [
-      "Pro'daki her şey",
-      "'Masamda Görüntüle' — web tabanlı AR",
-      "Tüm premium temalara sınırsız erişim (11 tema)",
-      "Gelişmiş zincir & şube yönetimi (içerik kopyalama)",
-      "Zarif PDF menü çıktısı (baskıya hazır A4)",
-      "Maksimum medya kotası (3D / video / HD görsel)",
-      "Öncelikli destek & VIP kurulum",
-    ],
-    featured: false,
-    highlight: "Lansmana özel: İlk 5 Hero ürünün 3D modellemesi + AR çekimi hediye!",
-  },
-];
 
 const tr = (n: number) => n.toLocaleString("tr-TR");
 
@@ -94,8 +28,9 @@ function Gift({ className = "" }: { className?: string }) {
   );
 }
 
-export default function Pricing() {
+export default function Pricing({ config }: { config: PricingConfig }) {
   const [yearly, setYearly] = useState(true);
+  const tiers = config.tiers;
 
   return (
     <>
@@ -104,12 +39,9 @@ export default function Pricing() {
           Fiyatlandırma
         </p>
         <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-          İşletmenize uygun paketi seçin
+          {config.heading}
         </h2>
-        <p className="mt-3 text-ink/60">
-          Tüm paketlerde kurulum ücretsiz. İstediğiniz zaman yükseltin — sözleşme,
-          komisyon, gizli ücret yok.
-        </p>
+        <p className="mt-3 text-ink/60">{config.subtitle}</p>
 
         {/* Aylık / Yıllık geçişi */}
         <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white p-1 shadow-sm" role="group" aria-label="Faturalandırma dönemi">
@@ -133,7 +65,7 @@ export default function Pricing() {
           >
             Yıllık
             <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-ink">
-              %25 indirim
+              {config.yearlyBadge}
             </span>
           </button>
         </div>
@@ -215,16 +147,13 @@ export default function Pricing() {
       </div>
 
       {/* Konumlandırma notu */}
-      <Reveal delay={120}>
-        <div className="mx-auto mt-12 max-w-3xl rounded-2xl border border-ink/10 bg-brand-soft/50 px-6 py-6 text-center">
-          <p className="text-sm leading-relaxed text-ink/70">
-            <span className="font-semibold text-ink">Karmaşık adisyon sistemleri değiliz.</span>{" "}
-            Kilitlenen mutfak yazıcıları, yüksek komisyonlar ya da kurulum derdi yok.
-            Eagle QR, müşterinizin iştahını kabartarak masadaki sepet ortalamanızı
-            artırmaya odaklanan bir <span className="font-semibold text-ink">pazarlama platformudur</span>.
-          </p>
-        </div>
-      </Reveal>
+      {config.note && (
+        <Reveal delay={120}>
+          <div className="mx-auto mt-12 max-w-3xl rounded-2xl border border-ink/10 bg-brand-soft/50 px-6 py-6 text-center">
+            <p className="text-sm leading-relaxed text-ink/70">{config.note}</p>
+          </div>
+        </Reveal>
+      )}
     </>
   );
 }

@@ -48,6 +48,9 @@ export default function ProductAr({
           src,
           ar: true,
           "ar-modes": "webxr scene-viewer quick-look",
+          // Modeli GLB'deki gerçek-dünya boyutuna sabitler; kullanıcı pinch ile
+          // ölçek değiştiremez. (Doğru görünmesi için GLB metre biriminde olmalı.)
+          "ar-scale": "fixed",
           loading: "eager",
           reveal: "auto",
           poster: poster ?? undefined,

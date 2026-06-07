@@ -1,4 +1,4 @@
-import Navbar from "@/components/site/Navbar";
+import SiteNav from "@/components/site/SiteNav";
 import Footer from "@/components/site/Footer";
 
 export default function LegalLayout({
@@ -8,7 +8,7 @@ export default function LegalLayout({
 }) {
   return (
     <>
-      <Navbar />
+      <SiteNav />
       <main className="flex-1">
         <article
           className="mx-auto max-w-3xl px-5 py-16 sm:px-8

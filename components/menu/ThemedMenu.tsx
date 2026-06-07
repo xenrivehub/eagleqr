@@ -382,7 +382,9 @@ export default function ThemedMenu({
               {itemTags(p).map(tagPill)}
               {ratingMark(p)}
               {warnBadge(conf)}
-              {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
+              {p.weight && <span style={{ fontSize: 11, color: c.faint }}>{p.weight}</span>}
+            {p.portion && <span style={{ fontSize: 11, color: c.faint }}>{p.portion}</span>}
+            {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
             </div>
           </div>
         </Link>
@@ -408,6 +410,8 @@ export default function ThemedMenu({
             {itemTags(p).map(tagPill)}
             {ratingMark(p)}
             {warnBadge(conf)}
+            {p.weight && <span style={{ fontSize: 11, color: c.faint }}>{p.weight}</span>}
+            {p.portion && <span style={{ fontSize: 11, color: c.faint }}>{p.portion}</span>}
             {p.prepMinutes != null && <span style={{ fontSize: 11, color: c.faint, marginLeft: "auto" }}>{p.prepMinutes} dk</span>}
           </div>
         </div>

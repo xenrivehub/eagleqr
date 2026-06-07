@@ -233,6 +233,8 @@ model Product {
   price       Decimal   @db.Decimal(10, 2)
   calories    Int?
   prepMinutes Int? // hazırlık süresi (dk)
+  weight      String? // gramaj/hacim, serbest metin (örn. "250 g", "1 L")
+  portion     String? // porsiyon bilgisi, serbest metin (örn. "2 kişilik")
   isSoldOut   Boolean   @default(false)
   isFeatured  Boolean   @default(false) // Şefin Seçimi / öne çıkan
   isNew       Boolean   @default(false) // Yeni
@@ -395,6 +397,47 @@ model Language {
 model AppSetting {
   key   String @id
   value String
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// Admin'den yönetilen pazarlama sayfaları (blok tabanlı içerik, /[slug] altında yayınlanır)
+model Page {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  title          String
+  seoTitle       String?
+  seoDescription String?
+  status         PageStatus @default(DRAFT)
+  blocks         Json       @default("[]") // bkz. lib/page-blocks.ts
+  navLabel       String? // navbar'da görünecek etiket (Faz 2)
+  navOrder       Int        @default(0)
+  showInNav      Boolean    @default(false)
+  navItems       NavItem[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+// Admin'den yönetilen site navbar'ı — gruplu (dropdown) menü öğeleri
+model NavItem {
+  id        String    @id @default(cuid())
+  label     String
+  description String? // dropdown'da etiketin altında görünen kısa açıklama
+  icon      String? // lucide ikon adı (bkz. components/site/NavIcon.tsx)
+  url       String? // harici/manuel link (pageId yoksa)
+  pageId    String?
+  page      Page?     @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  parentId  String?
+  parent    NavItem?  @relation("NavChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children  NavItem[] @relation("NavChildren")
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([parentId])
 }
 
 // Arayüz metni çevirileri (admin panelinden girilir). Anahtar + TR/EN

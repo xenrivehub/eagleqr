@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveBranch } from "@/lib/branch-context";
+import { getBusinessFeatures } from "@/lib/queries/plan-features";
 
 // Türkiye UTC+3 (DST yok) — UTC zaman damgasını yerel saate çevir
 const TR_OFFSET_MS = 3 * 3600_000;
@@ -27,6 +28,7 @@ export default async function AnalyticsPage({ searchParams }: Params) {
     select: { type: true },
   });
   const isChain = business?.type === "CHAIN";
+  const advanced = (await getBusinessFeatures(businessId)).advancedAnalytics;
 
   const { scope: scopeParam, range: rangeParam } = await searchParams;
   const showAll = !isChain || scopeParam === "all";
@@ -174,6 +176,8 @@ export default async function AnalyticsPage({ searchParams }: Params) {
             </div>
           </Card>
 
+          {advanced ? (
+          <>
           {/* Yoğunluk ısı haritası */}
           <Card title="Yoğunluk ısı haritası (gün × saat)">
             <p className="mb-3 text-xs text-ink/50">En yoğun tarama saatleriniz (yerel saat).</p>
@@ -250,6 +254,16 @@ export default async function AnalyticsPage({ searchParams }: Params) {
               </ul>
             )}
           </Card>
+          </>
+          ) : (
+            <div className="mt-6 rounded-2xl border border-dashed border-ink/20 bg-white p-8 text-center">
+              <p className="font-display text-lg font-semibold text-ink">Gelişmiş analitik kilitli</p>
+              <p className="mx-auto mt-1.5 max-w-md text-sm text-ink/60">
+                Yoğunluk ısı haritası, ürün ve kategori popülerliği gibi gelişmiş
+                raporlar Pro ve Max planlarında. Açtırmak için iletişime geçin.
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

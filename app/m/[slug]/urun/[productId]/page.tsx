@@ -9,6 +9,8 @@ import { allergenLabel } from "@/lib/allergen-i18n";
 import { formatPrice } from "@/lib/currency";
 import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
+import { getSeoSettings } from "@/lib/queries/seo";
+import { fillSeo } from "@/lib/seo";
 import { isCampaignLive, applyDiscount } from "@/lib/campaign";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
@@ -59,12 +61,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const data = await getProduct(slug, productId);
   if (!data) return { title: "Ürün" };
   const p = data.product;
-  const title = `${p.name} — ${p.business.name}`;
-  const description = p.description ?? `${p.name} · ${p.business.name} menüsü`;
+  const seo = await getSeoSettings();
+  const vars = { business: p.business.name, product: p.name };
+  const title = fillSeo(seo.productTitle, vars);
+  // Açıklamada ürünün kendi açıklaması önceliklidir (daha iyi SEO), yoksa şablon
+  const description = p.description?.trim() || fillSeo(seo.productDescription, vars);
+  const keywords = seo.keywords.split(",").map((k) => fillSeo(k, vars).trim()).filter(Boolean);
   const img = p.imageUrl ?? undefined;
   return {
     title,
     description,
+    keywords,
     alternates: { canonical: `/m/${slug}/urun/${productId}` },
     openGraph: {
       title,
@@ -286,6 +293,23 @@ export default async function ProductDetailPage({ params }: Params) {
               </span>
             )}
             {product.calories != null && <span>{product.calories} kcal</span>}
+            {product.weight && (
+              <span className="flex items-center gap-1.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 3a2 2 0 0 0-2 2H6l-3 14h18L18 5h-4a2 2 0 0 0-2-2z" />
+                </svg>
+                {product.weight}
+              </span>
+            )}
+            {product.portion && (
+              <span className="flex items-center gap-1.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 3v9l5 3" />
+                </svg>
+                {product.portion}
+              </span>
+            )}
             {product.modelGlbUrl && (
               <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} label={ui.viewInAR} />
             )}

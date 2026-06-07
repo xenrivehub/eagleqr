@@ -10,6 +10,8 @@ export type MenuProduct = {
   price: string;
   calories: number | null;
   prepMinutes: number | null;
+  weight: string | null;
+  portion: string | null;
   imageUrl: string | null;
   hasVideo: boolean;
   hasAr: boolean;

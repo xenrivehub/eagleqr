@@ -11,11 +11,13 @@ export default function CategoryForm({
   menuId,
   category,
   campaigns,
+  campaignsEnabled = true,
   onDone,
 }: {
   menuId: string;
   category?: CategoryView;
   campaigns: { id: string; label: string; color: string }[];
+  campaignsEnabled?: boolean;
   onDone: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export default function CategoryForm({
         <p className="mt-1 text-xs text-ink/45">Bu kategori sadece bu saatler arasında müşteriye görünür (örn. kahvaltı 07:00–11:00). Boşsa hep açık.</p>
       </div>
 
+      {campaignsEnabled && (
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">Kategori kampanyası (opsiyonel)</legend>
         <div className="flex flex-wrap gap-2">
@@ -144,6 +147,7 @@ export default function CategoryForm({
           </div>
         )}
       </fieldset>
+      )}
 
       <div className="flex justify-end gap-3 pt-2">
         <button type="button" onClick={onDone} className="cursor-pointer rounded-full border border-ink/15 px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/5">

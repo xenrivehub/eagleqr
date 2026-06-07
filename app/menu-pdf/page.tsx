@@ -5,6 +5,7 @@ import { getOrCreateDefaultMenu } from "@/lib/actions/menu";
 import { getActiveBranch } from "@/lib/branch-context";
 import { loadMenuProducts } from "@/lib/queries/customer-menu";
 import { getCurrencySpec } from "@/lib/queries/currencies";
+import { getBusinessFeatures } from "@/lib/queries/plan-features";
 import { formatPrice } from "@/lib/currency";
 import { getTheme } from "@/lib/themes";
 import PrintButton from "@/components/dashboard/PrintButton";
@@ -21,6 +22,22 @@ export default async function MenuPdfPage() {
     select: { name: true, logoUrl: true, currency: true, themeKey: true, type: true, address: true, phone: true },
   });
   if (!business) redirect("/login");
+
+  // PDF menü çıktısı plan özelliğine bağlı (kapalıysa kilitli)
+  if (!(await getBusinessFeatures(businessId)).pdfMenu) {
+    return (
+      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui", background: "#f3f3f0" }}>
+        <div style={{ textAlign: "center", maxWidth: 420 }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px", color: "#1a1a1a" }}>PDF menü kilitli</h1>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: "#6b6b6b", margin: "0 0 20px" }}>
+            Baskıya hazır PDF menü çıktısı Max planında. Açtırmak için iletişime geçin.
+          </p>
+          <a href="/dashboard/menu" style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>← Menüye dön</a>
+        </div>
+      </div>
+    );
+  }
 
   let menuId: string;
   let branchName: string | null = null;

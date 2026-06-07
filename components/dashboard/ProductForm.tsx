@@ -20,6 +20,8 @@ export default function ProductForm({
   currency,
   menuProducts,
   campaigns,
+  aiEnabled = true,
+  campaignsEnabled = true,
   onDone,
 }: {
   categoryId: string;
@@ -29,6 +31,8 @@ export default function ProductForm({
   currency: CurrencySpec;
   menuProducts: { id: string; name: string }[];
   campaigns: { id: string; label: string; color: string }[];
+  aiEnabled?: boolean;
+  campaignsEnabled?: boolean;
   onDone: () => void;
 }) {
   const [selected, setSelected] = useState<string[]>(product?.allergenIds ?? []);
@@ -155,6 +159,8 @@ export default function ProductForm({
       description: String(form.get("description") ?? ""),
       calories: String(form.get("calories") ?? ""),
       prepMinutes: String(form.get("prepMinutes") ?? ""),
+      weight: String(form.get("weight") ?? ""),
+      portion: String(form.get("portion") ?? ""),
       categoryId,
       allergenIds: selected,
       imageUrl,
@@ -262,15 +268,17 @@ export default function ProductForm({
           <label htmlFor="p-desc" className="block text-sm font-medium text-ink">
             Açıklama
           </label>
-          <button
-            type="button"
-            onClick={suggestDescription}
-            disabled={aiBusy}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-3 py-1 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
-          >
-            <span aria-hidden>✨</span>
-            {aiBusy ? "Öneriliyor…" : "AI ile açıklama öner"}
-          </button>
+          {aiEnabled && (
+            <button
+              type="button"
+              onClick={suggestDescription}
+              disabled={aiBusy}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-3 py-1 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
+            >
+              <span aria-hidden>✨</span>
+              {aiBusy ? "Öneriliyor…" : "AI ile açıklama öner"}
+            </button>
+          )}
         </div>
 
         <textarea
@@ -332,6 +340,21 @@ export default function ProductForm({
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="p-weight" className="mb-1.5 block text-sm font-medium text-ink">
+            Gramaj / hacim
+          </label>
+          <input id="p-weight" name="weight" defaultValue={product?.weight ?? ""} placeholder="örn. 250 g" className={inputBase} />
+        </div>
+        <div>
+          <label htmlFor="p-portion" className="mb-1.5 block text-sm font-medium text-ink">
+            Porsiyon
+          </label>
+          <input id="p-portion" name="portion" defaultValue={product?.portion ?? ""} placeholder="örn. 2 kişilik" className={inputBase} />
+        </div>
+      </div>
+
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">Etiketler</legend>
         <div className="flex flex-wrap gap-2">
@@ -357,6 +380,7 @@ export default function ProductForm({
         </div>
       </fieldset>
 
+      {campaignsEnabled && (
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">Kampanya</legend>
         <div className="flex flex-wrap gap-2">
@@ -418,6 +442,7 @@ export default function ProductForm({
           </div>
         )}
       </fieldset>
+      )}
 
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-ink">Alerjenler</legend>
@@ -456,15 +481,17 @@ export default function ProductForm({
       <fieldset>
         <div className="mb-2 flex items-center justify-between gap-2">
           <legend className="text-sm font-medium text-ink">Yanında iyi gider</legend>
-          <button
-            type="button"
-            onClick={suggestPairs}
-            disabled={pairBusy}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-3 py-1 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
-          >
-            <span aria-hidden>✨</span>
-            {pairBusy ? "Öneriliyor…" : "AI ile öner"}
-          </button>
+          {aiEnabled && (
+            <button
+              type="button"
+              onClick={suggestPairs}
+              disabled={pairBusy}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-3 py-1 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-soft disabled:opacity-50"
+            >
+              <span aria-hidden>✨</span>
+              {pairBusy ? "Öneriliyor…" : "AI ile öner"}
+            </button>
+          )}
         </div>
 
         {pairedIds.length > 0 && (

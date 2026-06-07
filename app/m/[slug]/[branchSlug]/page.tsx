@@ -5,6 +5,8 @@ import { getMenuBusiness, loadMenuProducts } from "@/lib/queries/customer-menu";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
+import { getSeoSettings } from "@/lib/queries/seo";
+import { fillSeo } from "@/lib/seo";
 import { cookies } from "next/headers";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
@@ -29,9 +31,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug, branchSlug } = await params;
   const data = await getBranch(slug, branchSlug);
   if (!data) return { title: "Menü" };
+  const seo = await getSeoSettings();
+  const vars = { business: data.business.name, branch: data.menu.name };
+  const title = fillSeo(seo.branchTitle, vars);
+  const description = fillSeo(seo.branchDescription, vars);
+  const keywords = seo.keywords.split(",").map((k) => fillSeo(k, vars).trim()).filter(Boolean);
   return {
-    title: `${data.menu.name} — ${data.business.name}`,
-    description: `${data.business.name} ${data.menu.name} menüsü`,
+    title,
+    description,
+    keywords,
+    alternates: { canonical: `/m/${slug}/${branchSlug}` },
+    robots: { index: true, follow: true },
+    openGraph: { title, description, type: "website", url: `/m/${slug}/${branchSlug}`, siteName: data.business.name },
   };
 }
 

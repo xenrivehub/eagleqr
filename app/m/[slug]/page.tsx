@@ -7,6 +7,8 @@ import { cookies } from "next/headers";
 import { getEnabledLanguages } from "@/lib/queries/languages";
 import { getCurrencySpec } from "@/lib/queries/currencies";
 import { getUiStrings } from "@/lib/queries/ui-strings";
+import { getSeoSettings } from "@/lib/queries/seo";
+import { fillSeo } from "@/lib/seo";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
@@ -18,20 +20,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const business = await prisma.business.findUnique({
     where: { slug },
-    select: {
-      name: true, logoUrl: true, coverUrl: true,
-      seoTitle: true, seoDescription: true, seoKeywords: true,
-    },
+    select: { name: true, logoUrl: true, coverUrl: true },
   });
   if (!business) return { title: "Menü" };
 
-  const title = business.seoTitle || `${business.name} — Menü | Dijital QR Menü`;
-  const description =
-    business.seoDescription ||
-    `${business.name} dijital menüsü. QR ile açın; güncel fiyatlar, fotoğraflı ürünler, alerjen bilgisi ve çok dilli menü.`;
-  const keywords = business.seoKeywords
-    ? business.seoKeywords.split(",").map((k) => k.trim()).filter(Boolean)
-    : ["qr menü", "dijital menü", business.name, "menü", "restoran menü"];
+  // Global SEO şablonları (admin'den, tüm işletmeler için ortak)
+  const seo = await getSeoSettings();
+  const title = fillSeo(seo.menuTitle, { business: business.name });
+  const description = fillSeo(seo.menuDescription, { business: business.name });
+  const keywords = seo.keywords
+    .split(",")
+    .map((k) => fillSeo(k, { business: business.name }).trim())
+    .filter(Boolean);
   const image = business.coverUrl || business.logoUrl || undefined;
 
   return {

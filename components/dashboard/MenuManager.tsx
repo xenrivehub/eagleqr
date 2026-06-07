@@ -22,6 +22,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { AllergenOption, CategoryView, ProductView } from "./types";
 import type { MediaEntitlements } from "@/lib/plans";
+import type { PlanFeatures } from "@/lib/plan-features";
 import SlideOver from "./SlideOver";
 import ConfirmDialog from "./ConfirmDialog";
 import CategoryForm from "./CategoryForm";
@@ -58,6 +59,7 @@ export default function MenuManager({
   languages,
   currency,
   campaigns,
+  features,
 }: {
   menuId: string;
   categories: CategoryView[];
@@ -66,6 +68,7 @@ export default function MenuManager({
   languages: TargetLang[];
   currency: CurrencySpec;
   campaigns: { id: string; label: string; color: string }[];
+  features: PlanFeatures;
 }) {
   const router = useRouter();
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -157,18 +160,20 @@ export default function MenuManager({
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-          <a
-            href="/menu-pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
-            </svg>
-            PDF
-          </a>
-          <TranslateMenu menuId={menuId} languages={languages} />
+          {features.pdfMenu && (
+            <a
+              href="/menu-pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />
+              </svg>
+              PDF
+            </a>
+          )}
+          {features.aiTranslation && <TranslateMenu menuId={menuId} languages={languages} />}
           <button
             type="button"
             onClick={() => setPanel({ kind: "import" })}
@@ -179,16 +184,18 @@ export default function MenuManager({
             </svg>
             Toplu içe aktar
           </button>
-          <button
-            type="button"
-            onClick={() => setPanel({ kind: "bulk-price" })}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-            Toplu fiyat
-          </button>
+          {features.bulkPrice && (
+            <button
+              type="button"
+              onClick={() => setPanel({ kind: "bulk-price" })}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+              Toplu fiyat
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setPanel({ kind: "category-new" })}
@@ -242,10 +249,10 @@ export default function MenuManager({
           <BulkImport menuId={menuId} onImported={closeAndRefresh} />
         )}
         {panel?.kind === "category-new" && (
-          <CategoryForm menuId={menuId} campaigns={campaigns} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} campaigns={campaigns} campaignsEnabled={features.campaigns} onDone={closeAndRefresh} />
         )}
         {panel?.kind === "category-edit" && (
-          <CategoryForm menuId={menuId} category={panel.category} campaigns={campaigns} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} category={panel.category} campaigns={campaigns} campaignsEnabled={features.campaigns} onDone={closeAndRefresh} />
         )}
         {panel?.kind === "bulk-price" && (
           <BulkPrice
@@ -263,6 +270,8 @@ export default function MenuManager({
             currency={currency}
             menuProducts={menuProducts}
             campaigns={campaigns}
+            aiEnabled={features.ai}
+            campaignsEnabled={features.campaigns}
             onDone={closeAndRefresh}
           />
         )}
@@ -275,6 +284,8 @@ export default function MenuManager({
             currency={currency}
             menuProducts={menuProducts}
             campaigns={campaigns}
+            aiEnabled={features.ai}
+            campaignsEnabled={features.campaigns}
             onDone={closeAndRefresh}
           />
         )}

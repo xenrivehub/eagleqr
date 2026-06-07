@@ -7,6 +7,7 @@ import { slugify } from "@/lib/slug";
 import { THEMES, isThemeFree } from "@/lib/themes";
 import { PLANS, type Plan } from "@/lib/plans";
 import { FEATURE_KEYS } from "@/lib/plan-features";
+import { SEO_KEYS, type SeoSettings } from "@/lib/seo";
 import type { BusinessStatus, BusinessType } from "@prisma/client";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -170,20 +171,16 @@ export async function setPlanFeatures(
 }
 
 // İşletme SEO ayarları
-export async function setBusinessSeo(
-  id: string,
-  seo: { title: string; description: string; keywords: string },
-): Promise<ActionResult> {
+// Global SEO ayarları — tüm sayfa tiplerine uygulanır (AppSetting).
+export async function setSeoSettings(seo: SeoSettings): Promise<ActionResult> {
   try {
     await requireAdmin();
-    await prisma.business.update({
-      where: { id },
-      data: {
-        seoTitle: seo.title.trim() || null,
-        seoDescription: seo.description.trim() || null,
-        seoKeywords: seo.keywords.trim() || null,
-      },
-    });
+    const entries: [string, string][] = (Object.keys(SEO_KEYS) as (keyof SeoSettings)[]).map(
+      (k) => [SEO_KEYS[k], (seo[k] ?? "").trim()],
+    );
+    for (const [key, value] of entries) {
+      await prisma.appSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
+    }
     revalidatePath("/admin/seo");
     return { success: true };
   } catch {
