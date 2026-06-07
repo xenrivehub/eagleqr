@@ -184,6 +184,18 @@ export default function MenuManager({
             </svg>
             Toplu içe aktar
           </button>
+          {features.menuScan && (
+            <a
+              href="/dashboard/menu/foto-ice-aktar"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand/50 bg-brand-soft/40 px-4 py-2.5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-soft"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              Fotoğraftan ekle (AI)
+            </a>
+          )}
           {features.bulkPrice && (
             <button
               type="button"

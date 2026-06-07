@@ -16,7 +16,8 @@ export type FeatureKey =
   | "aiTranslation"
   | "campaigns"
   | "advancedAnalytics"
-  | "pdfMenu";
+  | "pdfMenu"
+  | "menuScan";
 
 export const FEATURE_KEYS: FeatureKey[] = [
   "bulkPrice",
@@ -25,6 +26,7 @@ export const FEATURE_KEYS: FeatureKey[] = [
   "campaigns",
   "advancedAnalytics",
   "pdfMenu",
+  "menuScan",
 ];
 
 export const FEATURE_META: Record<
@@ -61,6 +63,11 @@ export const FEATURE_META: Record<
     desc: "Yoğunluk ısı haritası, ilgi oranı ve ürün/kategori popülerliği.",
     group: "Analitik",
   },
+  menuScan: {
+    label: "Fotoğraftan menü oluşturma (AI)",
+    desc: "Basılı menü fotoğrafını yapay zekaya okutup ürünleri toplu oluşturma.",
+    group: "Yapay Zeka",
+  },
 };
 
 // Plan başına varsayılan açık/kapalı (admin override etmezse bu geçerli)
@@ -72,6 +79,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
     ai: false,
     aiTranslation: false,
     advancedAnalytics: false,
+    menuScan: false,
   },
   PRO: {
     bulkPrice: true,
@@ -80,6 +88,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
     ai: true,
     aiTranslation: true,
     advancedAnalytics: true,
+    menuScan: false,
   },
   MAX: {
     bulkPrice: true,
@@ -88,6 +97,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
     ai: true,
     aiTranslation: true,
     advancedAnalytics: true,
+    menuScan: true,
   },
 };
 
