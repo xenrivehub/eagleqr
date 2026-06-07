@@ -1,10 +1,13 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveBranch } from "@/lib/branch-context";
 import { getEnabledCurrencies, getCurrencySpec } from "@/lib/queries/currencies";
+import { THEMES, isThemeUnlocked, getTheme } from "@/lib/themes";
 import BusinessInfoForm from "@/components/dashboard/BusinessInfoForm";
-import BranchContactForm from "@/components/dashboard/BranchContactForm";
+import BranchSettingsForm from "@/components/dashboard/BranchSettingsForm";
+import BrandSettingsForm from "@/components/dashboard/BrandSettingsForm";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -14,20 +17,10 @@ export default async function SettingsPage() {
   const business = await prisma.business.findUnique({
     where: { id: businessId },
     select: {
-      name: true,
-      type: true,
-      logoUrl: true,
-      phone: true,
-      contactEmail: true,
-      address: true,
-      about: true,
-      openingHours: true,
-      currency: true,
-      ratingsEnabled: true,
-      mapUrl: true,
-      socialLinks: true,
-      maintenanceMode: true,
-      maintenanceMessage: true,
+      name: true, type: true, logoUrl: true, phone: true, contactEmail: true,
+      address: true, about: true, openingHours: true, currency: true,
+      ratingsEnabled: true, mapUrl: true, socialLinks: true,
+      maintenanceMode: true, maintenanceMessage: true, themeKey: true, allowedThemes: true,
     },
   });
   if (!business) redirect("/login");
@@ -37,65 +30,104 @@ export default async function SettingsPage() {
     currencies.unshift(await getCurrencySpec(business.currency));
   }
 
-  const isChain = business.type === "CHAIN";
-  const active = isChain ? (await getActiveBranch(businessId)).active : null;
+  // ----- TEKİL İŞLETME: tek form (önceki davranış) -----
+  if (business.type !== "CHAIN") {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
+        <h1 className="font-display text-2xl font-bold text-ink">İşletme Bilgileri</h1>
+        <p className="mt-2 text-ink/60">İşletmenizin iletişim ve tanıtım bilgilerini düzenleyin. İşletme adı dışında hepsi opsiyoneldir.</p>
+        <div className="mt-8">
+          <BusinessInfoForm
+            name={business.name}
+            logoUrl={business.logoUrl}
+            phone={business.phone ?? ""}
+            contactEmail={business.contactEmail ?? ""}
+            address={business.address ?? ""}
+            about={business.about ?? ""}
+            openingHours={business.openingHours ?? ""}
+            currency={business.currency}
+            currencies={currencies}
+            ratingsEnabled={business.ratingsEnabled}
+            mapUrl={business.mapUrl ?? ""}
+            social={(business.socialLinks as Record<string, string>) ?? {}}
+            maintenanceMode={business.maintenanceMode}
+            maintenanceMessage={business.maintenanceMessage ?? ""}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ----- ZİNCİR: aktif şube ayarları + marka geneli -----
+  const { active } = await getActiveBranch(businessId);
   const branch = active
     ? await prisma.menu.findUnique({
         where: { id: active.id },
-        select: { id: true, name: true, phone: true, address: true, openingHours: true },
+        select: {
+          id: true, name: true, logoUrl: true, phone: true, contactEmail: true,
+          address: true, openingHours: true, mapUrl: true, socialLinks: true,
+          currency: true, themeKey: true, maintenanceMode: true, maintenanceMessage: true,
+        },
       })
     : null;
 
+  const unlockedThemes = THEMES.filter((t) => isThemeUnlocked(t.key, business.allowedThemes)).map((t) => ({ key: t.key, name: t.name }));
+  const brandThemeName = getTheme(business.themeKey).name;
+
   return (
     <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8">
-      <h1 className="font-display text-2xl font-bold text-ink">İşletme Bilgileri</h1>
-      <p className="mt-2 text-ink/60">
-        {isChain
-          ? "Genel marka bilgileri tüm şubelerde geçerlidir. İletişim bilgileri aktif şubeye özeldir."
-          : "İşletmenizin iletişim ve tanıtım bilgilerini düzenleyin. İşletme adı dışında hepsi opsiyoneldir."}
-      </p>
+      <h1 className="font-display text-2xl font-bold text-ink">Ayarlar</h1>
 
-      <div className="mt-8">
-        {isChain && (
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-dark">
-            Genel bilgiler
-          </h2>
-        )}
-        <BusinessInfoForm
-          name={business.name}
-          logoUrl={business.logoUrl}
-          phone={business.phone ?? ""}
-          contactEmail={business.contactEmail ?? ""}
-          address={business.address ?? ""}
-          about={business.about ?? ""}
-          openingHours={business.openingHours ?? ""}
-          currency={business.currency}
-          currencies={currencies}
-          ratingsEnabled={business.ratingsEnabled}
-          mapUrl={business.mapUrl ?? ""}
-          social={(business.socialLinks as Record<string, string>) ?? {}}
-          maintenanceMode={business.maintenanceMode}
-          maintenanceMessage={business.maintenanceMessage ?? ""}
-        />
-      </div>
-
-      {isChain && branch && (
-        <div className="mt-12">
-          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-brand-dark">
-            Şube bilgileri · {branch.name}
-          </h2>
-          <p className="mb-4 text-sm text-ink/60">
-            Bu şubenin iletişim bilgileri. Başka şube için sol menüden şube
-            değiştirin. Boş bırakılırsa işletme geneli kullanılır.
-          </p>
-          <BranchContactForm
-            menuId={branch.id}
-            branchName={branch.name}
-            phone={branch.phone ?? ""}
-            address={branch.address ?? ""}
-            openingHours={branch.openingHours ?? ""}
-          />
+      {!branch ? (
+        <div className="mt-8 rounded-2xl border border-dashed border-ink/20 bg-white p-10 text-center">
+          <p className="font-display text-lg font-semibold text-ink">Henüz şube yok</p>
+          <Link href="/dashboard/branches" className="mt-4 inline-block rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-ink hover:bg-brand-dark">+ Şube ekle</Link>
         </div>
+      ) : (
+        <>
+          <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-brand/30 bg-brand-soft/40 px-5 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-brand-dark">Şube ayarları</p>
+              <p className="font-display text-lg font-bold text-ink">{branch.name}</p>
+            </div>
+            <p className="ml-auto text-sm text-ink/60">Başka şube için sol menüden şube değiştirin.</p>
+          </div>
+          <p className="mt-3 text-sm text-ink/60">
+            Bu şubeye özel bilgiler. Tema/para birimi/logo boş bırakılırsa marka geneli kullanılır.
+          </p>
+
+          <div className="mt-6">
+            <BranchSettingsForm
+              menuId={branch.id}
+              logoUrl={branch.logoUrl}
+              phone={branch.phone ?? ""}
+              contactEmail={branch.contactEmail ?? ""}
+              address={branch.address ?? ""}
+              openingHours={branch.openingHours ?? ""}
+              mapUrl={branch.mapUrl ?? ""}
+              social={(branch.socialLinks as Record<string, string>) ?? {}}
+              currency={branch.currency ?? ""}
+              themeKey={branch.themeKey ?? ""}
+              maintenanceMode={branch.maintenanceMode}
+              maintenanceMessage={branch.maintenanceMessage ?? ""}
+              currencies={currencies}
+              themes={unlockedThemes}
+              brandCurrency={business.currency}
+              brandThemeName={brandThemeName}
+            />
+          </div>
+
+          <div className="mt-12 border-t border-ink/10 pt-8">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-brand-dark">Marka geneli · tüm şubeler</h2>
+            <p className="mb-4 mt-1 text-sm text-ink/60">Bu ayarlar tüm şubelerde geçerlidir.</p>
+            <BrandSettingsForm
+              name={business.name}
+              logoUrl={business.logoUrl}
+              ratingsEnabled={business.ratingsEnabled}
+              about={business.about ?? ""}
+            />
+          </div>
+        </>
       )}
     </div>
   );

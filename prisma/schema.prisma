@@ -168,10 +168,18 @@ model Menu {
   business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
   name       String
   slug       String? // zincir şube URL'i için (/m/[isletme]/[sube]); tekil işletmede null
-  // Şubeye özel iletişim (zincir işletmelerde; boşsa işletme geneli kullanılır)
+  // Şubeye özel ayarlar (zincir işletmelerde; boş/null ise marka geneli kullanılır)
   phone        String?
   address      String?
   openingHours String?
+  contactEmail String?
+  logoUrl      String?
+  mapUrl       String?
+  socialLinks  Json     @default("{}")
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String?
+  themeKey   String? // null → marka teması
+  currency   String? // null → marka para birimi
   schedule   MenuSchedule @default(ALL_DAY)
   isActive   Boolean      @default(true)
   createdAt  DateTime     @default(now())

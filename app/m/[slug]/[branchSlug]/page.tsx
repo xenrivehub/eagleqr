@@ -20,7 +20,11 @@ async function getBranch(slug: string, branchSlug: string) {
 
   const menu = await prisma.menu.findFirst({
     where: { businessId: business.id, slug: branchSlug, isActive: true },
-    select: { id: true, name: true, phone: true, address: true, openingHours: true },
+    select: {
+      id: true, name: true, phone: true, address: true, openingHours: true,
+      logoUrl: true, contactEmail: true, mapUrl: true, socialLinks: true,
+      currency: true, themeKey: true, maintenanceMode: true, maintenanceMessage: true,
+    },
   });
   if (!menu) return null;
 
@@ -52,19 +56,35 @@ export default async function BranchMenuPage({ params }: Params) {
   if (!data) notFound();
 
   const { business, menu } = data;
-  const theme0 = getTheme(business.themeKey);
-  if (business.maintenanceMode) {
+
+  // Şubeye özel ayar varsa onu, yoksa marka genelini kullan (effective)
+  const menuSocial = (menu.socialLinks as Record<string, string>) ?? {};
+  const eff = {
+    themeKey: menu.themeKey || business.themeKey,
+    currency: menu.currency || business.currency,
+    logoUrl: menu.logoUrl ?? business.logoUrl,
+    phone: menu.phone ?? business.phone,
+    address: menu.address ?? business.address,
+    openingHours: menu.openingHours ?? business.openingHours,
+    mapUrl: menu.mapUrl ?? business.mapUrl,
+    socialLinks: Object.keys(menuSocial).length ? menuSocial : business.socialLinks,
+    maintenanceMode: menu.maintenanceMode,
+    maintenanceMessage: menu.maintenanceMessage,
+  };
+
+  const theme = getTheme(eff.themeKey);
+  if (eff.maintenanceMode) {
     const mLang = (await cookies()).get("eq_lang")?.value ?? "tr";
     const mui = (await getUiStrings([mLang]))[mLang];
     return (
       <>
-        <link rel="stylesheet" href={theme0.fonts.import} />
+        <link rel="stylesheet" href={theme.fonts.import} />
         <MaintenanceScreen
-          theme={theme0}
+          theme={theme}
           name={business.name}
-          logoUrl={business.logoUrl}
+          logoUrl={eff.logoUrl}
           title={mui.maintenanceTitle}
-          message={business.maintenanceMessage || mui.maintenanceHint}
+          message={eff.maintenanceMessage || mui.maintenanceHint}
         />
       </>
     );
@@ -72,17 +92,19 @@ export default async function BranchMenuPage({ params }: Params) {
   const [{ products, categoryList }, languages, currency] = await Promise.all([
     loadMenuProducts(menu.id),
     getEnabledLanguages(),
-    getCurrencySpec(business.currency),
+    getCurrencySpec(eff.currency),
   ]);
   const ui = await getUiStrings(["tr", ...languages.map((l) => l.code)]);
-  const theme = getTheme(business.themeKey);
 
-  // Şube iletişim bilgisi varsa onu, yoksa işletme genelini göster
   const merged = {
     ...business,
-    phone: menu.phone ?? business.phone,
-    address: menu.address ?? business.address,
-    openingHours: menu.openingHours ?? business.openingHours,
+    themeKey: eff.themeKey,
+    logoUrl: eff.logoUrl,
+    phone: eff.phone,
+    address: eff.address,
+    openingHours: eff.openingHours,
+    mapUrl: eff.mapUrl,
+    socialLinks: eff.socialLinks,
   };
 
   return (

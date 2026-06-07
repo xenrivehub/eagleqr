@@ -303,36 +303,109 @@ export async function updateBranch(
   }
 }
 
-export type BranchContactInput = {
-  phone: string;
-  address: string;
-  openingHours: string;
+// Marka geneli bilgiler (tüm şubelerde ortak) — zincir işletme için.
+export type BrandInfoInput = {
+  name: string;
+  logoUrl: string | null;
+  ratingsEnabled: boolean;
+  about: string;
 };
 
-export async function updateBranchContact(
+export async function updateBrandInfo(input: BrandInfoInput): Promise<ActionResult> {
+  const businessId = await requireBusinessId().catch(() => null);
+  if (!businessId) return { success: false, error: "Yetkisiz erişim." };
+  const name = input.name.trim();
+  if (name.length < 2) return { success: false, error: "İşletme adı en az 2 karakter olmalı." };
+  try {
+    const business = await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        name,
+        logoUrl: input.logoUrl || null,
+        ratingsEnabled: input.ratingsEnabled,
+        about: input.about.trim() || null,
+      },
+      select: { slug: true },
+    });
+    revalidatePath("/dashboard/settings");
+    revalidatePath(`/m/${business.slug}`, "layout");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kaydedilemedi." };
+  }
+}
+
+// Şubeye özel ayarlar (zincir işletme) — boş bırakılanlar marka genelinden gelir.
+export type BranchSettingsInput = {
+  logoUrl: string | null;
+  phone: string;
+  contactEmail: string;
+  address: string;
+  openingHours: string;
+  mapUrl: string;
+  social: Record<string, string>;
+  currency: string; // "" → marka para birimi
+  themeKey: string; // "" → marka teması
+  maintenanceMode: boolean;
+  maintenanceMessage: string;
+};
+
+export async function updateBranchSettings(
   menuId: string,
-  input: BranchContactInput,
+  input: BranchSettingsInput,
 ): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();
-    const owned = await prisma.menu.findFirst({
+    const menu = await prisma.menu.findFirst({
       where: { id: menuId, businessId },
-      select: { id: true },
+      select: { id: true, slug: true, business: { select: { slug: true, allowedThemes: true } } },
     });
-    if (!owned) return { success: false, error: "Şube bulunamadı." };
+    if (!menu) return { success: false, error: "Şube bulunamadı." };
+
+    // Tema (boş → marka teması)
+    let themeKey: string | null = null;
+    if (input.themeKey) {
+      if (!THEMES.some((t) => t.key === input.themeKey)) return { success: false, error: "Geçersiz tema." };
+      if (!isThemeUnlocked(input.themeKey, menu.business.allowedThemes)) {
+        return { success: false, error: "Bu tema kilitli. Kullanmak için iletişime geçin." };
+      }
+      themeKey = input.themeKey;
+    }
+
+    // Para birimi (boş → marka para birimi)
+    let currency: string | null = null;
+    if (input.currency) {
+      const cur = await prisma.currency.findFirst({ where: { code: input.currency, enabled: true }, select: { code: true } });
+      currency = cur?.code ?? null;
+    }
+
+    const social: Record<string, string> = {};
+    for (const k of SOCIAL_KEYS) {
+      const v = (input.social?.[k] ?? "").trim();
+      if (v) social[k] = v;
+    }
 
     await prisma.menu.update({
       where: { id: menuId },
       data: {
+        logoUrl: input.logoUrl || null,
         phone: input.phone.trim() || null,
+        contactEmail: input.contactEmail.trim() || null,
         address: input.address.trim() || null,
         openingHours: input.openingHours.trim() || null,
+        mapUrl: input.mapUrl.trim() || null,
+        socialLinks: social,
+        currency,
+        themeKey,
+        maintenanceMode: input.maintenanceMode,
+        maintenanceMessage: input.maintenanceMessage.trim() || null,
       },
     });
     revalidatePath("/dashboard/settings");
+    if (menu.business.slug && menu.slug) revalidatePath(`/m/${menu.business.slug}/${menu.slug}`);
     return { success: true };
   } catch {
-    return { success: false, error: "Şube bilgileri kaydedilemedi." };
+    return { success: false, error: "Şube ayarları kaydedilemedi." };
   }
 }
 
