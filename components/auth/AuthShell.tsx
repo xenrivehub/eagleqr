@@ -27,13 +27,13 @@ export default function AuthShell({
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/eagle-logo.webp"
-              alt="Eagle QR"
+              alt="Eagle Menu"
               width={40}
               height={40}
               className="h-10 w-10 object-contain"
             />
             <span className="font-display text-xl font-bold tracking-tight text-ink">
-              Eagle QR
+              Eagle Menu
             </span>
           </Link>
           <h1 className="mt-6 font-display text-2xl font-bold text-ink">{title}</h1>

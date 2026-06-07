@@ -166,7 +166,7 @@ export default function MenuView({
             danışın.
           </p>
           <p className="mt-3 text-[10px] uppercase tracking-widest text-menu-muted/60">
-            Eagle QR ile hazırlanmıştır
+            Eagle Menu ile hazırlanmıştır
           </p>
         </footer>
       </div>

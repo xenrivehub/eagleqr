@@ -48,7 +48,7 @@ export default function AdminLoginForm() {
           {error}
         </div>
       )}
-      <TextField label="E-posta" name="email" type="email" autoComplete="email" placeholder="admin@eagleqr.com" required />
+      <TextField label="E-posta" name="email" type="email" autoComplete="email" placeholder="admin@eaglemenu.com" required />
       <PasswordField label="Şifre" name="password" autoComplete="current-password" placeholder="••••••••" required />
       <SubmitButton pending={pending}>Yönetici Girişi</SubmitButton>
     </form>

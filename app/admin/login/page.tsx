@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AdminLoginForm from "@/components/admin/AdminLoginForm";
 
 export const metadata: Metadata = {
-  title: "Yönetici Girişi — Eagle QR",
+  title: "Yönetici Girişi — Eagle Menu",
   robots: { index: false },
 };
 
@@ -12,7 +12,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center">
           <span className="inline-block rounded-full bg-brand px-3 py-1 text-xs font-bold uppercase tracking-wider text-ink">
-            Eagle QR · Admin
+            Eagle Menu · Admin
           </span>
           <h1 className="mt-5 font-display text-2xl font-bold text-cream">
             Yönetici Paneli

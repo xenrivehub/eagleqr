@@ -77,7 +77,7 @@ export async function translateItems(
     headers: {
       Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
-      "X-Title": "Eagle QR",
+      "X-Title": "Eagle Menu",
     },
     body: JSON.stringify(payload),
   });

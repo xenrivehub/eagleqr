@@ -57,7 +57,7 @@ export async function generateDescription(
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "X-Title": "Eagle QR",
+        "X-Title": "Eagle Menu",
       },
       body: JSON.stringify({
         model,
@@ -137,7 +137,7 @@ export async function suggestPairings(
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "X-Title": "Eagle QR",
+        "X-Title": "Eagle Menu",
       },
       body: JSON.stringify({
         model: await getModel(),

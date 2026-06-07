@@ -63,8 +63,8 @@ export default function AdminShell({
     <div className="flex min-h-dvh flex-col md:flex-row">
       <aside className="hidden w-64 shrink-0 border-r border-ink/10 bg-white p-4 md:flex md:flex-col">
         <div className="flex items-center gap-2 px-2 py-2">
-          <Image src="/eagle-logo.webp" alt="Eagle QR" width={28} height={28} className="h-7 w-7 object-contain" />
-          <span className="font-display text-lg font-bold text-ink">Eagle QR</span>
+          <Image src="/eagle-logo.webp" alt="Eagle Menu" width={28} height={28} className="h-7 w-7 object-contain" />
+          <span className="font-display text-lg font-bold text-ink">Eagle Menu</span>
         </div>
         <div className="mt-2 px-2 pb-4">
           <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cream">
@@ -84,8 +84,8 @@ export default function AdminShell({
 
       <header className="flex items-center justify-between border-b border-ink/10 bg-white px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
-          <Image src="/eagle-logo.webp" alt="Eagle QR" width={26} height={26} className="h-6 w-6 object-contain" />
-          <span className="font-display text-base font-bold text-ink">Eagle QR</span>
+          <Image src="/eagle-logo.webp" alt="Eagle Menu" width={26} height={26} className="h-6 w-6 object-contain" />
+          <span className="font-display text-base font-bold text-ink">Eagle Menu</span>
           <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold uppercase text-cream">Admin</span>
         </div>
         <button

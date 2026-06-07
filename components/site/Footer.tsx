@@ -30,12 +30,12 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <Image
                 src="/eagle-logo.webp"
-                alt="Eagle QR"
+                alt="Eagle Menu"
                 width={28}
                 height={28}
                 className="h-7 w-7 object-contain"
               />
-              <span className="font-display text-base font-bold text-ink">Eagle QR</span>
+              <span className="font-display text-base font-bold text-ink">Eagle Menu</span>
             </div>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink/60">
               Restoran ve kafeler için AR/3D, videolu ve çok dilli akıllı dijital
@@ -63,7 +63,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-ink/10 pt-6 text-sm text-ink/50">
-          © {new Date().getFullYear()} Eagle QR. Tüm hakları saklıdır.
+          © {new Date().getFullYear()} Eagle Menu. Tüm hakları saklıdır.
         </div>
       </div>
     </footer>

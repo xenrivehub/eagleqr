@@ -57,7 +57,7 @@ export function defaultHomeSections(): HomeSection[] {
       id: "hero", type: "hero", enabled: true,
       badge: "AR & videolu menü ile yeni nesil deneyim",
       titleLead: "Menünüz artık", titleAccent: "canlanıyor.",
-      subtitle: "Eagle QR ile müşterileriniz ürünlerinizi videoyla izler, 3D ve AR ile masalarında görür. Çok dilli, alerjen filtreli, işletmenize özel tasarlanan dijital menü — 15 dakikada yayında.",
+      subtitle: "Eagle Menu ile müşterileriniz ürünlerinizi videoyla izler, 3D ve AR ile masalarında görür. Çok dilli, alerjen filtreli, işletmenize özel tasarlanan dijital menü — 15 dakikada yayında.",
       primaryLabel: "Ücretsiz Dene", primaryHref: "/register",
       secondaryLabel: "Nasıl Çalışır?", secondaryHref: "#nasil-calisir",
       bullets: ["Kurulum 15 dakika", "Kredi kartı gerekmez", "KVKK uyumlu"],

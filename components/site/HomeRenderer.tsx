@@ -69,7 +69,7 @@ function Hero({ s }: { s: HomeSection }) {
           <div className="relative flex items-center justify-center">
             <div className="absolute h-72 w-72 rounded-full bg-brand/30 blur-3xl" />
             <div className="relative flex h-72 w-72 items-center justify-center rounded-full bg-gradient-to-b from-brand-soft to-cream sm:h-80 sm:w-80">
-              <Image src="/eagle-logo.webp" alt="Eagle QR" width={220} height={220} className="relative h-52 w-52 object-contain sm:h-60 sm:w-60" priority />
+              <Image src="/eagle-logo.webp" alt="Eagle Menu" width={220} height={220} className="relative h-52 w-52 object-contain sm:h-60 sm:w-60" priority />
             </div>
             {s.chip1 && (
               <div className="absolute right-2 top-6 flex items-center gap-1.5 rounded-xl border border-ink/10 bg-white px-3 py-2 text-xs font-semibold text-ink shadow-lg">

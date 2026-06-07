@@ -14,7 +14,8 @@ const karla = Karla({
 });
 
 export const metadata: Metadata = {
-  title: "Eagle QR — Restoranlar için akıllı dijital menü",
+  metadataBase: new URL("https://eaglemenu.com"),
+  title: "Eagle Menu — Restoranlar için akıllı dijital menü",
   description:
     "QR kodla açılan, AR/3D ve videolu ürünler, çok dilli ve alerjen filtreli dijital menü platformu. 15 dakikada kurun, anında yayınlayın.",
 };

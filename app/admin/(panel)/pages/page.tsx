@@ -1,7 +1,8 @@
-import { listPages } from "@/lib/queries/pages";
+import { listPages, ensureLegalPages } from "@/lib/queries/pages";
 import PagesList from "@/components/admin/PagesList";
 
 export default async function AdminPagesPage() {
+  await ensureLegalPages();
   const pages = await listPages();
   return (
     <div className="mx-auto w-full max-w-3xl px-5 py-10 sm:px-8">

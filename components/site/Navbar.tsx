@@ -56,8 +56,8 @@ export default function Navbar({ items }: { items?: NavItemLink[] }) {
     <header className="sticky top-0 z-50 border-b border-ink/5 bg-cream/80 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className={`flex items-center gap-2 rounded-lg ${focusRing}`}>
-          <Image src="/eagle-logo.webp" alt="Eagle QR" width={32} height={32} className="h-8 w-8 object-contain" priority />
-          <span className="font-display text-lg font-bold tracking-tight text-ink">Eagle QR</span>
+          <Image src="/eagle-logo.webp" alt="Eagle Menu" width={32} height={32} className="h-8 w-8 object-contain" priority />
+          <span className="font-display text-lg font-bold tracking-tight text-ink">Eagle Menu</span>
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">

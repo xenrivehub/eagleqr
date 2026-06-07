@@ -26,7 +26,7 @@ export const PRICING_DEFAULT: PricingConfig = {
   heading: "İşletmenize uygun paketi seçin",
   subtitle: "Tüm paketlerde kurulum ücretsiz. İstediğiniz zaman yükseltin — sözleşme, komisyon, gizli ücret yok.",
   yearlyBadge: "%25 indirim",
-  note: "Karmaşık adisyon sistemleri değiliz. Kilitlenen mutfak yazıcıları, yüksek komisyonlar ya da kurulum derdi yok. Eagle QR, müşterinizin iştahını kabartarak masadaki sepet ortalamanızı artırmaya odaklanan bir pazarlama platformudur.",
+  note: "Karmaşık adisyon sistemleri değiliz. Kilitlenen mutfak yazıcıları, yüksek komisyonlar ya da kurulum derdi yok. Eagle Menu, müşterinizin iştahını kabartarak masadaki sepet ortalamanızı artırmaya odaklanan bir pazarlama platformudur.",
   tiers: [
     {
       name: "Standart",

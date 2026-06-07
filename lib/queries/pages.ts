@@ -1,5 +1,22 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import type { Block } from "@/lib/page-blocks";
+import { LEGAL_DEFAULTS } from "@/lib/legal-defaults";
+
+/** Yasal sayfaları (yoksa) varsayılan içerikle oluşturur. Idempotent. */
+export async function ensureLegalPages() {
+  await prisma.page.createMany({
+    data: LEGAL_DEFAULTS.map((d) => ({
+      slug: d.slug,
+      title: d.title,
+      seoTitle: d.seoTitle,
+      seoDescription: d.seoDescription,
+      status: "PUBLISHED" as const,
+      blocks: d.blocks as unknown as Prisma.InputJsonValue,
+    })),
+    skipDuplicates: true,
+  });
+}
 
 export async function listPages() {
   return prisma.page.findMany({

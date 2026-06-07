@@ -52,7 +52,7 @@ export const UI_KEYS: UiKeyDef[] = [
 
   // Alt bilgi
   { key: "footerNote", group: "Alt bilgi", tr: "Fiyatlara KDV dahildir.", en: "Prices include VAT." },
-  { key: "poweredBy", group: "Alt bilgi", tr: "EAGLE QR İLE HAZIRLANMIŞTIR", en: "POWERED BY EAGLE QR" },
+  { key: "poweredBy", group: "Alt bilgi", tr: "EAGLE MENU İLE HAZIRLANMIŞTIR", en: "POWERED BY EAGLE MENU" },
   { key: "directions", group: "Alt bilgi", tr: "Yol tarifi", en: "Directions" },
 ];
 

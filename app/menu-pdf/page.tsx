@@ -138,7 +138,7 @@ export default async function MenuPdfPage() {
 
         <footer style={{ marginTop: 40, borderTop: "1px solid #e5e2db", paddingTop: 16, textAlign: "center", fontFamily: "system-ui", fontSize: 11, color: "#9a958c" }}>
           {[business.address, business.phone].filter(Boolean).join(" · ")}
-          <div style={{ marginTop: 6, letterSpacing: "0.2em" }}>EAGLE QR</div>
+          <div style={{ marginTop: 6, letterSpacing: "0.2em" }}>EAGLE MENU</div>
         </footer>
       </div>
 

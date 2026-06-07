@@ -89,8 +89,8 @@ export default function DashboardShell({
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 border-r border-ink/10 bg-white p-4 md:flex md:flex-col">
         <Link href="/dashboard" className="flex items-center gap-2 px-2 py-2">
-          <Image src="/eagle-logo.webp" alt="Eagle QR" width={28} height={28} className="h-7 w-7 object-contain" />
-          <span className="font-display text-lg font-bold text-ink">Eagle QR</span>
+          <Image src="/eagle-logo.webp" alt="Eagle Menu" width={28} height={28} className="h-7 w-7 object-contain" />
+          <span className="font-display text-lg font-bold text-ink">Eagle Menu</span>
         </Link>
         <div className="mt-2 px-2 pb-4">
           <p className="truncate text-xs text-ink/50">{businessName}</p>
@@ -110,8 +110,8 @@ export default function DashboardShell({
       {/* Mobile top bar */}
       <header className="flex items-center justify-between border-b border-ink/10 bg-white px-4 py-3 md:hidden">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Image src="/eagle-logo.webp" alt="Eagle QR" width={26} height={26} className="h-6 w-6 object-contain" />
-          <span className="font-display text-base font-bold text-ink">Eagle QR</span>
+          <Image src="/eagle-logo.webp" alt="Eagle Menu" width={26} height={26} className="h-6 w-6 object-contain" />
+          <span className="font-display text-base font-bold text-ink">Eagle Menu</span>
         </Link>
         <button
           type="button"

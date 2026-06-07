@@ -7,14 +7,13 @@ export const RESERVED_SLUGS = new Set([
   "register",
   "m",
   "menu-pdf",
-  "gizlilik",
-  "kullanim-kosullari",
-  "kvkk",
   "ozellikler",
   "sayfa",
   "_next",
   "favicon.ico",
 ]);
+// Not: gizlilik / kullanim-kosullari / kvkk artık sayfa-builder'da düzenlenen
+// gerçek Page kayıtlarıdır (bkz. lib/legal-defaults.ts), bu yüzden rezerve değil.
 
 /** Slug'ı normalize eder: küçük harf, boşluk→tire, geçersiz karakterleri at. */
 export function normalizeSlug(input: string): string {
