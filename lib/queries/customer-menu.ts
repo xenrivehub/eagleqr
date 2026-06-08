@@ -7,6 +7,7 @@ const businessSelect = {
   id: true,
   name: true,
   type: true,
+  status: true,
   themeKey: true,
   currency: true,
   ratingsEnabled: true,

@@ -1,6 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Karla } from "next/font/google";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#f5b70c",
+};
 
 const playfair = Playfair_Display({
   variable: "--font-display",

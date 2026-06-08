@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     description,
     keywords,
     alternates: { canonical: `/m/${slug}/${branchSlug}` },
-    robots: { index: true, follow: true },
+    robots: data.business.status === "ACTIVE" ? { index: true, follow: true } : { index: false, follow: false },
     openGraph: { title, description, type: "website", url: `/m/${slug}/${branchSlug}`, siteName: data.business.name },
   };
 }
@@ -107,8 +107,20 @@ export default async function BranchMenuPage({ params }: Params) {
     socialLinks: eff.socialLinks,
   };
 
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: `${business.name} — ${menu.name}`,
+    ...(eff.logoUrl ? { image: eff.logoUrl } : {}),
+    ...(eff.address ? { address: eff.address } : {}),
+    ...(eff.phone ? { telephone: eff.phone } : {}),
+    url: `/m/${slug}/${branchSlug}`,
+    servesCuisine: "Çeşitli",
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
       <ThemedMenu
         theme={theme}

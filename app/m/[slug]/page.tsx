@@ -20,9 +20,10 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const business = await prisma.business.findUnique({
     where: { slug },
-    select: { name: true, logoUrl: true, coverUrl: true },
+    select: { name: true, logoUrl: true, coverUrl: true, status: true },
   });
   if (!business) return { title: "Menü" };
+  const indexable = business.status === "ACTIVE";
 
   // Global SEO şablonları (admin'den, tüm işletmeler için ortak)
   const seo = await getSeoSettings();
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     description,
     keywords,
     alternates: { canonical: `/m/${slug}` },
-    robots: { index: true, follow: true },
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
     openGraph: {
       title,
       description,

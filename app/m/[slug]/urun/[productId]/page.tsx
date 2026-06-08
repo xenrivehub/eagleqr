@@ -24,7 +24,7 @@ async function getProduct(slug: string, productId: string) {
   const product = await prisma.product.findFirst({
     where: { id: productId, business: { slug } },
     include: {
-      business: { select: { name: true, type: true, themeKey: true, currency: true, ratingsEnabled: true } },
+      business: { select: { name: true, type: true, themeKey: true, currency: true, ratingsEnabled: true, status: true } },
       category: {
         select: {
           id: true, name: true, translations: true,
@@ -72,6 +72,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description,
     keywords,
+    robots: p.business.status === "ACTIVE" ? { index: true, follow: true } : { index: false, follow: false },
     alternates: { canonical: `/m/${slug}/urun/${productId}` },
     openGraph: {
       title,
@@ -198,8 +199,25 @@ export default async function ProductDetailPage({ params }: Params) {
     fontFamily: theme.fonts.body,
   } as CSSProperties;
 
+  // Zengin sonuç (rich results) için Product/Offer JSON-LD
+  const ldPrice = (campaignPrice ?? Number(product.price)).toFixed(2);
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: dName,
+    ...(dDesc ? { description: dDesc } : {}),
+    ...(product.imageUrl ? { image: product.imageUrl } : {}),
+    offers: {
+      "@type": "Offer",
+      price: ldPrice,
+      priceCurrency: currency.code,
+      availability: product.isSoldOut ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+    },
+  };
+
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="min-h-dvh bg-menu-bg font-sans text-menu-text" style={themeVars}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
       <TrackView businessId={product.businessId} type="VIEW" productId={product.id} menuId={product.category.menu.id} />
       <header className="sticky top-0 z-30 border-b border-menu-border bg-menu-bg/90 backdrop-blur">
