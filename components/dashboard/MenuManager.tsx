@@ -261,10 +261,10 @@ export default function MenuManager({
           <BulkImport menuId={menuId} onImported={closeAndRefresh} />
         )}
         {panel?.kind === "category-new" && (
-          <CategoryForm menuId={menuId} campaigns={campaigns} campaignsEnabled={features.campaigns} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} campaigns={campaigns} campaignsEnabled={features.campaigns} videoAllowed={media.video.allowed} onDone={closeAndRefresh} />
         )}
         {panel?.kind === "category-edit" && (
-          <CategoryForm menuId={menuId} category={panel.category} campaigns={campaigns} campaignsEnabled={features.campaigns} onDone={closeAndRefresh} />
+          <CategoryForm menuId={menuId} category={panel.category} campaigns={campaigns} campaignsEnabled={features.campaigns} videoAllowed={media.video.allowed} onDone={closeAndRefresh} />
         )}
         {panel?.kind === "bulk-price" && (
           <BulkPrice

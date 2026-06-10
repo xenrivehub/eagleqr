@@ -77,14 +77,14 @@ export default function Pricing({ config }: { config: PricingConfig }) {
           return (
             <Reveal key={tier.name} delay={i * 100}>
               <div
-                className={`relative flex h-full flex-col rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                className={`relative flex h-full flex-col rounded-3xl border p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
                   tier.featured
-                    ? "border-transparent bg-ink text-cream shadow-xl md:-translate-y-2"
-                    : "border-ink/10 bg-white text-ink"
+                    ? "border-transparent bg-ink text-cream shadow-2xl shadow-ink/25 md:-translate-y-2"
+                    : "border-ink/10 bg-white text-ink shadow-sm"
                 }`}
               >
                 {tier.featured && (
-                  <span className="absolute -top-3 left-6 rounded-full bg-brand px-3 py-1 text-xs font-bold text-ink">
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-ink">
                     En Popüler
                   </span>
                 )}

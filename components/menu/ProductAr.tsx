@@ -1,6 +1,7 @@
 "use client";
 
 import { createElement, useEffect, useRef, useState } from "react";
+import { trackEvent } from "@/lib/track";
 
 // model-viewer (GLB) — buton "Masamda Görüntüle" ile AR başlatır.
 // Sayfada 360° kutu gösterilmez; model-viewer görünmez tutulur, yalnızca AR için.
@@ -11,10 +12,16 @@ export default function ProductAr({
   src,
   poster,
   label,
+  businessId,
+  productId,
+  menuId,
 }: {
   src: string;
   poster: string | null;
   label: string;
+  businessId: string;
+  productId: string;
+  menuId?: string;
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const [ready, setReady] = useState(false);
@@ -36,6 +43,7 @@ export default function ProductAr({
   }, []);
 
   function launch() {
+    trackEvent({ businessId, type: "AR_OPEN", productId, menuId });
     const mv = ref.current as unknown as { activateAR?: () => Promise<void> } | null;
     if (mv?.activateAR) mv.activateAR().catch(() => {});
   }

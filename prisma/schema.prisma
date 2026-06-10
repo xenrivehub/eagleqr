@@ -58,6 +58,8 @@ enum SpiceTolerance {
 enum ScanType {
   SCAN
   VIEW
+  AR_OPEN
+  PAIR_CLICK
 }
 
 enum SubscriptionStatus {
@@ -116,6 +118,10 @@ model Business {
   heroOverline String? // hero üst etiket (örn. "BUGÜN")
   heroTitle    String? // hero serif başlık
   heroSubtitle String? // hero alt metin
+  // QR açılış (splash) ekranı — Pro/Max. Açıksa menü öncesi karşılama gösterilir
+  splashEnabled  Boolean @default(false)
+  splashImageUrl String? // açılış görseli (R2)
+  splashVideoUrl String? // açılış videosu (R2, opsiyonel)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -213,6 +219,9 @@ model Category {
   name      String
   sortOrder Int    @default(0)
   translations Json @default("{}") // { en: { name }, de: { name } }
+  description String? // kategori başlık kartı açıklaması
+  imageUrl   String? // kategori kartı arka plan görseli (R2)
+  videoUrl   String? // kategori kartı arka plan videosu (R2, opsiyonel)
   availStart String? // servis başlangıç "HH:MM" (boşsa hep açık)
   availEnd   String? // servis bitiş "HH:MM"
   // Kategori kampanyası (tüm ürünlere zamanlı indirim + rozet)
@@ -374,9 +383,11 @@ model ScanEvent {
   tableNo    String?
   productId  String?
   type       ScanType @default(SCAN)
+  lang       String? // müşterinin menü dili (eq_lang) — turist/dil analitiği
   ts         DateTime @default(now())
 
   @@index([businessId, ts])
+  @@index([menuId, type, ts])
 }
 
 model Subscription {

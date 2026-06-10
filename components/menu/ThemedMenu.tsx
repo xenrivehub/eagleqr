@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ThemeSpec } from "@/lib/themes";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import TrackView from "@/components/menu/TrackView";
+import ScrollFadeRow from "@/components/menu/ScrollFadeRow";
 import { useAllergenFilter } from "@/lib/use-allergen-filter";
 import { useMenuLang } from "@/lib/use-menu-lang";
 import { allergenLabel } from "@/lib/allergen-i18n";
@@ -12,7 +13,14 @@ import { formatPrice, type CurrencySpec } from "@/lib/currency";
 import { fillTemplate, type UiStrings } from "@/lib/ui-strings";
 
 export type MenuLang = { code: string; label: string; nativeLabel: string; rtl: boolean };
-type CatItem = { id: string; name: string; translations?: Record<string, { name?: string }> };
+type CatItem = {
+  id: string;
+  name: string;
+  translations?: Record<string, { name?: string; description?: string }>;
+  description?: string | null;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+};
 
 export type ThemedBusiness = {
   id: string;
@@ -199,10 +207,18 @@ export default function ThemedMenu({
         {T("soldOut")}
       </span>
     ) : null;
-  // kampanya + tükendi rozet satırı (varsa)
+  // "Bugün Popüler" — günlük görüntülenmeye göre otomatik (gece yarısı sıfırlanır)
+  const trendBadge = (p: MenuProduct) =>
+    p.trendToday ? (
+      <span style={{ display: "inline-block", background: c.accent, color: c.onAccent, fontSize: 9.5, fontWeight: 800, letterSpacing: "0.04em", borderRadius: 999, padding: "2px 9px" }}>
+        🔥 {T("trendingToday")}
+      </span>
+    ) : null;
+  // kampanya + tükendi + trend rozet satırı (varsa)
   const topBadges = (p: MenuProduct, mt = 0) =>
-    p.campaign || p.isSoldOut ? (
+    p.campaign || p.isSoldOut || p.trendToday ? (
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6, marginTop: mt }}>
+        {trendBadge(p)}
         {campaignBadge(p)}
         {soldOutBadge(p)}
       </div>
@@ -335,12 +351,50 @@ export default function ThemedMenu({
     }
     // underline
     return (
-      <div style={{ display: "flex", gap: 18, marginBottom: 22, borderBottom: `1px solid ${c.line}`, overflowX: "auto" }}>
+      <ScrollFadeRow style={{ display: "flex", gap: 18, marginBottom: 22, borderBottom: `1px solid ${c.line}` }}>
         {cats.map((cat) => {
           const on = activeCat === cat.id;
           return <button key={cat.id} type="button" onClick={() => setActiveCat(cat.id)} style={{ cursor: "pointer", background: "transparent", border: "none", fontFamily: t.headingSerif ? t.fonts.display : t.fonts.body, fontSize: t.headingSerif ? 15.5 : 13.5, paddingBottom: 11, whiteSpace: "nowrap", fontWeight: on ? 700 : 400, color: on ? c.accent : c.sub, borderBottom: on ? `2px solid ${c.accent}` : "2px solid transparent", marginBottom: -1 }}>{catName(cat)}</button>;
         })}
-      </div>
+      </ScrollFadeRow>
+    );
+  }
+
+  // ---- KATEGORİ BAŞLIK KARTI (seçili kategorinin medyası/açıklaması varsa) ----
+  function CategoryCard() {
+    if (activeCat === "all") return null;
+    const cat = categories.find((x) => x.id === activeCat);
+    if (!cat) return null;
+    const hasMedia = !!(cat.videoUrl || cat.imageUrl);
+    const desc = (activeLang !== "tr" && cat.translations?.[activeLang]?.description) || cat.description;
+    if (!hasMedia && !desc) return null;
+    const title = catName(cat);
+
+    // sadece açıklama (medya yok) — düz kart
+    if (!hasMedia) {
+      return (
+        <section style={{ ...cardStyle, padding: 16, marginBottom: 22 }}>
+          <h3 style={display({ margin: 0, fontSize: 18, fontWeight: 700 })}>{title}</h3>
+          {desc && <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.55, color: c.sub }}>{desc}</p>}
+        </section>
+      );
+    }
+
+    const h = 168;
+    return (
+      <section style={{ position: "relative", overflow: "hidden", borderRadius: imgRadius(h), marginBottom: 22, border: t.cardBorder, boxShadow: t.cardShadow }}>
+        {cat.videoUrl ? (
+          <video src={cat.videoUrl} poster={cat.imageUrl ?? undefined} autoPlay muted loop playsInline style={{ width: "100%", height: h, objectFit: "cover", display: "block" }} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cat.imageUrl!} alt="" loading="lazy" style={{ width: "100%", height: h, objectFit: "cover", display: "block" }} />
+        )}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.74) 100%)" }} />
+        <div style={{ position: "absolute", left: 18, right: 18, bottom: 16 }}>
+          <h3 style={display({ margin: 0, fontSize: 22, fontWeight: 800, color: "#fff", lineHeight: 1.1 })}>{title}</h3>
+          {desc && <p style={{ margin: "6px 0 0", fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.9)" }}>{desc}</p>}
+        </div>
+      </section>
     );
   }
 
@@ -576,6 +630,8 @@ export default function ThemedMenu({
             )}
 
             <Tabs />
+
+            <CategoryCard />
 
             {/* ITEMS */}
             <section style={itemsWrap}>

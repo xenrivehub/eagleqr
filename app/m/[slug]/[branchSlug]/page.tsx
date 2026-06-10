@@ -11,6 +11,8 @@ import { cookies } from "next/headers";
 import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
+import SplashGate from "@/components/menu/SplashGate";
+import { getBusinessFeatures } from "@/lib/queries/plan-features";
 
 type Params = { params: Promise<{ slug: string; branchSlug: string }> };
 
@@ -118,10 +120,19 @@ export default async function BranchMenuPage({ params }: Params) {
     servesCuisine: "Çeşitli",
   };
 
+  // QR açılış (splash) ekranı — işletme genelinde, Pro/Max
+  const splashOn =
+    business.splashEnabled &&
+    Boolean(business.splashVideoUrl || business.splashImageUrl) &&
+    (await getBusinessFeatures(business.id)).splashScreen;
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
+      {splashOn && (
+        <SplashGate slug={slug} imageUrl={business.splashImageUrl} videoUrl={business.splashVideoUrl} />
+      )}
       <ThemedMenu
         theme={theme}
         business={merged}

@@ -23,6 +23,9 @@ const businessSelect = {
   socialLinks: true,
   maintenanceMode: true,
   maintenanceMessage: true,
+  splashEnabled: true,
+  splashImageUrl: true,
+  splashVideoUrl: true,
 } as const;
 
 export async function getMenuBusiness(slug: string) {
@@ -38,12 +41,19 @@ export type MenuBusinessWithType = MenuBusiness & {
   type: "SINGLE" | "CHAIN";
 };
 
-type CatTrans = Record<string, { name?: string }>;
+type CatTrans = Record<string, { name?: string; description?: string }>;
 type ProdTrans = Record<string, { name?: string; description?: string }>;
 
 export async function loadMenuProducts(menuId: string): Promise<{
   products: MenuProduct[];
-  categoryList: { id: string; name: string; translations: CatTrans }[];
+  categoryList: {
+    id: string;
+    name: string;
+    translations: CatTrans;
+    description: string | null;
+    imageUrl: string | null;
+    videoUrl: string | null;
+  }[];
 }> {
   const categories = await prisma.category.findMany({
     where: { menuId },
@@ -75,6 +85,28 @@ export async function loadMenuProducts(menuId: string): Promise<{
       r.productId,
       { avg: Math.round((r._avg.stars ?? 0) * 10) / 10, count: r._count._all },
     ]),
+  );
+
+  // "Bugün Popüler" — bugünkü (TR saati) görüntülenmeye göre en çok bakılan 3 ürün
+  // (en az 3 görüntülenme). Günlük sıfırlanır (yalnız bugünün verisi sorgulanır).
+  const TR_OFFSET = 3 * 3600_000;
+  const trNow = new Date(Date.now() + TR_OFFSET);
+  const trMidnight = Date.UTC(trNow.getUTCFullYear(), trNow.getUTCMonth(), trNow.getUTCDate());
+  const todayStartUtc = new Date(trMidnight - TR_OFFSET);
+  const todayViews = productIds.length
+    ? await prisma.scanEvent.groupBy({
+        by: ["productId"],
+        where: { menuId, type: "VIEW", productId: { in: productIds }, ts: { gte: todayStartUtc } },
+        _count: { productId: true },
+      })
+    : [];
+  const trendSet = new Set(
+    todayViews
+      .map((r) => ({ id: r.productId as string, c: r._count.productId }))
+      .filter((r) => r.c >= 3)
+      .sort((a, b) => b.c - a.c)
+      .slice(0, 3)
+      .map((r) => r.id),
   );
 
   const products: MenuProduct[] = categories
@@ -136,6 +168,7 @@ export async function loadMenuProducts(menuId: string): Promise<{
       isFeatured: p.isFeatured,
       isNew: p.isNew,
       isPopular: p.isPopular,
+      trendToday: trendSet.has(p.id),
       };
       });
     });
@@ -146,7 +179,14 @@ export async function loadMenuProducts(menuId: string): Promise<{
         isWithinWindow(c.availStart, c.availEnd) &&
         c.products.some((p) => isWithinWindow(p.availStart, p.availEnd)),
     )
-    .map((c) => ({ id: c.id, name: c.name, translations: (c.translations as CatTrans) ?? {} }));
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      translations: (c.translations as CatTrans) ?? {},
+      description: c.description,
+      imageUrl: c.imageUrl,
+      videoUrl: c.videoUrl,
+    }));
 
   return { products, categoryList };
 }

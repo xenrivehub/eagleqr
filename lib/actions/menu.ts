@@ -86,6 +86,9 @@ async function assertCategoryOwned(categoryId: string, businessId: string) {
 
 export type CategoryInput = {
   name: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
   availStart?: string | null;
   availEnd?: string | null;
   campaignId?: string | null;
@@ -150,6 +153,9 @@ export async function createCategory(
       data: {
         menuId: menu.id,
         name: trimmed,
+        description: input.description?.trim() || null,
+        imageUrl: input.imageUrl || null,
+        videoUrl: input.videoUrl || null,
         availStart: cleanTime(input.availStart),
         availEnd: cleanTime(input.availEnd),
         ...(await categoryCampaignData(input, businessId)),
@@ -177,6 +183,9 @@ export async function updateCategory(
       where: { id },
       data: {
         name: trimmed,
+        description: input.description?.trim() || null,
+        imageUrl: input.imageUrl || null,
+        videoUrl: input.videoUrl || null,
         availStart: cleanTime(input.availStart),
         availEnd: cleanTime(input.availEnd),
         ...(await categoryCampaignData(input, businessId)),

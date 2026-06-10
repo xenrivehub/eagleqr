@@ -26,6 +26,7 @@ export type MenuProduct = {
   isFeatured: boolean;
   isNew: boolean;
   isPopular: boolean;
+  trendToday: boolean;
 };
 
 type Chip = "featured" | "new" | "popular";

@@ -72,6 +72,44 @@ export async function updateStorefront(
 }
 
 // ---------------------------------------------------------------------------
+// QR açılış (splash) ekranı — Pro/Max
+// ---------------------------------------------------------------------------
+
+export type SplashInput = {
+  enabled: boolean;
+  imageUrl: string | null;
+  videoUrl: string | null;
+};
+
+export async function updateSplash(input: SplashInput): Promise<ActionResult> {
+  const session = await auth();
+  const businessId = session?.user?.businessId;
+  if (!businessId) return { success: false, error: "Yetkisiz erişim." };
+
+  const { hasFeature } = await import("@/lib/queries/plan-features");
+  if (!(await hasFeature(businessId, "splashScreen"))) {
+    return { success: false, error: "QR açılış ekranı planınızda kapalı." };
+  }
+
+  try {
+    const business = await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        splashEnabled: input.enabled,
+        splashImageUrl: input.imageUrl || null,
+        splashVideoUrl: input.videoUrl || null,
+      },
+      select: { slug: true },
+    });
+    revalidatePath("/dashboard/storefront");
+    revalidatePath(`/m/${business.slug}`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kaydedilemedi." };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // İşletme bilgileri (profil)
 // ---------------------------------------------------------------------------
 

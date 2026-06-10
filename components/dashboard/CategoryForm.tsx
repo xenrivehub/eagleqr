@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import type { CategoryView } from "./types";
 import { createCategory, updateCategory } from "@/lib/actions/menu";
+import ImageUpload from "./ImageUpload";
+import MediaUpload from "./MediaUpload";
 
 const inputBase =
   "w-full rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark";
@@ -12,18 +14,22 @@ export default function CategoryForm({
   category,
   campaigns,
   campaignsEnabled = true,
+  videoAllowed = false,
   onDone,
 }: {
   menuId: string;
   category?: CategoryView;
   campaigns: { id: string; label: string; color: string }[];
   campaignsEnabled?: boolean;
+  videoAllowed?: boolean;
   onDone: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [availStart, setAvailStart] = useState(category?.availStart ?? "");
   const [availEnd, setAvailEnd] = useState(category?.availEnd ?? "");
+  const [imageUrl, setImageUrl] = useState<string | null>(category?.imageUrl ?? null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(category?.videoUrl ?? null);
   const [campaignId, setCampaignId] = useState<string | null>(category?.campaignId ?? null);
   const [cStart, setCStart] = useState(category?.campaignStart ?? "");
   const [cEnd, setCEnd] = useState(category?.campaignEnd ?? "");
@@ -35,10 +41,15 @@ export default function CategoryForm({
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    const name = String(new FormData(e.currentTarget).get("name") ?? "");
+    const fd = new FormData(e.currentTarget);
+    const name = String(fd.get("name") ?? "");
+    const description = String(fd.get("description") ?? "");
 
     const input = {
       name,
+      description: description || null,
+      imageUrl,
+      videoUrl,
       availStart: availStart || null,
       availEnd: availEnd || null,
       campaignId,
@@ -82,6 +93,34 @@ export default function CategoryForm({
           className="w-full rounded-xl border border-ink/15 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark"
         />
       </div>
+
+      <div>
+        <label htmlFor="c-desc" className="mb-1.5 block text-sm font-medium text-ink">
+          Açıklama (opsiyonel)
+        </label>
+        <textarea
+          id="c-desc"
+          name="description"
+          defaultValue={category?.description ?? ""}
+          rows={2}
+          maxLength={240}
+          placeholder="Örn. Güne enerjik başlamanız için doyurucu seçenekler."
+          className={inputBase}
+        />
+        <p className="mt-1 text-xs text-ink/45">Kategori kartının üstünde görünür (resimdeki gibi).</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageUpload value={imageUrl} onChange={setImageUrl} folder="covers" shape="wide" label="Kategori görseli (opsiyonel)" />
+        <MediaUpload
+          kind="video"
+          value={videoUrl}
+          onChange={setVideoUrl}
+          locked={!videoAllowed}
+          lockedReason="Kategori videosu için video özelliği (Pro/Max) gerekir."
+        />
+      </div>
+
       <div>
         <label className="mb-1.5 block text-sm font-medium text-ink">Servis saatleri (opsiyonel)</label>
         <div className="flex items-center gap-2">

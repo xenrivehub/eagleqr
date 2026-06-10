@@ -16,7 +16,7 @@ function localParts(ts: Date) {
   return { wd, hour: d.getUTCHours(), dayKey: d.toISOString().slice(0, 10) };
 }
 
-type Params = { searchParams: Promise<{ scope?: string; range?: string }> };
+type Params = { searchParams: Promise<{ scope?: string; range?: string; view?: string }> };
 
 export default async function AnalyticsPage({ searchParams }: Params) {
   const session = await auth();
@@ -30,7 +30,8 @@ export default async function AnalyticsPage({ searchParams }: Params) {
   const isChain = business?.type === "CHAIN";
   const advanced = (await getBusinessFeatures(businessId)).advancedAnalytics;
 
-  const { scope: scopeParam, range: rangeParam } = await searchParams;
+  const { scope: scopeParam, range: rangeParam, view: viewParam } = await searchParams;
+  const view = viewParam === "etki" ? "etki" : "genel";
   const showAll = !isChain || scopeParam === "all";
   const RANGE = [7, 30, 90].includes(Number(rangeParam)) ? Number(rangeParam) : 30;
 
@@ -108,6 +109,40 @@ export default async function AnalyticsPage({ searchParams }: Params) {
   const maxCat = Math.max(1, ...categoryPop.map((c) => c.count));
 
   const hasData = rangeScans > 0 || rangeViews > 0;
+
+  // ---- Etki paneli (#11) + dil analitiği (#6) — yalnız Etki sekmesi & gelişmiş analitik ----
+  let etki: {
+    langDist: { lang: string; count: number }[];
+    totalLang: number;
+    videoViews: number;
+    arOpens: number;
+    pairClicks: number;
+    campaignViews: number;
+  } | null = null;
+
+  if (view === "etki" && advanced) {
+    const [videoRows, campRows] = await Promise.all([
+      prisma.product.findMany({ where: { ...prodWhere, videoUrl: { not: null } }, select: { id: true } }),
+      prisma.product.findMany({ where: { ...prodWhere, campaignId: { not: null } }, select: { id: true } }),
+    ]);
+    const videoIds = videoRows.map((p) => p.id);
+    const campIds = campRows.map((p) => p.id);
+    const [langRows, arOpens, pairClicks, videoViews, campaignViews] = await Promise.all([
+      prisma.scanEvent.groupBy({ by: ["lang"], where: { ...where, type: "SCAN", lang: { not: null }, ts: { gte: since } }, _count: { lang: true } }),
+      prisma.scanEvent.count({ where: { ...where, type: "AR_OPEN", ts: { gte: since } } }),
+      prisma.scanEvent.count({ where: { ...where, type: "PAIR_CLICK", ts: { gte: since } } }),
+      videoIds.length ? prisma.scanEvent.count({ where: { ...where, type: "VIEW", productId: { in: videoIds }, ts: { gte: since } } }) : Promise.resolve(0),
+      campIds.length ? prisma.scanEvent.count({ where: { ...where, type: "VIEW", productId: { in: campIds }, ts: { gte: since } } }) : Promise.resolve(0),
+    ]);
+    const langDist = langRows
+      .map((r) => ({ lang: (r.lang as string).toUpperCase(), count: r._count.lang }))
+      .sort((a, b) => b.count - a.count);
+    etki = {
+      langDist,
+      totalLang: langDist.reduce((s, r) => s + r.count, 0),
+      videoViews, arOpens, pairClicks, campaignViews,
+    };
+  }
 
   const tab = (active: boolean, href: string, label: string) => (
     <Link

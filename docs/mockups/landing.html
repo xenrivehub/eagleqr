@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eagle Menu — QR Menünün Ötesinde, Dijital Vitrin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet" />
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        cream: "#fbf9f3",
+        ink: { DEFAULT: "#0f1a2a", soft: "#1b2a3d" },
+        brand: { DEFAULT: "#f5b70c", dark: "#e0a400", soft: "#fdf3d6" },
+      },
+      fontFamily: {
+        sans: ["Karla", "sans-serif"],
+        display: ["Playfair Display", "Georgia", "serif"],
+      },
+      maxWidth: { "8xl": "88rem" },
+    },
+  },
+};
+</script>
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  .text-balance { text-wrap: balance; }
+  /* yumuşak yukarı kayma animasyonu */
+  @keyframes rise { from { opacity: 0; transform: translateY(18px);} to { opacity: 1; transform: translateY(0);} }
+  .rise { animation: rise .7s ease-out both; }
+  .rise-1 { animation-delay: .08s } .rise-2 { animation-delay: .16s } .rise-3 { animation-delay: .26s }
+  /* telefon mock kaydırma */
+  @keyframes drift { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+  .drift { animation: drift 7s ease-in-out infinite; }
+</style>
+</head>
+<body class="bg-cream font-sans text-ink antialiased">
+
+<!-- ============ NAV ============ -->
+<header class="fixed inset-x-0 top-0 z-50 border-b border-ink/5 bg-cream/80 backdrop-blur-md">
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+    <a href="#" class="flex items-center gap-2.5" aria-label="Eagle Menu ana sayfa">
+      <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink text-brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM21 14v.01M14 21v.01M17.5 17.5h.01M21 18v3h-3"/></svg>
+      </span>
+      <span class="font-display text-lg font-bold tracking-tight">Eagle<span class="text-brand-dark">Menu</span></span>
+    </a>
+    <nav class="hidden items-center gap-8 text-sm font-medium text-ink/70 md:flex" aria-label="Ana menü">
+      <a href="#ozellikler" class="transition-colors hover:text-ink">Özellikler</a>
+      <a href="#nasil" class="transition-colors hover:text-ink">Nasıl Çalışır</a>
+      <a href="#vitrin" class="transition-colors hover:text-ink">Canlı Örnek</a>
+      <a href="#fiyat" class="transition-colors hover:text-ink">Fiyatlandırma</a>
+      <a href="#sss" class="transition-colors hover:text-ink">SSS</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="#" class="hidden rounded-full px-4 py-2 text-sm font-semibold text-ink/70 transition-colors hover:text-ink sm:block">Giriş Yap</a>
+      <a href="#fiyat" class="cursor-pointer rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-cream shadow-sm transition-all hover:bg-ink-soft hover:shadow-md">
+        Ücretsiz Başla
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ============ HERO ============ -->
+<section class="relative overflow-hidden pt-16">
+  <!-- arka plan dokusu -->
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <div class="absolute -top-32 right-[-10%] h-[480px] w-[480px] rounded-full bg-brand/15 blur-3xl"></div>
+    <div class="absolute bottom-[-20%] left-[-8%] h-[420px] w-[420px] rounded-full bg-brand/10 blur-3xl"></div>
+    <svg class="absolute inset-0 h-full w-full opacity-[0.35]" aria-hidden="true"><defs><pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#0f1a2a" stroke-opacity="0.04"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)"/></svg>
+  </div>
+
+  <div class="relative mx-auto grid max-w-7xl items-center gap-14 px-5 pb-20 pt-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:pb-28 lg:pt-24">
+    <div>
+      <div class="rise inline-flex items-center gap-2 rounded-full border border-brand-dark/25 bg-brand-soft px-4 py-1.5 text-xs font-bold tracking-wide text-ink/80">
+        <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-dark opacity-60"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-brand-dark"></span></span>
+        YENİ — AR ile masada 3D ürün önizleme
+      </div>
+
+      <h1 class="rise rise-1 mt-6 font-display text-[2.6rem] font-bold leading-[1.07] tracking-tight text-balance sm:text-6xl">
+        QR menünün ötesinde,<br />
+        <span class="relative inline-block text-brand-dark">dijital vitrininiz.<svg class="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 220 10" fill="none" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8C60 2 160 2 218 6" stroke="#f5b70c" stroke-width="4" stroke-linecap="round" opacity="0.55"/></svg></span>
+      </h1>
+
+      <p class="rise rise-2 mt-6 max-w-lg text-lg leading-relaxed text-ink/65">
+        Eagle Menu sıradan bir QR menü değil; videolu ürünler, AR önizleme,
+        10 dilde otomatik çeviri ve gerçek müşteri analitiğiyle işletmenizin
+        <strong class="font-semibold text-ink">satış yapan pazarlama platformu</strong>.
+      </p>
+
+      <div class="rise rise-3 mt-8 flex flex-wrap items-center gap-4">
+        <a href="#fiyat" class="group inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand px-7 py-3.5 text-sm font-bold text-ink shadow-lg shadow-brand/30 transition-all hover:bg-brand-dark hover:shadow-xl hover:shadow-brand/40">
+          14 gün ücretsiz dene
+          <svg class="transition-transform group-hover:translate-x-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#vitrin" class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-ink/15 bg-white/70 px-6 py-3.5 text-sm font-bold text-ink transition-colors hover:border-ink/30 hover:bg-white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none"/></svg>
+          Canlı menüyü izle
+        </a>
+      </div>
+
+      <!-- sosyal kanıt -->
+      <div class="rise rise-3 mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-ink/55">
+        <div class="flex items-center gap-2">
+          <div class="flex -space-x-2.5">
+            <span class="grid h-8 w-8 place-items-center rounded-full border-2 border-cream bg-ink text-[10px] font-bold text-brand">KA</span>
+            <span class="grid h-8 w-8 place-items-center rounded-full border-2 border-cream bg-brand-dark text-[10px] font-bold text-white">MZ</span>
+            <span class="grid h-8 w-8 place-items-center rounded-full border-2 border-cream bg-ink-soft text-[10px] font-bold text-brand">LB</span>
+            <span class="grid h-8 w-8 place-items-center rounded-full border-2 border-cream bg-brand text-[10px] font-bold text-ink">+</span>
+          </div>
+          <span><strong class="font-bold text-ink">500+</strong> işletme</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="flex text-brand-dark" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>
+          </span>
+          <span><strong class="font-bold text-ink">4.9</strong>/5 memnuniyet</span>
+        </div>
+        <span><strong class="font-bold text-ink">2M+</strong> aylık tarama</span>
+      </div>
+    </div>
+
+    <!-- telefon mockup -->
+    <div class="relative mx-auto w-full max-w-sm lg:max-w-md">
+      <div class="drift relative">
+        <!-- arka kart: analitik -->
+        <div class="absolute -left-10 top-16 z-10 hidden w-44 rounded-2xl border border-ink/10 bg-white p-4 shadow-xl shadow-ink/10 sm:block">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-ink/45">Bugünkü tarama</p>
+          <p class="mt-1 font-display text-2xl font-bold">347</p>
+          <div class="mt-2 flex items-end gap-1" aria-hidden="true">
+            <span class="h-3 w-2 rounded-sm bg-brand/30"></span><span class="h-5 w-2 rounded-sm bg-brand/45"></span><span class="h-4 w-2 rounded-sm bg-brand/60"></span><span class="h-7 w-2 rounded-sm bg-brand/80"></span><span class="h-9 w-2 rounded-sm bg-brand"></span><span class="h-6 w-2 rounded-sm bg-brand/70"></span>
+          </div>
+          <p class="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>%23 bu hafta</p>
+        </div>
+        <!-- arka kart: dil -->
+        <div class="absolute -right-6 bottom-24 z-10 hidden w-40 rounded-2xl border border-ink/10 bg-white p-4 shadow-xl shadow-ink/10 sm:block">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-ink/45">Turist dilleri</p>
+          <div class="mt-2 space-y-1.5 text-[11px] font-semibold">
+            <div class="flex items-center justify-between"><span>🇬🇧 EN</span><span class="text-ink/50">%38</span></div>
+            <div class="h-1.5 rounded-full bg-ink/5"><div class="h-full w-[38%] rounded-full bg-brand"></div></div>
+            <div class="flex items-center justify-between"><span>🇩🇪 DE</span><span class="text-ink/50">%21</span></div>
+            <div class="h-1.5 rounded-full bg-ink/5"><div class="h-full w-[21%] rounded-full bg-brand/70"></div></div>
+          </div>
+        </div>
+
+        <!-- telefon gövdesi -->
+        <div class="relative mx-auto w-[270px] rounded-[2.6rem] border-[10px] border-ink bg-ink shadow-2xl shadow-ink/30">
+          <div class="absolute left-1/2 top-2 h-5 w-24 -translate-x-1/2 rounded-full bg-ink"></div>
+          <div class="overflow-hidden rounded-[2rem] bg-[#140d08]">
+            <!-- menü ekranı -->
+            <div class="px-4 pb-5 pt-8 text-[#f2e8d9]">
+              <p class="text-center text-[8px] font-semibold tracking-[0.35em] text-[#cda86d]">DİJİTAL MENÜ</p>
+              <p class="mt-1.5 text-center font-display text-lg font-bold tracking-wide">MAISON NOIR</p>
+              <div class="mt-3 flex gap-1.5 overflow-hidden text-[9px] font-bold">
+                <span class="rounded-full bg-[#cda86d] px-2.5 py-1 text-[#140d08]">Tümü</span>
+                <span class="rounded-full border border-[#3a2c1f] px-2.5 py-1 text-[#ab9883]">Kahve</span>
+                <span class="rounded-full border border-[#3a2c1f] px-2.5 py-1 text-[#ab9883]">Tatlı</span>
+                <span class="rounded-full border border-[#3a2c1f] px-2.5 py-1 text-[#ab9883]">Brunch</span>
+              </div>
+              <!-- ürün kartı 1 -->
+              <div class="mt-3 rounded-xl bg-[#221710] p-2.5">
+                <div class="flex gap-2.5">
+                  <div class="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#cda86d] to-[#8a6a3c] text-[#140d08]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 8h1a4 4 0 1 1 0 8h-1M3 8h14v6a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/></svg>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1">
+                      <p class="truncate text-[11px] font-bold">Cold Brew 18h</p>
+                      <span class="rounded border border-[#3a2c1f] px-1 text-[6.5px] font-bold text-[#cda86d]">▶ VIDEO</span>
+                    </div>
+                    <p class="mt-0.5 text-[8.5px] leading-snug text-[#ab9883]">18 saat soğuk demleme, düşük asidite</p>
+                    <div class="mt-1 flex items-center justify-between">
+                      <span class="rounded-full bg-[#cda86d] px-1.5 py-px text-[7px] font-extrabold text-[#140d08]">🔥 Bugün Popüler</span>
+                      <span class="text-[11px] font-bold text-[#cda86d]">₺95</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- ürün kartı 2 -->
+              <div class="mt-2 rounded-xl bg-[#221710] p-2.5">
+                <div class="flex gap-2.5">
+                  <div class="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#5c4632] to-[#2c2017] text-[#cda86d]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></svg>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1">
+                      <p class="truncate text-[11px] font-bold">San Sebastian</p>
+                      <span class="rounded border border-[#3a2c1f] px-1 text-[6.5px] font-bold text-[#cda86d]">AR</span>
+                    </div>
+                    <p class="mt-0.5 text-[8.5px] leading-snug text-[#ab9883]">Masanda 3D görüntüle — gerçek boyut</p>
+                    <div class="mt-1 flex items-center justify-between">
+                      <span class="text-[8px] text-[#ab9883]">★ 4.8 (124)</span>
+                      <span class="text-[11px] font-bold text-[#cda86d]">₺180</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- AR butonu -->
+              <button class="mt-3 w-full cursor-pointer rounded-full bg-[#cda86d] py-2 text-[10px] font-extrabold text-[#140d08]">Masamda Görüntüle (AR)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- logo şeridi -->
+  <div class="relative border-y border-ink/5 bg-white/60">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-12 gap-y-4 px-5 py-7 sm:px-8">
+      <p class="w-full text-center text-[11px] font-bold uppercase tracking-[0.2em] text-ink/40 sm:w-auto">Bize güvenenler</p>
+      <span class="font-display text-lg font-semibold text-ink/35">Maison Noir</span>
+      <span class="font-display text-lg font-semibold text-ink/35">Kahve Atölyesi</span>
+      <span class="font-display text-lg font-semibold text-ink/35">La Brasserie</span>
+      <span class="font-display text-lg font-semibold text-ink/35">Mezze 34</span>
+      <span class="hidden font-display text-lg font-semibold text-ink/35 md:inline">Roast &amp; Co.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ÖZELLİKLER (BENTO) ============ -->
+<section id="ozellikler" class="mx-auto max-w-7xl px-5 py-24 sm:px-8">
+  <div class="mx-auto max-w-2xl text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-dark">Neden Eagle Menu?</p>
+    <h2 class="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.6rem] sm:leading-[1.15]">PDF menü göstermek değil,<br class="hidden sm:block" /> <em class="text-brand-dark">satış yaptırmak</em> için tasarlandı</h2>
+    <p class="mt-4 text-lg leading-relaxed text-ink/60">Her özellik tek bir amaca hizmet eder: müşterinin daha fazla sipariş vermesi.</p>
+  </div>
+
+  <div class="mt-14 grid gap-5 md:grid-cols-3">
+    <!-- büyük kart: AR -->
+    <article class="group relative overflow-hidden rounded-3xl bg-ink p-8 text-cream md:col-span-2 md:row-span-2">
+      <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-brand/20 blur-3xl transition-all group-hover:bg-brand/30" aria-hidden="true"></div>
+      <span class="inline-flex items-center gap-2 rounded-full bg-brand/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></svg>
+        Türkiye'de bir ilk
+      </span>
+      <h3 class="mt-5 font-display text-2xl font-bold sm:text-3xl">Yemeği daha gelmeden masada gör: <span class="text-brand">AR önizleme</span></h3>
+      <p class="mt-3 max-w-md leading-relaxed text-cream/70">Müşteri telefon kamerasıyla ürünü gerçek boyutuyla masasında görür. Kararsızlık biter, ortalama sepet büyür. Uygulama indirmek yok — tarayıcıdan tek dokunuş.</p>
+      <div class="mt-6 flex flex-wrap gap-6 text-sm">
+        <div><p class="font-display text-2xl font-bold text-brand">+%27</p><p class="text-cream/55">ürün detay etkileşimi</p></div>
+        <div><p class="font-display text-2xl font-bold text-brand">0</p><p class="text-cream/55">uygulama indirme</p></div>
+        <div><p class="font-display text-2xl font-bold text-brand">GLB/USDZ</p><p class="text-cream/55">iOS + Android desteği</p></div>
+      </div>
+      <a href="ozellik-ar.html" class="mt-8 inline-flex cursor-pointer items-center gap-2 text-sm font-bold text-brand transition-colors hover:text-brand-dark">AR özelliğini incele <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </article>
+
+    <!-- video -->
+    <article class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm transition-shadow hover:shadow-md">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-brand-soft text-brand-dark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none"/></svg></span>
+      <h3 class="mt-4 font-display text-lg font-bold">Videolu ürünler</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink/60">Hazırlanış videosu iştah açar. Videolu ürünler menüde otomatik <strong>▶ VIDEO</strong> rozeti alır.</p>
+    </article>
+
+    <!-- analitik -->
+    <article class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm transition-shadow hover:shadow-md">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-brand-soft text-brand-dark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></span>
+      <h3 class="mt-4 font-display text-lg font-bold">Saydam analitik</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink/60">Hangi ürün bakılıyor, hangi saat yoğun, müşterileriniz hangi dili konuşuyor — şişirilmemiş, gerçek veri.</p>
+    </article>
+
+    <!-- çeviri -->
+    <article class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm transition-shadow hover:shadow-md">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-brand-soft text-brand-dark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg></span>
+      <h3 class="mt-4 font-display text-lg font-bold">10 dilde tek tıkla</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink/60">AI çevirisiyle menünüz İngilizce, Almanca, Arapça, Rusça… Turist masada kendi dilinde okur.</p>
+    </article>
+
+    <!-- kampanya -->
+    <article class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm transition-shadow hover:shadow-md">
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-brand-soft text-brand-dark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 9 6 6M9.5 14.5 4 20M15 4l5 5-8.5 8.5a2.1 2.1 0 0 1-3-3z"/></svg></span>
+      <h3 class="mt-4 font-display text-lg font-bold">Zamanlı kampanyalar</h3>
+      <p class="mt-2 text-sm leading-relaxed text-ink/60">Happy hour 17:00'de kendiliğinden başlar, 19:00'da kendiliğinden biter. Rozet + üstü çizili fiyat otomatik.</p>
+    </article>
+
+    <!-- splash -->
+    <article class="relative overflow-hidden rounded-3xl border border-brand/40 bg-gradient-to-br from-brand-soft to-white p-7 shadow-sm transition-shadow hover:shadow-md md:col-span-2">
+      <span class="absolute right-5 top-5 rounded-full bg-brand px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">Yeni</span>
+      <span class="grid h-11 w-11 place-items-center rounded-xl bg-ink text-brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg></span>
+      <h3 class="mt-4 font-display text-lg font-bold">QR açılış ekranı</h3>
+      <p class="mt-2 max-w-lg text-sm leading-relaxed text-ink/60">QR okutulduğunda menüden önce tam ekran tanıtım videonuz veya kampanya görseliniz oynar. Marka deneyimi kapıdan girer girmez başlar — "Menüyü Görüntüle" ile devam eder.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ NASIL ÇALIŞIR ============ -->
+<section id="nasil" class="border-y border-ink/5 bg-white py-24">
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-dark">Nasıl Çalışır</p>
+      <h2 class="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.4rem]">15 dakikada yayında</h2>
+    </div>
+    <ol class="mt-14 grid gap-10 sm:grid-cols-3">
+      <li class="relative text-center">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-ink font-display text-xl font-bold text-brand">1</span>
+        <h3 class="mt-5 font-display text-lg font-bold">Menünü yükle</h3>
+        <p class="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink/60">Basılı menünün fotoğrafını çek — AI ürünleri, fiyatları ve kategorileri otomatik çıkarsın. Ya da elle ekle.</p>
+        <svg class="absolute -right-7 top-6 hidden text-ink/15 sm:block" width="44" height="14" viewBox="0 0 44 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M1 7h38m0 0-5-5m5 5-5 5"/></svg>
+      </li>
+      <li class="relative text-center">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-ink font-display text-xl font-bold text-brand">2</span>
+        <h3 class="mt-5 font-display text-lg font-bold">Temanı seç</h3>
+        <p class="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink/60">12+ hazır temadan markana uyanı seç; logo, kapak ve karşılama metnini ekle. Kod yok, tasarımcı yok.</p>
+        <svg class="absolute -right-7 top-6 hidden text-ink/15 sm:block" width="44" height="14" viewBox="0 0 44 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M1 7h38m0 0-5-5m5 5-5 5"/></svg>
+      </li>
+      <li class="text-center">
+        <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-brand font-display text-xl font-bold text-ink">3</span>
+        <h3 class="mt-5 font-display text-lg font-bold">QR'ı bas, masaya koy</h3>
+        <p class="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink/60">QR kodunu indir, bastır, masaya yerleştir. Fiyat değişikliği mi? Panelden düzelt — anında her masada güncel.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ VİTRİN / KOYU ŞERİT ============ -->
+<section id="vitrin" class="bg-ink py-24 text-cream">
+  <div class="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-2">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand">Canlı Örnek</p>
+      <h2 class="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.4rem] sm:leading-[1.15]">Menünüz markanız gibi<br />görünsün, PDF gibi değil</h2>
+      <p class="mt-5 max-w-md leading-relaxed text-cream/65">Her işletmeye özel tema: kendi renkleriniz, kendi yazı tipiniz, kendi hikâyeniz. Müşteri menüyü açtığında ucuz bir liste değil, özenli bir vitrin görür.</p>
+      <ul class="mt-7 space-y-3 text-sm">
+        <li class="flex items-start gap-3"><svg class="mt-0.5 shrink-0 text-brand" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="text-cream/80">Alerjen filtresi — müşteri kaçındığı alerjeni seçer, riskli ürünler işaretlenir</span></li>
+        <li class="flex items-start gap-3"><svg class="mt-0.5 shrink-0 text-brand" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="text-cream/80">Yıldızlı müşteri puanları + "Bugün Popüler" otomatik rozeti</span></li>
+        <li class="flex items-start gap-3"><svg class="mt-0.5 shrink-0 text-brand" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="text-cream/80">"Yanında iyi gider" eşleştirmeleri — çapraz satış kendiliğinden</span></li>
+        <li class="flex items-start gap-3"><svg class="mt-0.5 shrink-0 text-brand" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span class="text-cream/80">Zincir işletmeler için şube bazlı menü, tema ve analitik</span></li>
+      </ul>
+      <a href="#" class="mt-8 inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand px-6 py-3 text-sm font-bold text-ink transition-colors hover:bg-brand-dark">
+        Demo menüyü aç
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
+      </a>
+    </div>
+
+    <!-- tema kartları -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="space-y-4">
+        <div class="rounded-2xl bg-[#140d08] p-5 ring-1 ring-white/10">
+          <p class="text-[9px] font-semibold tracking-[0.3em] text-[#cda86d]">MAISON NOIR</p>
+          <p class="mt-1 font-display text-lg font-bold text-[#f2e8d9]">Espresso &amp; Bakır</p>
+          <div class="mt-3 flex gap-1.5"><span class="h-5 w-5 rounded-full bg-[#cda86d]"></span><span class="h-5 w-5 rounded-full bg-[#221710]"></span><span class="h-5 w-5 rounded-full bg-[#f2e8d9]"></span></div>
+        </div>
+        <div class="rounded-2xl bg-[#f4f1ea] p-5">
+          <p class="text-[9px] font-semibold tracking-[0.3em] text-[#8a6a3c]">MINERAL</p>
+          <p class="mt-1 font-display text-lg font-bold text-[#2b2118]">Taş &amp; Zeytin</p>
+          <div class="mt-3 flex gap-1.5"><span class="h-5 w-5 rounded-full bg-[#7a8450]"></span><span class="h-5 w-5 rounded-full bg-[#2b2118]"></span><span class="h-5 w-5 rounded-full bg-white ring-1 ring-black/10"></span></div>
+        </div>
+      </div>
+      <div class="mt-8 space-y-4">
+        <div class="rounded-2xl bg-[#11304d] p-5">
+          <p class="text-[9px] font-semibold tracking-[0.3em] text-[#ffd34d]">POP</p>
+          <p class="mt-1 font-display text-lg font-bold text-white">Gece &amp; Neon</p>
+          <div class="mt-3 flex gap-1.5"><span class="h-5 w-5 rounded-full bg-[#ffd34d]"></span><span class="h-5 w-5 rounded-full bg-[#ff6b6b]"></span><span class="h-5 w-5 rounded-full bg-white"></span></div>
+        </div>
+        <div class="rounded-2xl bg-white p-5">
+          <p class="text-[9px] font-semibold tracking-[0.3em] text-[#b0413e]">BRUTALIST</p>
+          <p class="mt-1 font-display text-lg font-bold text-[#191919]">Sert &amp; Net</p>
+          <div class="mt-3 flex gap-1.5"><span class="h-5 w-5 rounded-full bg-[#b0413e]"></span><span class="h-5 w-5 rounded-full bg-[#191919]"></span><span class="h-5 w-5 rounded-full bg-[#f5f5f0] ring-1 ring-black/10"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REFERANS ============ -->
+<section class="mx-auto max-w-7xl px-5 py-24 sm:px-8">
+  <div class="mx-auto max-w-2xl text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-dark">İşletmeler Anlatıyor</p>
+    <h2 class="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.4rem]">Rakamlar bizim, sözler onların</h2>
+  </div>
+  <div class="mt-14 grid gap-5 md:grid-cols-3">
+    <figure class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm">
+      <svg class="text-brand" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 8c-3 0-5 2.2-5 5.5S7 19 9.5 19c2 0 3.5-1.4 3.5-3.4 0-1.9-1.3-3.2-3-3.2-.3 0-.6 0-.8.1.3-1.6 1.6-2.8 3.3-3.3zM21 8c-3 0-5 2.2-5 5.5s2 5.5 4.5 5.5c2 0 3.5-1.4 3.5-3.4 0-1.9-1.3-3.2-3-3.2-.3 0-.6 0-.8.1.3-1.6 1.6-2.8 3.3-3.3z" transform="scale(0.85)"/></svg>
+      <blockquote class="mt-4 leading-relaxed text-ink/75">"AR önizleme müşterilerin en çok konuştuğu şey. San Sebastian'ı masada 3D gören sipariş etmeden duramıyor — tatlı satışımız gözle görülür arttı."</blockquote>
+      <figcaption class="mt-5 flex items-center gap-3">
+        <span class="grid h-10 w-10 place-items-center rounded-full bg-ink text-xs font-bold text-brand">EY</span>
+        <div><p class="text-sm font-bold">Emre Y.</p><p class="text-xs text-ink/50">Maison Noir — İstanbul</p></div>
+      </figcaption>
+    </figure>
+    <figure class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm">
+      <svg class="text-brand" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 8c-3 0-5 2.2-5 5.5S7 19 9.5 19c2 0 3.5-1.4 3.5-3.4 0-1.9-1.3-3.2-3-3.2-.3 0-.6 0-.8.1.3-1.6 1.6-2.8 3.3-3.3zM21 8c-3 0-5 2.2-5 5.5s2 5.5 4.5 5.5c2 0 3.5-1.4 3.5-3.4 0-1.9-1.3-3.2-3-3.2-.3 0-.6 0-.8.1.3-1.6 1.6-2.8 3.3-3.3z" transform="scale(0.85)"/></svg>
+      <blockquote class="mt-4 leading-relaxed text-ink/75">"Dil analitiğinde Alman turistlerin %21 olduğunu görünce Almanca menüyü tek tıkla açtım. Garsonların çeviri derdi bitti."</blockquote>
+      <figcaption class="mt-5 flex items-center gap-3">
+        <span class="grid h-10 w-10 place-items-center rounded-full bg-brand-dark text-xs font-bold text-white">SK</span>
+        <div><p class="text-sm font-bold">Selin K.</p><p class="text-xs text-ink/50">Mezze 34 — Bodrum</p></div>
+      </figcaption>
+    </figure>
+    <figure class="rounded-3xl border border-ink/8 bg-white p-7 shadow-sm">
+      <svg class="text-brand" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 8c-3 0-5 2.2-5 5.5S7 19 9.5 19c2 0 3.5-1.4 3.5-3.4 0-1.9-1.3-3.2-3-3.2-.3 0-.6 0-.8.1.3-1.6 1.6-2.8 3.3-3.3zM21 8c-3 0-5 2.2-5 5.5s2 5.5 4.5 5.5c2 0 3.5-1.4 3.5-3.4 0-1.9-1.3-3.2-3-3.2-.3 0-.6 0-.8.1.3-1.6 1.6-2.8 3.3-3.3z" transform="scale(0.85)"/></svg>
+      <blockquote class="mt-4 leading-relaxed text-ink/75">"4 şubeyi tek panelden yönetiyorum. Fiyat güncellemesi 30 saniye; eskiden matbaaya 4 ayrı menü bastırıyorduk."</blockquote>
+      <figcaption class="mt-5 flex items-center gap-3">
+        <span class="grid h-10 w-10 place-items-center rounded-full bg-ink-soft text-xs font-bold text-brand">MA</span>
+        <div><p class="text-sm font-bold">Murat A.</p><p class="text-xs text-ink/50">Roast &amp; Co. — Ankara (4 şube)</p></div>
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ FİYAT ============ -->
+<section id="fiyat" class="border-y border-ink/5 bg-white py-24">
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-dark">Fiyatlandırma</p>
+      <h2 class="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.4rem]">Masadaki bir servisten ucuz</h2>
+      <p class="mt-4 text-ink/60">Yıllık ödemede 2 ay hediye. İstediğin an iptal et.</p>
+    </div>
+
+    <div class="mx-auto mt-14 grid max-w-5xl gap-6 lg:grid-cols-3">
+      <!-- Standart -->
+      <div class="flex flex-col rounded-3xl border border-ink/10 bg-cream p-8">
+        <h3 class="font-display text-lg font-bold">Standart</h3>
+        <p class="mt-1 text-sm text-ink/55">Dijitale ilk adım</p>
+        <p class="mt-5"><span class="font-display text-4xl font-bold">₺X</span><span class="text-sm text-ink/50">/ay</span></p>
+        <ul class="mt-6 flex-1 space-y-2.5 text-sm text-ink/75">
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Sınırsız ürün &amp; kategori</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>QR kod + temel temalar</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Alerjen filtresi &amp; puanlama</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Temel analitik</li>
+        </ul>
+        <a href="#" class="mt-8 block cursor-pointer rounded-full border border-ink/15 py-3 text-center text-sm font-bold transition-colors hover:bg-ink/5">Başla</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="relative flex flex-col rounded-3xl bg-ink p-8 text-cream shadow-2xl shadow-ink/25 lg:-my-4 lg:py-12">
+        <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-brand px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-ink">En Popüler</span>
+        <h3 class="font-display text-lg font-bold text-brand">Pro</h3>
+        <p class="mt-1 text-sm text-cream/60">Satışı büyütenler için</p>
+        <p class="mt-5"><span class="font-display text-4xl font-bold">₺X</span><span class="text-sm text-cream/50">/ay</span></p>
+        <ul class="mt-6 flex-1 space-y-2.5 text-sm text-cream/85">
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Standart'taki her şey</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>Videolu ürünler</strong> + QR açılış ekranı</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>AI çeviri (10 dil) + AI açıklama</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Kampanyalar &amp; servis saatleri</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Gelişmiş analitik (ısı haritası, dil, etki)</li>
+        </ul>
+        <a href="#" class="mt-8 block cursor-pointer rounded-full bg-brand py-3 text-center text-sm font-extrabold text-ink transition-colors hover:bg-brand-dark">14 gün ücretsiz dene</a>
+      </div>
+
+      <!-- Max -->
+      <div class="flex flex-col rounded-3xl border border-ink/10 bg-cream p-8">
+        <h3 class="font-display text-lg font-bold">Max</h3>
+        <p class="mt-1 text-sm text-ink/55">Fark yaratanlar için</p>
+        <p class="mt-5"><span class="font-display text-4xl font-bold">₺X</span><span class="text-sm text-ink/50">/ay</span></p>
+        <ul class="mt-6 flex-1 space-y-2.5 text-sm text-ink/75">
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Pro'daki her şey</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><strong>AR / 3D ürün önizleme</strong></li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Fotoğraftan AI menü aktarma</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>PDF menü çıktısı + tüm premium temalar</li>
+          <li class="flex gap-2.5"><svg class="mt-0.5 shrink-0 text-brand-dark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Öncelikli destek</li>
+        </ul>
+        <a href="#" class="mt-8 block cursor-pointer rounded-full border border-ink/15 py-3 text-center text-sm font-bold transition-colors hover:bg-ink/5">Başla</a>
+      </div>
+    </div>
+    <p class="mt-8 text-center text-xs text-ink/45">Fiyatlar örnek amaçlıdır (₺X) — kesin fiyatlandırma yayında belirlenir.</p>
+  </div>
+</section>
+
+<!-- ============ SSS ============ -->
+<section id="sss" class="mx-auto max-w-3xl px-5 py-24 sm:px-8">
+  <div class="text-center">
+    <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-dark">SSS</p>
+    <h2 class="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.4rem]">Aklınızda kalanlar</h2>
+  </div>
+  <div class="mt-12 divide-y divide-ink/8 rounded-3xl border border-ink/8 bg-white px-7 shadow-sm">
+    <details class="group py-5">
+      <summary class="flex cursor-pointer items-center justify-between gap-4 font-display text-base font-bold marker:content-none">
+        Müşterilerin uygulama indirmesi gerekiyor mu?
+        <svg class="shrink-0 text-ink/40 transition-transform group-open:rotate-45" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </summary>
+      <p class="mt-3 text-sm leading-relaxed text-ink/65">Hayır. QR okutulduğunda menü doğrudan telefonun tarayıcısında açılır. AR önizleme dahil hiçbir özellik uygulama gerektirmez.</p>
+    </details>
+    <details class="group py-5">
+      <summary class="flex cursor-pointer items-center justify-between gap-4 font-display text-base font-bold marker:content-none">
+        AR için 3D modeli nereden bulacağım?
+        <svg class="shrink-0 text-ink/40 transition-transform group-open:rotate-45" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </summary>
+      <p class="mt-3 text-sm leading-relaxed text-ink/65">Telefonunuzla üründen çektiğiniz fotoğraflardan 3D model üreten ücretsiz araçlar var; rehberimizde adım adım anlatıyoruz. GLB dosyanızı panele yüklemeniz yeterli.</p>
+    </details>
+    <details class="group py-5">
+      <summary class="flex cursor-pointer items-center justify-between gap-4 font-display text-base font-bold marker:content-none">
+        Fiyat değişikliği ne kadar sürede yansır?
+        <svg class="shrink-0 text-ink/40 transition-transform group-open:rotate-45" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </summary>
+      <p class="mt-3 text-sm leading-relaxed text-ink/65">Anında. Panelden kaydettiğiniz saniye tüm masalardaki QR menüde günceldir. Toplu zam/indirim için tek tıkla yüzde veya sabit tutar uygulayabilirsiniz.</p>
+    </details>
+    <details class="group py-5">
+      <summary class="flex cursor-pointer items-center justify-between gap-4 font-display text-base font-bold marker:content-none">
+        Sipariş / POS sistemi mi bu?
+        <svg class="shrink-0 text-ink/40 transition-transform group-open:rotate-45" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </summary>
+      <p class="mt-3 text-sm leading-relaxed text-ink/65">Hayır — bilinçli olarak değil. Eagle Menu bir <strong>pazarlama platformudur</strong>: amacı menünüzü en iştah açıcı şekilde sunmak ve size müşteri içgörüsü vermektir. Servis akışınıza karışmaz.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ CTA BANDI ============ -->
+<section class="px-5 pb-24 sm:px-8">
+  <div class="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-ink px-8 py-16 text-center text-cream sm:py-20">
+    <div class="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-brand/20 blur-3xl" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-brand/15 blur-3xl" aria-hidden="true"></div>
+    <h2 class="relative mx-auto max-w-2xl font-display text-3xl font-bold leading-tight sm:text-[2.6rem]">Menünüz hâlâ PDF mi?<br /><span class="text-brand">Bugün vitrine dönüştürün.</span></h2>
+    <p class="relative mx-auto mt-4 max-w-md text-cream/65">Kurulum 15 dakika. Kredi kartı gerekmez. İlk 14 gün bizden.</p>
+    <a href="#fiyat" class="relative mt-9 inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand px-8 py-4 text-sm font-extrabold text-ink shadow-xl shadow-brand/25 transition-all hover:bg-brand-dark hover:shadow-2xl">
+      Ücretsiz hesabını aç
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="border-t border-ink/8 bg-white">
+  <div class="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <div>
+      <a href="#" class="flex items-center gap-2.5" aria-label="Eagle Menu">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-ink text-brand">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM21 14v.01M14 21v.01M17.5 17.5h.01M21 18v3h-3"/></svg>
+        </span>
+        <span class="font-display text-lg font-bold">Eagle<span class="text-brand-dark">Menu</span></span>
+      </a>
+      <p class="mt-4 max-w-xs text-sm leading-relaxed text-ink/55">Restoran ve kafeler için QR menünün ötesinde dijital vitrin: video, AR, çok dil ve gerçek analitik.</p>
+    </div>
+    <nav aria-label="Ürün">
+      <p class="text-sm font-bold">Ürün</p>
+      <ul class="mt-4 space-y-2.5 text-sm text-ink/60">
+        <li><a class="transition-colors hover:text-ink" href="#ozellikler">Özellikler</a></li>
+        <li><a class="transition-colors hover:text-ink" href="ozellik-ar.html">AR Menü</a></li>
+        <li><a class="transition-colors hover:text-ink" href="#fiyat">Fiyatlandırma</a></li>
+        <li><a class="transition-colors hover:text-ink" href="#sss">SSS</a></li>
+      </ul>
+    </nav>
+    <nav aria-label="Şirket">
+      <p class="text-sm font-bold">Şirket</p>
+      <ul class="mt-4 space-y-2.5 text-sm text-ink/60">
+        <li><a class="transition-colors hover:text-ink" href="#">Hakkımızda</a></li>
+        <li><a class="transition-colors hover:text-ink" href="#">İletişim</a></li>
+        <li><a class="transition-colors hover:text-ink" href="#">Blog</a></li>
+      </ul>
+    </nav>
+    <nav aria-label="Yasal">
+      <p class="text-sm font-bold">Yasal</p>
+      <ul class="mt-4 space-y-2.5 text-sm text-ink/60">
+        <li><a class="transition-colors hover:text-ink" href="#">KVKK</a></li>
+        <li><a class="transition-colors hover:text-ink" href="#">Kullanım Şartları</a></li>
+        <li><a class="transition-colors hover:text-ink" href="#">Çerez Politikası</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="border-t border-ink/5">
+    <p class="mx-auto max-w-7xl px-5 py-5 text-xs text-ink/40 sm:px-8">© 2026 Eagle Menu. Tüm hakları saklıdır.</p>
+  </div>
+</footer>
+
+</body>
+</html>

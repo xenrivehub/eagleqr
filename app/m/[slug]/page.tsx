@@ -13,6 +13,8 @@ import { getTheme } from "@/lib/themes";
 import ThemedMenu from "@/components/menu/ThemedMenu";
 import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
 import TrackView from "@/components/menu/TrackView";
+import SplashGate from "@/components/menu/SplashGate";
+import { getBusinessFeatures } from "@/lib/queries/plan-features";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -84,6 +86,15 @@ export default async function CustomerMenuPage({ params }: Params) {
     );
   }
 
+  // QR açılış (splash) ekranı — Pro/Max, açıksa ve medyası varsa
+  const splashOn =
+    business.splashEnabled &&
+    Boolean(business.splashVideoUrl || business.splashImageUrl) &&
+    (await getBusinessFeatures(business.id)).splashScreen;
+  const splash = splashOn ? (
+    <SplashGate slug={slug} imageUrl={business.splashImageUrl} videoUrl={business.splashVideoUrl} />
+  ) : null;
+
   // Zincir işletme → şube seçici (tema renkleriyle)
   if (business.type === "CHAIN") {
     const branches = await prisma.menu.findMany({
@@ -98,6 +109,7 @@ export default async function CustomerMenuPage({ params }: Params) {
     return (
       <>
         <link rel="stylesheet" href={theme.fonts.import} />
+        {splash}
         <div style={{ minHeight: "100dvh", background: c.bg, color: c.ink, fontFamily: theme.fonts.body }}>
           <TrackView businessId={business.id} type="SCAN" />
           <header style={{ textAlign: "center", padding: "36px 20px 28px", borderBottom: `1px solid ${c.line}` }}>
@@ -163,6 +175,7 @@ export default async function CustomerMenuPage({ params }: Params) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
+      {splash}
       <ThemedMenu
         theme={theme}
         business={business}

@@ -17,7 +17,8 @@ export type FeatureKey =
   | "campaigns"
   | "advancedAnalytics"
   | "pdfMenu"
-  | "menuScan";
+  | "menuScan"
+  | "splashScreen";
 
 export const FEATURE_KEYS: FeatureKey[] = [
   "bulkPrice",
@@ -27,6 +28,7 @@ export const FEATURE_KEYS: FeatureKey[] = [
   "advancedAnalytics",
   "pdfMenu",
   "menuScan",
+  "splashScreen",
 ];
 
 export const FEATURE_META: Record<
@@ -68,6 +70,11 @@ export const FEATURE_META: Record<
     desc: "Basılı menü fotoğrafını yapay zekaya okutup ürünleri toplu oluşturma.",
     group: "Yapay Zeka",
   },
+  splashScreen: {
+    label: "QR açılış ekranı",
+    desc: "QR okununca menü öncesi tam ekran karşılama (görsel/video) + 'Menüyü Görüntüle'.",
+    group: "Menü",
+  },
 };
 
 // Plan başına varsayılan açık/kapalı (admin override etmezse bu geçerli)
@@ -80,6 +87,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
     aiTranslation: false,
     advancedAnalytics: false,
     menuScan: false,
+    splashScreen: false,
   },
   PRO: {
     bulkPrice: true,
@@ -89,6 +97,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
     aiTranslation: true,
     advancedAnalytics: true,
     menuScan: false,
+    splashScreen: true,
   },
   MAX: {
     bulkPrice: true,
@@ -98,6 +107,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
     aiTranslation: true,
     advancedAnalytics: true,
     menuScan: true,
+    splashScreen: true,
   },
 };
 

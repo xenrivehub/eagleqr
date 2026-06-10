@@ -58,3 +58,21 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Landing hero — telefon mockup'ı için hafif süzülme */
+@keyframes hero-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.hero-drift {
+  animation: hero-drift 7s ease-in-out infinite;
+}
+
+/* Yatay kaydırma çubuğunu gizle (kaydırma yine çalışır) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

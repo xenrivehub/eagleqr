@@ -33,6 +33,9 @@ export type ProductView = {
 export type CategoryView = {
   id: string;
   name: string;
+  description: string | null;
+  imageUrl: string | null;
+  videoUrl: string | null;
   availStart: string | null;
   availEnd: string | null;
   campaignId: string | null;

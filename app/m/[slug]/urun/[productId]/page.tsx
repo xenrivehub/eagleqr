@@ -15,6 +15,7 @@ import { isCampaignLive, applyDiscount } from "@/lib/campaign";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
+import PairLink from "@/components/menu/PairLink";
 import AllergenWarning from "@/components/menu/AllergenWarning";
 import StarRating from "@/components/menu/StarRating";
 
@@ -329,7 +330,7 @@ export default async function ProductDetailPage({ params }: Params) {
               </span>
             )}
             {product.modelGlbUrl && (
-              <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} label={ui.viewInAR} />
+              <ProductAr src={product.modelGlbUrl} poster={product.imageUrl} label={ui.viewInAR} businessId={product.businessId} productId={product.id} menuId={product.category.menu.id} />
             )}
           </div>
           {campaignPrice ? (
@@ -413,9 +414,12 @@ export default async function ProductDetailPage({ params }: Params) {
             <h2 className="mb-3 font-display text-lg font-semibold">✦ {ui.pairsWith}</h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {pairedItems.map((r) => (
-                <Link
+                <PairLink
                   key={r.id}
                   href={`/m/${slug}/urun/${r.id}`}
+                  businessId={product.businessId}
+                  productId={r.id}
+                  menuId={product.category.menu.id}
                   className="group w-36 shrink-0 overflow-hidden rounded-2xl border border-menu-border bg-menu-surface transition-colors hover:border-menu-gold/40"
                 >
                   {r.imageUrl ? (
@@ -434,7 +438,7 @@ export default async function ProductDetailPage({ params }: Params) {
                       {formatPrice(r.price.toFixed(2), currency)}
                     </p>
                   </div>
-                </Link>
+                </PairLink>
               ))}
             </div>
           </section>

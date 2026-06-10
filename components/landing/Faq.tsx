@@ -8,7 +8,7 @@ export default function Faq({ items }: { items: FaqItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <div className="mx-auto max-w-3xl divide-y divide-ink/10 rounded-2xl border border-ink/10 bg-white">
+    <div className="mx-auto max-w-3xl divide-y divide-ink/8 rounded-3xl border border-ink/8 bg-white shadow-sm">
       {items.map((faq, i) => {
         const isOpen = openIndex === i;
         return (
@@ -17,14 +17,14 @@ export default function Faq({ items }: { items: FaqItem[] }) {
               type="button"
               onClick={() => setOpenIndex(isOpen ? null : i)}
               aria-expanded={isOpen}
-              className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-5 py-5 text-left transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-inset"
+              className="flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl px-6 py-5 text-left transition-colors hover:bg-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-inset"
             >
-              <span className="text-base font-semibold text-ink">{faq.q}</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`shrink-0 text-ink/50 transition-transform ${isOpen ? "rotate-180" : ""}`}>
-                <polyline points="6 9 12 15 18 9" />
+              <span className="font-display text-base font-bold text-ink">{faq.q}</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={`shrink-0 text-ink/40 transition-transform duration-200 ${isOpen ? "rotate-45" : ""}`} aria-hidden>
+                <path d="M12 5v14M5 12h14" />
               </svg>
             </button>
-            <div className={`grid px-5 transition-all duration-300 ease-out ${isOpen ? "grid-rows-[1fr] pb-5 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+            <div className={`grid px-6 transition-all duration-300 ease-out ${isOpen ? "grid-rows-[1fr] pb-5 opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
               <p className="min-h-0 overflow-hidden text-sm leading-relaxed text-ink/70">{faq.a}</p>
             </div>
           </div>

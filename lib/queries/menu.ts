@@ -26,6 +26,9 @@ export async function loadMenuForManager(menuId: string): Promise<{
   const categories: CategoryView[] = categoriesRaw.map((c) => ({
     id: c.id,
     name: c.name,
+    description: c.description,
+    imageUrl: c.imageUrl,
+    videoUrl: c.videoUrl,
     availStart: c.availStart,
     availEnd: c.availEnd,
     campaignId: c.campaignId,
