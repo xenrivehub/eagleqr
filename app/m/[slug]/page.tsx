@@ -15,6 +15,7 @@ import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
 import TrackView from "@/components/menu/TrackView";
 import SplashGate from "@/components/menu/SplashGate";
 import { getBusinessFeatures } from "@/lib/queries/plan-features";
+import { jsonLdScript } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -173,7 +174,7 @@ export default async function CustomerMenuPage({ params }: Params) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
       {splash}
       <ThemedMenu

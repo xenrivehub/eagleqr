@@ -1,9 +1,11 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { slugify } from "@/lib/slug";
+import { rateLimit, ipFromRequest } from "@/lib/rate-limit";
 
 type RegisterResult =
   | { success: true }
@@ -23,6 +25,12 @@ async function uniqueSlug(name: string): Promise<string> {
 export async function registerBusiness(
   input: RegisterInput,
 ): Promise<RegisterResult> {
+  // Sahte hesap spam'ini sınırla — IP başına saatte 5 kayıt denemesi
+  const ip = ipFromRequest({ headers: await headers() });
+  if (!rateLimit(`register:${ip}`, 5, 60 * 60_000).ok) {
+    return { success: false, error: "Çok fazla deneme. Lütfen daha sonra tekrar deneyin." };
+  }
+
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: "Girilen bilgiler geçersiz." };

@@ -91,7 +91,7 @@ export function defaultHomeSections(): HomeSection[] {
         { icon: "Camera", title: "Videolu Ürünler", desc: "Her ürüne kısa hazırlanış veya tanıtım videosu ekle, iştahı menüde aç." },
         { icon: "Leaf", title: "Profil & Alerjen Filtresi", desc: "14 AB alerjen kategorisine göre otomatik filtre, kişisel tercihlerle akıllı sıralama." },
         { icon: "BarChart3", title: "Analitik & Raporlar", desc: "Tarama sayısı, ürün görüntüleme, heatmap ve menü mühendisliği; PDF/Excel export." },
-        { icon: "Globe", title: "Çok Dil & KVKK", desc: "10 dile kadar menü, KVKK/GDPR uyumlu veri yaklaşımı ve 2FA korumalı panel." },
+        { icon: "Globe", title: "Çok Dil & KVKK", desc: "10 dile kadar menü, KVKK/GDPR uyumlu veri yaklaşımı ve güvenli işletme paneli." },
       ],
     },
     { id: "pricing", type: "pricing", enabled: true },

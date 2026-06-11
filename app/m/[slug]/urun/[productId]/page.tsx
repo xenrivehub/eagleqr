@@ -12,6 +12,7 @@ import { getUiStrings } from "@/lib/queries/ui-strings";
 import { getSeoSettings } from "@/lib/queries/seo";
 import { fillSeo } from "@/lib/seo";
 import { isCampaignLive, applyDiscount } from "@/lib/campaign";
+import { jsonLdScript } from "@/lib/json-ld";
 import ShareButton from "@/components/menu/ShareButton";
 import TrackView from "@/components/menu/TrackView";
 import ProductAr from "@/components/menu/ProductAr";
@@ -218,7 +219,7 @@ export default async function ProductDetailPage({ params }: Params) {
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="min-h-dvh bg-menu-bg font-sans text-menu-text" style={themeVars}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
       <TrackView businessId={product.businessId} type="VIEW" productId={product.id} menuId={product.category.menu.id} />
       <header className="sticky top-0 z-30 border-b border-menu-border bg-menu-bg/90 backdrop-blur">

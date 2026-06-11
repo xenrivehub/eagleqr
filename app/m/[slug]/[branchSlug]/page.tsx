@@ -13,6 +13,7 @@ import ThemedMenu from "@/components/menu/ThemedMenu";
 import MaintenanceScreen from "@/components/menu/MaintenanceScreen";
 import SplashGate from "@/components/menu/SplashGate";
 import { getBusinessFeatures } from "@/lib/queries/plan-features";
+import { jsonLdScript } from "@/lib/json-ld";
 
 type Params = { params: Promise<{ slug: string; branchSlug: string }> };
 
@@ -128,7 +129,7 @@ export default async function BranchMenuPage({ params }: Params) {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(ld) }} />
       <link rel="stylesheet" href={theme.fonts.import} />
       {splashOn && (
         <SplashGate slug={slug} imageUrl={business.splashImageUrl} videoUrl={business.splashVideoUrl} />
