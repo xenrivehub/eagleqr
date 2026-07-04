@@ -272,6 +272,66 @@ export const THEMES: ThemeSpec[] = [
     cardBorder: "1px solid rgba(22,19,15,0.16)", cardShadow: "none",
     headingSerif: true, chipFilled: false, chefCard: false, uppercase: false,
   },
+  {
+    key: "yali",
+    name: "Yalı",
+    description: "Ege badanası, deniz mavisi — sahil mekanları",
+    mode: "light",
+    fonts: {
+      import: gf("family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Karla:wght@400;500;600;700"),
+      display: "'Cormorant Garamond', Georgia, serif",
+      body: "'Karla', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#ECEADE", surface: "#F7F7F4", surface2: "#E7E3D6", ink: "#16303F",
+      sub: "#5D7681", faint: "#9DAAB0", accent: "#1F6F8B", onAccent: "#FFFFFF",
+      line: "rgba(22,48,63,0.13)",
+    },
+    radius: 18, imageShape: "rect", imageRadius: 14, heroStyle: "overlay",
+    itemStyle: "list-thumb", tabStyle: "pill", priceStyle: "plain",
+    cardBorder: "1px solid rgba(22,48,63,0.10)", cardShadow: "0 6px 20px rgba(22,48,63,0.06)",
+    headingSerif: true, chipFilled: false, chefCard: true, uppercase: false,
+  },
+  {
+    key: "kordon",
+    name: "Kordon 22",
+    description: "Art-deco supper club — zümrüt gecesi, şampanya",
+    mode: "dark",
+    fonts: {
+      import: gf("family=Cinzel:wght@500;600;700&family=Jost:wght@300;400;500;600"),
+      display: "'Cinzel', Georgia, serif",
+      body: "'Jost', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#080D0B", surface: "#0D1512", surface2: "#121C17", ink: "#EFE9DA",
+      sub: "#9DAA9F", faint: "#6B7A6F", accent: "#D8C9A3", onAccent: "#0D1512",
+      line: "rgba(216,201,163,0.18)",
+    },
+    radius: 6, imageShape: "rect", imageRadius: 6, heroStyle: "overlay",
+    itemStyle: "list-plain", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(216,201,163,0.18)", cardShadow: "none",
+    headingSerif: true, chipFilled: false, chefCard: true, uppercase: false,
+  },
+  {
+    key: "cini",
+    name: "Çini",
+    description: "İznik kobaltı, çağdaş grotesk — yeni nesil lokanta",
+    mode: "light",
+    fonts: {
+      import: gf("family=Space+Grotesk:wght@400;500;600;700"),
+      display: "'Space Grotesk', system-ui, sans-serif",
+      body: "'Space Grotesk', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#E9E7DE", surface: "#F6F5EF", surface2: "#ECE9DF", ink: "#1A2333",
+      sub: "#5B647A", faint: "#9AA0B0", accent: "#14418F", onAccent: "#FFFFFF",
+      line: "rgba(20,65,143,0.16)",
+    },
+    radius: 14, imageShape: "rect", imageRadius: 10, heroStyle: "card",
+    itemStyle: "list-thumb", tabStyle: "pill", priceStyle: "plain",
+    cardBorder: "1px solid rgba(20,65,143,0.14)", cardShadow: "0 5px 18px rgba(20,65,143,0.07)",
+    headingSerif: false, chipFilled: false, chefCard: true, uppercase: false,
+  },
 ];
 
 export const DEFAULT_THEME_KEY = "mineral";
