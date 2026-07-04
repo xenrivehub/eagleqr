@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Docker/Coolify için bağımsız (standalone) çıktı — küçük runtime imajı
-  output: "standalone",
   // Menü fotoğrafları base64 olarak server action'a gönderilir (AI menü okuma)
   experimental: { serverActions: { bodySizeLimit: "10mb" } },
   // Güvenlik HTTP başlıkları (clickjacking, MIME-sniffing, referrer sızıntısı, HSTS)
