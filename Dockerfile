@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Eagle Menu — Next.js 16 (standalone) production image for Coolify.
-# Migration'ı deploy sonrası Coolify terminalinden çalıştır:
-#   npx prisma migrate deploy
+# Migration'ı deploy sonrası Coolify terminalinden çalıştır (Prisma 7 CLI wasm'ları
+# prisma/build içinde olduğu için CLI'ı gerçek konumundan çağırıyoruz):
+#   node ./node_modules/prisma/build/index.js migrate deploy --schema=./prisma/schema.prisma
 
 # ---- deps: bağımlılıklar ----
 FROM node:22-alpine AS deps
@@ -38,12 +39,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prisma CLI + şema + client — Coolify terminalinden `npx prisma migrate deploy` için
+# Prisma CLI (build/ içinde wasm dahil) + şema + client — migration için.
+# NOT: .bin/prisma symlink'i KOPYALANMAZ; düz dosya olarak kopyalanınca CLI
+# kendini .bin içinde sanıp wasm'ları orada arar ve bulamaz. CLI'ı gerçek
+# konumundan çalıştırıyoruz (yorumdaki komuta bak).
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 USER nextjs
 EXPOSE 3000
