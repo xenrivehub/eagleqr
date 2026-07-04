@@ -75,6 +75,8 @@ export default function MenuManager({
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [cats, setCats] = useState<CategoryView[]>(categories);
+  // Önizleme dili — sadece görüntüleme (salt-okunur); "tr" temel dildir
+  const [lang, setLang] = useState("tr");
 
   // Sunucudan yeni veri gelince (ekle/sil/düzenle sonrası) yerel durumu eşitle
   useEffect(() => setCats(categories), [categories]);
@@ -218,6 +220,38 @@ export default function MenuManager({
         </div>
       </div>
 
+      {languages.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-ink/10 bg-white px-4 py-3">
+          <span className="mr-1 inline-flex items-center gap-1.5 text-sm font-medium text-ink/60">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18" />
+            </svg>
+            Önizleme dili:
+          </span>
+          {[{ code: "tr", nativeLabel: "Türkçe" }, ...languages].map((l) => {
+            const on = lang === l.code;
+            return (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => setLang(l.code)}
+                aria-pressed={on}
+                className={`cursor-pointer rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                  on ? "bg-ink text-cream" : "border border-ink/15 text-ink/60 hover:bg-ink/5"
+                }`}
+              >
+                {l.nativeLabel}
+              </button>
+            );
+          })}
+          {lang !== "tr" && (
+            <span className="ml-auto text-xs text-ink/45">
+              Salt-okunur önizleme — düzenleme Türkçe (temel dil) üzerinden yapılır.
+            </span>
+          )}
+        </div>
+      )}
+
       {cats.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-ink/20 bg-white p-10 text-center">
           <p className="font-display text-lg font-semibold text-ink">Henüz kategori yok</p>
@@ -241,6 +275,7 @@ export default function MenuManager({
                   key={category.id}
                   category={category}
                   currency={currency}
+                  lang={lang}
                   sensors={sensors}
                   onEditCategory={() => setPanel({ kind: "category-edit", category })}
                   onDeleteCategory={() => setConfirm({ kind: "category", id: category.id, name: category.name })}
@@ -322,6 +357,7 @@ export default function MenuManager({
 function SortableCategory({
   category,
   currency,
+  lang,
   sensors,
   onEditCategory,
   onDeleteCategory,
@@ -333,6 +369,7 @@ function SortableCategory({
 }: {
   category: CategoryView;
   currency: CurrencySpec;
+  lang: string;
   sensors: ReturnType<typeof useSensors>;
   onEditCategory: () => void;
   onDeleteCategory: () => void;
@@ -352,13 +389,22 @@ function SortableCategory({
     zIndex: isDragging ? 20 : undefined,
   };
 
+  const tr = lang !== "tr" ? category.translations?.[lang] : undefined;
+  const displayName = tr?.name || category.name;
+  const nameMissing = lang !== "tr" && !tr?.name;
+
   return (
     <section ref={setNodeRef} style={style} className="rounded-2xl border border-ink/10 bg-white">
       <header className="flex items-center justify-between gap-3 border-b border-ink/10 px-3 py-4 sm:px-5">
         <div className="flex min-w-0 items-center gap-1.5">
           <Grip listeners={listeners} attributes={attributes} label="Kategoriyi sürükle" />
           <h2 className="truncate font-display text-lg font-semibold text-ink">
-            {category.name}
+            {displayName}
+            {nameMissing && (
+              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                çeviri yok
+              </span>
+            )}
             <span className="ml-2 text-sm font-normal text-ink/40">
               {category.products.length} ürün
             </span>
@@ -386,6 +432,7 @@ function SortableCategory({
                   key={product.id}
                   product={product}
                   currency={currency}
+                  lang={lang}
                   onEdit={() => onEditProduct(product)}
                   onDelete={() => onDeleteProduct(product)}
                   onToggleStock={() => onToggleProductStock(product)}
@@ -412,12 +459,14 @@ function SortableCategory({
 function SortableProduct({
   product,
   currency,
+  lang,
   onEdit,
   onDelete,
   onToggleStock,
 }: {
   product: ProductView;
   currency: CurrencySpec;
+  lang: string;
   onEdit: () => void;
   onDelete: () => void;
   onToggleStock: () => void;
@@ -432,6 +481,11 @@ function SortableProduct({
     zIndex: isDragging ? 20 : undefined,
     background: isDragging ? "var(--color-cream, #faf7f2)" : undefined,
   };
+
+  const tr = lang !== "tr" ? product.translations?.[lang] : undefined;
+  const displayName = tr?.name || product.name;
+  const nameMissing = lang !== "tr" && !tr?.name;
+  const displayDesc = (lang !== "tr" && tr?.description) || product.description;
 
   return (
     <div
@@ -455,7 +509,12 @@ function SortableProduct({
         )}
         <div className="min-w-0">
           <p className={`truncate font-medium text-ink ${product.isSoldOut ? "line-through opacity-50" : ""}`}>
-            {product.name}
+            {displayName}
+            {nameMissing && (
+              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                çeviri yok
+              </span>
+            )}
             {product.variations.length > 0 && (
               <span className="ml-2 text-xs font-normal text-ink/40">+{product.variations.length} seçenek</span>
             )}
@@ -463,7 +522,7 @@ function SortableProduct({
               <span className="ml-2 text-xs font-normal text-ink/40">⏰ {product.availStart || "…"}–{product.availEnd || "…"}</span>
             )}
           </p>
-          {product.description && <p className="truncate text-sm text-ink/50">{product.description}</p>}
+          {displayDesc && <p className="truncate text-sm text-ink/50">{displayDesc}</p>}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">

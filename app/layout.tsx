@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Karla } from "next/font/google";
+import { Playfair_Display, Karla, Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 
 export const viewport: Viewport = {
@@ -14,6 +14,18 @@ const playfair = Playfair_Display({
 
 const karla = Karla({
   variable: "--font-sans",
+  subsets: ["latin", "latin-ext"],
+});
+
+// Fable landing markası — display + gövde
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-fable",
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700", "800"],
+});
+
+const figtree = Figtree({
+  variable: "--font-fable-body",
   subsets: ["latin", "latin-ext"],
 });
 
@@ -32,7 +44,7 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`${playfair.variable} ${karla.variable} h-full antialiased`}
+      className={`${playfair.variable} ${karla.variable} ${bricolage.variable} ${figtree.variable} h-full antialiased`}
     >
       <body
         suppressHydrationWarning

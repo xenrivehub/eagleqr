@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { getSeoSettings } from "@/lib/queries/seo";
-import { getHomeSections, getPricingConfig } from "@/lib/queries/home";
-import SiteNav from "@/components/site/SiteNav";
-import Footer from "@/components/site/Footer";
-import HomeRenderer from "@/components/site/HomeRenderer";
+import { getPricingConfig } from "@/lib/queries/home";
+import MotionLanding from "@/components/site/MotionLanding";
+
+// Build sırasında (Docker — DB yok) prerender edilmesin; SEO + fiyat DB'den istek anında.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const seo = await getSeoSettings();
@@ -16,15 +17,16 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+const fmt = (n: number) => n.toLocaleString("tr-TR");
+
 export default async function Home() {
-  const [sections, pricing] = await Promise.all([getHomeSections(), getPricingConfig()]);
-  return (
-    <>
-      <SiteNav />
-      <main className="flex-1">
-        <HomeRenderer sections={sections} pricing={pricing} />
-      </main>
-      <Footer />
-    </>
-  );
+  const pricing = await getPricingConfig();
+  const tArr = pricing.tiers ?? [];
+  const find = (key: string) => tArr.find((x) => x.name.toLowerCase().includes(key));
+  const tiers = {
+    standart: fmt(find("standart")?.yearlyMonthly ?? 299),
+    pro: fmt(find("pro")?.yearlyMonthly ?? 699),
+    max: fmt(find("max")?.yearlyMonthly ?? 1899),
+  };
+  return <MotionLanding tiers={tiers} />;
 }

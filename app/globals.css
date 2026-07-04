@@ -24,6 +24,18 @@
 
   --font-sans: var(--font-sans), Arial, Helvetica, sans-serif;
   --font-display: var(--font-display), Georgia, serif;
+
+  /* Fable landing paleti (koyu orman + kor) — yalnız pazarlama sayfasında kullanılır */
+  --color-pine-950: #0c110d;
+  --color-pine-900: #121a14;
+  --color-pine-800: #182219;
+  --color-pine-700: #22301f;
+  --color-bone: #ece9df;
+  --color-bone-dim: #9aa79b;
+  --color-ember: #ff5a2e;
+  --color-ember-deep: #e04a20;
+  --font-fable: var(--font-fable), "Bricolage Grotesque", sans-serif;
+  --font-fable-body: var(--font-fable-body), Figtree, sans-serif;
 }
 
 :root {
@@ -67,6 +79,12 @@ body {
 .hero-drift {
   animation: hero-drift 7s ease-in-out infinite;
 }
+
+/* Fable landing — hero başlık okunurluğu + mekan şeridi */
+.fable-cap { text-shadow: 0 2px 24px rgba(4,8,5,0.7), 0 1px 4px rgba(4,8,5,0.9); }
+@keyframes fable-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.fable-ticker { animation: fable-ticker 36s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .fable-ticker { animation: none !important; } }
 
 /* Yatay kaydırma çubuğunu gizle (kaydırma yine çalışır) */
 .no-scrollbar {

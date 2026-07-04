@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma";
 
 const BASE = "https://eaglemenu.com";
 
-export const revalidate = 3600; // sitemap saatte bir yenilensin
+// Build sırasında (Docker/Coolify — DATABASE_URL yok) prerender edilmesin;
+// istek anında üretilir. Aksi halde build DB'ye bağlanmaya çalışıp patlar.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [pages, businesses, branches, products] = await Promise.all([

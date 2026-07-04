@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { AllergenOption, CategoryView } from "@/components/dashboard/types";
+import type { AllergenOption, CategoryView, Translations } from "@/components/dashboard/types";
 
 /** Bir menünün kategori + ürünlerini panel görünümü tipine eşler. */
 export async function loadMenuForManager(menuId: string): Promise<{
@@ -27,6 +27,7 @@ export async function loadMenuForManager(menuId: string): Promise<{
     id: c.id,
     name: c.name,
     description: c.description,
+    translations: (c.translations as Translations) ?? {},
     imageUrl: c.imageUrl,
     videoUrl: c.videoUrl,
     availStart: c.availStart,
@@ -43,6 +44,7 @@ export async function loadMenuForManager(menuId: string): Promise<{
       name: p.name,
       price: p.price.toFixed(2),
       description: p.description,
+      translations: (p.translations as Translations) ?? {},
       calories: p.calories,
       prepMinutes: p.prepMinutes,
       weight: p.weight,

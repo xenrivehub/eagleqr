@@ -1,10 +1,14 @@
 export type AllergenOption = { id: string; label: string };
 
+// Çeviri sözlüğü: { en: { name, description }, de: { ... } } — panel önizlemesi + müşteri menüsü
+export type Translations = Record<string, { name?: string; description?: string }>;
+
 export type ProductView = {
   id: string;
   name: string;
   price: string;
   description: string | null;
+  translations: Translations;
   calories: number | null;
   prepMinutes: number | null;
   weight: string | null;
@@ -34,6 +38,7 @@ export type CategoryView = {
   id: string;
   name: string;
   description: string | null;
+  translations: Translations;
   imageUrl: string | null;
   videoUrl: string | null;
   availStart: string | null;
