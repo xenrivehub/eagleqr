@@ -8,7 +8,9 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# --ignore-scripts: postinstall'daki `prisma generate` bu aşamada şemayı göremez
+# (henüz kopyalanmadı). Client, builder aşamasında `npx prisma generate` ile üretilir.
+RUN npm ci --ignore-scripts
 
 # ---- builder: prisma generate + next build ----
 FROM node:22-alpine AS builder
