@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { TextField, PasswordField } from "./fields";
@@ -51,13 +52,20 @@ export default function LoginForm() {
         placeholder="ornek@isletme.com"
         required
       />
-      <PasswordField
-        label="Şifre"
-        name="password"
-        autoComplete="current-password"
-        placeholder="••••••••"
-        required
-      />
+      <div>
+        <PasswordField
+          label="Şifre"
+          name="password"
+          autoComplete="current-password"
+          placeholder="••••••••"
+          required
+        />
+        <div className="mt-1.5 text-right">
+          <Link href="/forgot-password" className="text-xs font-medium text-brand-dark hover:underline">
+            Şifremi unuttum?
+          </Link>
+        </div>
+      </div>
       <SubmitButton pending={pending}>Giriş Yap</SubmitButton>
     </form>
   );
