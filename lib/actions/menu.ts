@@ -615,6 +615,50 @@ export async function toggleSoldOut(id: string): Promise<ActionResult> {
   }
 }
 
+// Ürünü aynı kategoriye kopyalar (ad sonuna "(kopya)"). Görsel paylaşılır;
+// video/AR kopyalanmaz (kota tüketmemek için) — kullanıcı isterse ekler.
+export async function duplicateProduct(id: string): Promise<ActionResult> {
+  try {
+    const businessId = await requireBusinessId();
+    const src = await prisma.product.findFirst({
+      where: { id, businessId },
+      include: { allergens: { select: { allergenId: true } } },
+    });
+    if (!src) return { success: false, error: "Ürün bulunamadı." };
+
+    const max = await prisma.product.aggregate({
+      where: { categoryId: src.categoryId },
+      _max: { sortOrder: true },
+    });
+
+    await prisma.product.create({
+      data: {
+        categoryId: src.categoryId,
+        businessId,
+        name: `${src.name} (kopya)`.slice(0, 120),
+        description: src.description,
+        price: src.price,
+        calories: src.calories,
+        prepMinutes: src.prepMinutes,
+        weight: src.weight,
+        portion: src.portion,
+        translations: src.translations as object,
+        imageUrl: src.imageUrl, // aynı görsel referansı — kota yok
+        isFeatured: src.isFeatured,
+        isNew: src.isNew,
+        isPopular: src.isPopular,
+        variations: src.variations as object,
+        sortOrder: (max._max.sortOrder ?? -1) + 1,
+        allergens: { create: src.allergens.map((a) => ({ allergenId: a.allergenId })) },
+      },
+    });
+    revalidatePath("/dashboard/menu");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Ürün kopyalanamadı." };
+  }
+}
+
 export async function deleteProduct(id: string): Promise<ActionResult> {
   try {
     const businessId = await requireBusinessId();

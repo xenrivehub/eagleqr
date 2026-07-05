@@ -58,3 +58,13 @@ export function parseCsv(text: string): string[][] {
   // tamamen boş satırları at
   return rows.filter((r) => r.some((c) => c.trim() !== ""));
 }
+
+// Satır dizisini RFC 4180 CSV metnine çevirir. Excel'in Türkçe karakterleri
+// doğru açması için çağıran taraf başına BOM ekleyebilir.
+export function toCsv(rows: (string | number | null | undefined)[][]): string {
+  const esc = (v: string | number | null | undefined): string => {
+    const s = v == null ? "" : String(v);
+    return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return rows.map((r) => r.map(esc).join(",")).join("\r\n");
+}

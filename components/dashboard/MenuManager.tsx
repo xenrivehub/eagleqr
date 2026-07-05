@@ -33,6 +33,7 @@ import BulkPrice from "./BulkPrice";
 import {
   deleteCategory,
   deleteProduct,
+  duplicateProduct,
   reorderCategories,
   reorderProducts,
   toggleSoldOut,
@@ -77,6 +78,9 @@ export default function MenuManager({
   const [cats, setCats] = useState<CategoryView[]>(categories);
   // Önizleme dili — sadece görüntüleme (salt-okunur); "tr" temel dildir
   const [lang, setLang] = useState("tr");
+  // Arama + filtre (aktifken sürükle-bırak kapanır, düz sonuç listesi gösterilir)
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState<Set<string>>(new Set());
 
   // Sunucudan yeni veri gelince (ekle/sil/düzenle sonrası) yerel durumu eşitle
   useEffect(() => setCats(categories), [categories]);
@@ -126,6 +130,39 @@ export default function MenuManager({
     );
     toggleSoldOut(productId);
   }
+
+  async function duplicate(productId: string) {
+    const res = await duplicateProduct(productId);
+    if (res.success) router.refresh();
+  }
+
+  function toggleFilter(key: string) {
+    setFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  // Arama/filtre aktif mi? Aktifse düz (sürüklenemez) sonuç listesi gösterilir.
+  const filtering = query.trim() !== "" || filters.size > 0;
+  const q = query.trim().toLocaleLowerCase("tr");
+  const matches = (p: ProductView) => {
+    if (filters.has("soldout") && !p.isSoldOut) return false;
+    if (filters.has("video") && !p.videoUrl) return false;
+    if (filters.has("ar") && !p.modelGlbUrl) return false;
+    if (filters.has("featured") && !p.isFeatured) return false;
+    if (q) {
+      const hay = `${p.name} ${p.description ?? ""}`.toLocaleLowerCase("tr");
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  };
+  const filteredCats = filtering
+    ? cats.map((c) => ({ ...c, products: c.products.filter(matches) })).filter((c) => c.products.length > 0)
+    : [];
+  const filteredCount = filteredCats.reduce((n, c) => n + c.products.length, 0);
 
   function onProductDragEnd(categoryId: string, { active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
@@ -186,6 +223,17 @@ export default function MenuManager({
             </svg>
             Toplu içe aktar
           </button>
+          {cats.length > 0 && (
+            <a
+              href={`/dashboard/menu/export?menuId=${menuId}`}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-ink/15 px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-ink/5"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 3v12" />
+              </svg>
+              CSV indir
+            </a>
+          )}
           {features.menuScan && (
             <a
               href="/dashboard/menu/foto-ice-aktar"
@@ -252,6 +300,46 @@ export default function MenuManager({
         </div>
       )}
 
+      {cats.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-full border border-ink/15 bg-white px-4 py-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink/40" aria-hidden><circle cx="11" cy="11" r="7" /><path d="m20 20-3-3" /></svg>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ürün ara…"
+              className="w-full border-none bg-transparent text-sm text-ink outline-none placeholder:text-ink/40"
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} aria-label="Aramayı temizle" className="cursor-pointer text-ink/40 hover:text-ink">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+          {[
+            { key: "soldout", label: "Tükendi" },
+            { key: "video", label: "Videolu" },
+            { key: "ar", label: "AR'lı" },
+            { key: "featured", label: "Öne çıkan" },
+          ].map((f) => {
+            const on = filters.has(f.key);
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => toggleFilter(f.key)}
+                aria-pressed={on}
+                className={`cursor-pointer rounded-full px-3.5 py-2 text-sm font-medium transition-colors ${
+                  on ? "bg-ink text-cream" : "border border-ink/15 text-ink/60 hover:bg-ink/5"
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {cats.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-ink/20 bg-white p-10 text-center">
           <p className="font-display text-lg font-semibold text-ink">Henüz kategori yok</p>
@@ -265,6 +353,42 @@ export default function MenuManager({
           >
             + İlk kategoriyi ekle
           </button>
+        </div>
+      ) : filtering ? (
+        <div className="mt-6">
+          <p className="mb-3 text-sm text-ink/50">{filteredCount} sonuç · sıralama için filtreyi temizleyin</p>
+          {filteredCount === 0 ? (
+            <div className="rounded-2xl border border-dashed border-ink/20 bg-white p-10 text-center text-sm text-ink/50">
+              Eşleşen ürün yok.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {filteredCats.map((category) => (
+                <section key={category.id} className="rounded-2xl border border-ink/10 bg-white">
+                  <header className="border-b border-ink/10 px-5 py-3">
+                    <h2 className="font-display text-base font-semibold text-ink">
+                      {category.name}
+                      <span className="ml-2 text-sm font-normal text-ink/40">{category.products.length} ürün</span>
+                    </h2>
+                  </header>
+                  <div className="divide-y divide-ink/5">
+                    {category.products.map((product) => (
+                      <StaticProduct
+                        key={product.id}
+                        product={product}
+                        currency={currency}
+                        lang={lang}
+                        onEdit={() => setPanel({ kind: "product-edit", categoryId: category.id, product })}
+                        onDuplicate={() => duplicate(product.id)}
+                        onDelete={() => setConfirm({ kind: "product", id: product.id, name: product.name })}
+                        onToggleStock={() => toggleStock(product.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onCategoryDragEnd}>
@@ -281,6 +405,7 @@ export default function MenuManager({
                   onDeleteCategory={() => setConfirm({ kind: "category", id: category.id, name: category.name })}
                   onAddProduct={() => setPanel({ kind: "product-new", categoryId: category.id })}
                   onEditProduct={(product) => setPanel({ kind: "product-edit", categoryId: category.id, product })}
+                  onDuplicateProduct={(product) => duplicate(product.id)}
                   onDeleteProduct={(product) => setConfirm({ kind: "product", id: product.id, name: product.name })}
                   onToggleProductStock={(product) => toggleStock(product.id)}
                   onProductDragEnd={(e) => onProductDragEnd(category.id, e)}
@@ -363,6 +488,7 @@ function SortableCategory({
   onDeleteCategory,
   onAddProduct,
   onEditProduct,
+  onDuplicateProduct,
   onDeleteProduct,
   onToggleProductStock,
   onProductDragEnd,
@@ -375,6 +501,7 @@ function SortableCategory({
   onDeleteCategory: () => void;
   onAddProduct: () => void;
   onEditProduct: (p: ProductView) => void;
+  onDuplicateProduct: (p: ProductView) => void;
   onDeleteProduct: (p: ProductView) => void;
   onToggleProductStock: (p: ProductView) => void;
   onProductDragEnd: (e: DragEndEvent) => void;
@@ -434,6 +561,7 @@ function SortableCategory({
                   currency={currency}
                   lang={lang}
                   onEdit={() => onEditProduct(product)}
+                  onDuplicate={() => onDuplicateProduct(product)}
                   onDelete={() => onDeleteProduct(product)}
                   onToggleStock={() => onToggleProductStock(product)}
                 />
@@ -461,6 +589,7 @@ function SortableProduct({
   currency,
   lang,
   onEdit,
+  onDuplicate,
   onDelete,
   onToggleStock,
 }: {
@@ -468,6 +597,7 @@ function SortableProduct({
   currency: CurrencySpec;
   lang: string;
   onEdit: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   onToggleStock: () => void;
 }) {
@@ -542,6 +672,63 @@ function SortableProduct({
           {formatPrice(product.price, currency)}
         </span>
         <IconButton label="Ürünü düzenle" onClick={onEdit} icon="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+        <IconButton label="Ürünü kopyala" onClick={onDuplicate} icon="M9 9h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2zM5 15H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1" />
+        <IconButton label="Ürünü sil" danger onClick={onDelete} icon="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+      </div>
+    </div>
+  );
+}
+
+// Filtreli görünüm için sürüklenemez ürün satırı (aynı aksiyonlar).
+function StaticProduct({
+  product,
+  currency,
+  lang,
+  onEdit,
+  onDuplicate,
+  onDelete,
+  onToggleStock,
+}: {
+  product: ProductView;
+  currency: CurrencySpec;
+  lang: string;
+  onEdit: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  onToggleStock: () => void;
+}) {
+  const tr = lang !== "tr" ? product.translations?.[lang] : undefined;
+  const displayName = tr?.name || product.name;
+  return (
+    <div className="flex items-center justify-between gap-3 px-3 py-3.5 transition-colors hover:bg-cream sm:px-5">
+      <div className="flex min-w-0 items-center gap-2">
+        {product.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={product.imageUrl} alt="" className="h-11 w-11 shrink-0 rounded-lg border border-ink/10 object-cover" />
+        ) : (
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-dashed border-ink/15 text-ink/30">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-5-5L5 21" />
+            </svg>
+          </span>
+        )}
+        <p className={`truncate font-medium text-ink ${product.isSoldOut ? "line-through opacity-50" : ""}`}>{displayName}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={onToggleStock}
+          className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            product.isSoldOut ? "bg-red-100 text-red-700 hover:bg-red-200" : "border border-ink/15 text-ink/50 hover:bg-ink/5"
+          }`}
+        >
+          {product.isSoldOut ? "Stokta yok" : "Stokta"}
+        </button>
+        <span className={`font-display font-semibold tabular-nums ${product.isSoldOut ? "text-ink/40" : "text-ink"}`}>
+          {formatPrice(product.price, currency)}
+        </span>
+        <IconButton label="Ürünü düzenle" onClick={onEdit} icon="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+        <IconButton label="Ürünü kopyala" onClick={onDuplicate} icon="M9 9h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2zM5 15H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1" />
         <IconButton label="Ürünü sil" danger onClick={onDelete} icon="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
       </div>
     </div>
