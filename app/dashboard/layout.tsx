@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   const business = session.user.businessId
     ? await prisma.business.findUnique({
         where: { id: session.user.businessId },
-        select: { name: true, type: true },
+        select: { name: true, type: true, plan: true },
       })
     : null;
 
@@ -41,6 +41,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShell
       businessName={business?.name ?? session.user.email ?? "İşletme"}
+      plan={business?.plan ?? "STANDART"}
       signOutAction={signOutAction}
       branchSwitcher={switcher}
     >

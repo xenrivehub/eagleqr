@@ -197,6 +197,23 @@ export default function MenuManager({
           <p className="mt-1 text-sm text-ink/60">
             Kategorileri ve ürünleri buradan yönetin. Sıralamak için tutamaçtan sürükleyin.
           </p>
+          {(media.video.allowed || media.ar.allowed) && (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              {media.video.allowed && (
+                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${media.video.remaining <= 0 ? "bg-red-100 text-red-700" : "bg-ink/5 text-ink/60"}`}>
+                  Video: {media.video.limit - media.video.remaining}/{media.video.limit}
+                </span>
+              )}
+              {media.ar.allowed && (
+                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${media.ar.remaining <= 0 ? "bg-red-100 text-red-700" : "bg-ink/5 text-ink/60"}`}>
+                  AR/3D: {media.ar.limit - media.ar.remaining}/{media.ar.limit}
+                </span>
+              )}
+              {(media.video.remaining <= 0 || media.ar.remaining <= 0) && (
+                <a href="/#fiyat" className="text-xs font-semibold text-brand-dark hover:underline">Kota için yükselt →</a>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           {features.pdfMenu && (

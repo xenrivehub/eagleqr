@@ -49,13 +49,35 @@ const nav = [
   },
 ];
 
+const PLAN_LABEL: Record<string, string> = { STANDART: "Standart", PRO: "Pro", MAX: "Max" };
+
+function PlanBadge({ plan }: { plan: string }) {
+  return (
+    <div className="mx-2 mb-4 rounded-xl border border-ink/10 bg-cream/60 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-ink/50">Plan</span>
+        <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cream">
+          {PLAN_LABEL[plan] ?? plan}
+        </span>
+      </div>
+      {plan !== "MAX" && (
+        <Link href="/#fiyat" className="mt-1.5 block text-xs font-semibold text-brand-dark hover:underline">
+          Planı yükselt →
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardShell({
   businessName,
+  plan,
   signOutAction,
   branchSwitcher,
   children,
 }: {
   businessName: string;
+  plan: string;
   signOutAction: () => Promise<void>;
   branchSwitcher?: ReactNode;
   children: ReactNode;
@@ -100,6 +122,7 @@ export default function DashboardShell({
         <div className="mt-2 px-2 pb-4">
           <p className="truncate text-xs text-ink/50">{businessName}</p>
         </div>
+        <PlanBadge plan={plan} />
         {branchSwitcher && <div className="mb-4">{branchSwitcher}</div>}
         {navList}
         <form action={signOutAction} className="mt-auto pt-4">
@@ -133,6 +156,7 @@ export default function DashboardShell({
 
       {open && (
         <div className="border-b border-ink/10 bg-white px-4 py-3 md:hidden">
+          <PlanBadge plan={plan} />
           {branchSwitcher && <div className="mb-3">{branchSwitcher}</div>}
           {navList}
           <form action={signOutAction} className="mt-3">
