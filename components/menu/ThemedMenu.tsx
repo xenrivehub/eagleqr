@@ -83,7 +83,7 @@ export default function ThemedMenu({
 }) {
   const c = t.colors;
   const [query, setQuery] = useState("");
-  const [activeCat, setActiveCat] = useState("all");
+  const [activeCat, setActiveCat] = useState(categories[0]?.id ?? "");
   const [chips, setChips] = useState<Set<Chip>>(new Set());
   const { lang, setLang, ready: langReady } = useMenuLang();
 
@@ -107,8 +107,6 @@ export default function ThemedMenu({
   const al = (code: string, trLabel: string) => allergenLabel(code, activeLang, trLabel);
   const T = (key: string) => ui[activeLang]?.[key] ?? ui["tr"]?.[key] ?? key;
 
-  const ALL_LABELS: Record<string, string> = { tr: "Tümü", en: "All", de: "Alle", fr: "Tous", es: "Todos", it: "Tutti", ru: "Все", ar: "الكل", zh: "全部", ja: "すべて" };
-  const allLabel = ALL_LABELS[activeLang] ?? "Tümü";
   const catName = (cat: CatItem) => cn(cat);
   const { selected: allerSel, toggle: toggleAller, clear: clearAller, ready: allerReady } = useAllergenFilter();
   const [allerOpen, setAllerOpen] = useState(false);
@@ -133,7 +131,8 @@ export default function ThemedMenu({
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("tr");
     return products.filter((p) => {
-      if (activeCat !== "all" && p.categoryId !== activeCat) return false;
+      // Arama tüm menüde çalışır; arama yokken seçili kategori gösterilir
+      if (!q && p.categoryId !== activeCat) return false;
       if (chips.has("featured") && !p.isFeatured) return false;
       if (chips.has("new") && !p.isNew) return false;
       if (chips.has("popular") && !p.isPopular) return false;
@@ -328,7 +327,7 @@ export default function ThemedMenu({
 
   // ---- TABS --------------------------------------------------------------
   function Tabs() {
-    const cats: CatItem[] = [{ id: "all", name: allLabel, translations: {} }, ...categories];
+    const cats: CatItem[] = categories;
     if (t.tabStyle === "pill") {
       return (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 22 }}>
@@ -362,7 +361,6 @@ export default function ThemedMenu({
 
   // ---- KATEGORİ BAŞLIK KARTI (seçili kategorinin medyası/açıklaması varsa) ----
   function CategoryCard() {
-    if (activeCat === "all") return null;
     const cat = categories.find((x) => x.id === activeCat);
     if (!cat) return null;
     const hasMedia = !!(cat.videoUrl || cat.imageUrl);
