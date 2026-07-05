@@ -526,7 +526,7 @@ export default function ThemedMenu({
             {deals.length > 0 && (
               <section style={{ marginBottom: 32 }}>
                 <h3 style={display({ margin: "0 0 16px", fontSize: 18, fontWeight: 700 })}>🔥 {T("deals")}</h3>
-                <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
+                <ScrollFadeRow style={{ display: "flex", gap: 14, paddingBottom: 4 }}>
                   {deals.map((p) => (
                     <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 170, flex: "0 0 170px", textDecoration: "none", color: c.ink, position: "relative", ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
                       <div style={{ position: "relative" }}>
@@ -537,7 +537,7 @@ export default function ThemedMenu({
                       <div style={{ marginTop: 6 }}><PriceTag p={p} size={13} /></div>
                     </Link>
                   ))}
-                </div>
+                </ScrollFadeRow>
               </section>
             )}
 
@@ -548,7 +548,7 @@ export default function ThemedMenu({
                   <h3 style={display({ margin: 0, fontSize: 18, fontWeight: 700 })}><span style={{ color: c.accent }}>✦</span> {T("chefPick")}</h3>
                   <span style={{ fontSize: 9.5, letterSpacing: "0.16em", color: c.faint }}>{T("curatedByHand")}</span>
                 </div>
-                <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 4 }}>
+                <ScrollFadeRow style={{ display: "flex", gap: 14, paddingBottom: 4 }}>
                   {featured.map((p) => {
                     const conf = conflicts(p);
                     return (
@@ -561,7 +561,7 @@ export default function ThemedMenu({
                     </Link>
                     );
                   })}
-                </div>
+                </ScrollFadeRow>
               </section>
             )}
 
