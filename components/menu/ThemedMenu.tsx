@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import type { ThemeSpec } from "@/lib/themes";
+import { isOpenNow, type OpeningHours } from "@/lib/opening-hours";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import TrackView from "@/components/menu/TrackView";
 import ScrollFadeRow from "@/components/menu/ScrollFadeRow";
@@ -35,7 +36,32 @@ export type ThemedBusiness = {
   openingHours: string | null;
   mapUrl: string | null;
   socialLinks: Record<string, string>;
+  wifiSsid: string | null;
+  wifiPassword: string | null;
+  wifiShow: boolean;
+  hours: OpeningHours | null; // yapılandırılmış çalışma saatleri (Açık/Kapalı rozeti)
 };
+
+// Gerçek zamanlı Açık/Kapalı rozeti (client-side hesap; hydration uyumsuzluğu olmaması
+// için mount sonrası gösterilir, dakikada bir güncellenir).
+function OpenNowBadge({ hours }: { hours: OpeningHours | null }) {
+  const [open, setOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!hours) return;
+    const tick = () => setOpen(isOpenNow(hours, Date.now()).open);
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, [hours]);
+  if (!hours || open === null) return null;
+  const color = open ? "#1a7f5a" : "#c0392b";
+  return (
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, fontSize: 12.5, fontWeight: 700, color, background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 999, padding: "5px 13px" }}>
+      <span style={{ width: 7, height: 7, borderRadius: 999, background: color, display: "inline-block" }} />
+      {open ? "Şu an açık" : "Şu an kapalı"}
+    </div>
+  );
+}
 
 type Chip = "featured" | "new" | "popular";
 const chipDefs: { key: Chip; label: string }[] = [
@@ -645,11 +671,18 @@ export default function ThemedMenu({
         {/* FOOTER */}
         <footer style={{ textAlign: "center", padding: "44px 0 12px", marginTop: 14, borderTop: `1px solid ${c.line}` }}>
           <div style={display({ fontSize: 18, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 28 })}>{business.name}</div>
+          <div><OpenNowBadge hours={business.hours} /></div>
           {(business.address || business.openingHours || business.phone) && (
             <div style={{ fontSize: 12.5, color: c.sub, marginTop: 12, lineHeight: 1.9 }}>
               {business.address && <div>{business.address}</div>}
               {business.openingHours && <div>{business.openingHours}</div>}
               {business.phone && <div>{business.phone}</div>}
+            </div>
+          )}
+          {business.wifiShow && business.wifiSsid && (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 14, fontSize: 12.5, color: c.sub, background: c.surface, border: `1px solid ${c.line}`, borderRadius: 12, padding: "8px 14px" }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M2 8.8a15 15 0 0 1 20 0" /><circle cx="12" cy="20" r="1" fill={c.accent} stroke="none" /></svg>
+              <span>WiFi: <strong style={{ color: c.ink }}>{business.wifiSsid}</strong>{business.wifiPassword ? <> · Şifre: <strong style={{ color: c.ink }}>{business.wifiPassword}</strong></> : null}</span>
             </div>
           )}
 

@@ -5,9 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { getActiveBranch } from "@/lib/branch-context";
 import { getEnabledCurrencies, getCurrencySpec } from "@/lib/queries/currencies";
 import { THEMES, isThemeUnlocked, getTheme } from "@/lib/themes";
+import { parseHours } from "@/lib/opening-hours";
 import BusinessInfoForm from "@/components/dashboard/BusinessInfoForm";
 import BranchSettingsForm from "@/components/dashboard/BranchSettingsForm";
 import BrandSettingsForm from "@/components/dashboard/BrandSettingsForm";
+import MenuExtrasForm from "@/components/dashboard/MenuExtrasForm";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -21,9 +23,17 @@ export default async function SettingsPage() {
       address: true, about: true, openingHours: true, currency: true,
       ratingsEnabled: true, mapUrl: true, socialLinks: true,
       maintenanceMode: true, maintenanceMessage: true, themeKey: true, allowedThemes: true,
+      wifiSsid: true, wifiPassword: true, wifiShow: true, openingHoursJson: true,
     },
   });
   if (!business) redirect("/login");
+
+  const extrasProps = {
+    wifiSsid: business.wifiSsid ?? "",
+    wifiPassword: business.wifiPassword ?? "",
+    wifiShow: business.wifiShow,
+    hours: parseHours(business.openingHoursJson),
+  };
 
   const currencies = await getEnabledCurrencies();
   if (!currencies.some((c) => c.code === business.currency)) {
@@ -53,6 +63,12 @@ export default async function SettingsPage() {
             maintenanceMode={business.maintenanceMode}
             maintenanceMessage={business.maintenanceMessage ?? ""}
           />
+        </div>
+
+        <div className="mt-10 border-t border-ink/10 pt-8">
+          <h2 className="font-display text-xl font-bold text-ink">Menü ekstraları</h2>
+          <p className="mb-6 mt-1 text-sm text-ink/60">WiFi bilgisi ve çalışma saatleri — müşteri menüsünde gösterilir.</p>
+          <MenuExtrasForm {...extrasProps} />
         </div>
       </div>
     );
@@ -126,6 +142,12 @@ export default async function SettingsPage() {
               ratingsEnabled={business.ratingsEnabled}
               about={business.about ?? ""}
             />
+          </div>
+
+          <div className="mt-10 border-t border-ink/10 pt-8">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-brand-dark">Menü ekstraları · marka geneli</h2>
+            <p className="mb-6 mt-1 text-sm text-ink/60">WiFi bilgisi ve çalışma saatleri — tüm şubelerde müşteri menüsünde gösterilir.</p>
+            <MenuExtrasForm {...extrasProps} />
           </div>
         </>
       )}

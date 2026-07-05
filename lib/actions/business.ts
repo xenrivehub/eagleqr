@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import { ACTIVE_BRANCH_COOKIE } from "@/lib/branch-context";
 import { THEMES, isThemeUnlocked } from "@/lib/themes";
+import { parseHours } from "@/lib/opening-hours";
 
 type ActionResult = { success: true } | { success: false; error: string };
 
@@ -175,6 +177,40 @@ export async function updateBusinessInfo(
     });
     revalidatePath("/dashboard/settings");
     revalidatePath(`/m/${business.slug}`);
+    return { success: true };
+  } catch {
+    return { success: false, error: "Kaydedilemedi." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Menü ekstraları — WiFi + yapılandırılmış çalışma saatleri (işletme/marka geneli)
+// ---------------------------------------------------------------------------
+
+export type MenuExtrasInput = {
+  wifiSsid: string;
+  wifiPassword: string;
+  wifiShow: boolean;
+  openingHours: unknown; // OpeningHours objesi veya null (temizle)
+};
+
+export async function updateMenuExtras(input: MenuExtrasInput): Promise<ActionResult> {
+  const businessId = await requireBusinessId().catch(() => null);
+  if (!businessId) return { success: false, error: "Yetkisiz erişim." };
+  try {
+    const hours = parseHours(input.openingHours);
+    const business = await prisma.business.update({
+      where: { id: businessId },
+      data: {
+        wifiSsid: input.wifiSsid.trim().slice(0, 60) || null,
+        wifiPassword: input.wifiPassword.trim().slice(0, 60) || null,
+        wifiShow: input.wifiShow,
+        openingHoursJson: hours ? (hours as object) : Prisma.DbNull,
+      },
+      select: { slug: true },
+    });
+    revalidatePath("/dashboard/settings");
+    revalidatePath(`/m/${business.slug}`, "layout");
     return { success: true };
   } catch {
     return { success: false, error: "Kaydedilemedi." };

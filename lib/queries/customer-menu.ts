@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { isCampaignLive, isWithinWindow, applyDiscount } from "@/lib/campaign";
+import { parseHours } from "@/lib/opening-hours";
 import type { MenuProduct } from "@/components/menu/MenuBrowser";
 import type { MenuBusiness } from "@/components/menu/MenuView";
 
@@ -26,6 +27,10 @@ const businessSelect = {
   splashEnabled: true,
   splashImageUrl: true,
   splashVideoUrl: true,
+  wifiSsid: true,
+  wifiPassword: true,
+  wifiShow: true,
+  openingHoursJson: true,
 } as const;
 
 export async function getMenuBusiness(slug: string) {
@@ -34,7 +39,11 @@ export async function getMenuBusiness(slug: string) {
     select: businessSelect,
   });
   if (!b) return null;
-  return { ...b, socialLinks: (b.socialLinks as Record<string, string>) ?? {} };
+  return {
+    ...b,
+    socialLinks: (b.socialLinks as Record<string, string>) ?? {},
+    hours: parseHours(b.openingHoursJson),
+  };
 }
 
 export type MenuBusinessWithType = MenuBusiness & {
