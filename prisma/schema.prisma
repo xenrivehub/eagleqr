@@ -122,6 +122,13 @@ model Business {
   splashEnabled  Boolean @default(false)
   splashImageUrl String? // açılış görseli (R2)
   splashVideoUrl String? // açılış videosu (R2, opsiyonel)
+  // WiFi bilgisi — müşteri menüsünde gösterilebilir (işletme aç/kapa yapar)
+  wifiSsid     String?
+  wifiPassword String?
+  wifiShow     Boolean @default(false)
+  // Yapılandırılmış çalışma saatleri — { mon: {open,close,closed}, ... } (bkz. lib/opening-hours.ts)
+  // Açık/Kapalı rozetini gerçek saate göre hesaplamak için. openingHours (serbest metin) korunur.
+  openingHoursJson Json?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -131,6 +138,7 @@ model Business {
   menus        Menu[]
   products     Product[]
   scanEvents   ScanEvent[]
+  deletionRequests AccountDeletionRequest[]
 }
 
 model User {
@@ -145,7 +153,39 @@ model User {
   businessId String?
   business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
+  resetTokens PasswordResetToken[]
+
   @@index([businessId])
+}
+
+// Şifre sıfırlama token'ı — ham token mail'e gider, DB'de sha256 hash saklanır.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Hesap silme isteği — işletme talep eder, admin onaylayınca işletme silinir.
+// status: PENDING | REJECTED (APPROVED durumunda işletme + bu kayıt cascade silinir)
+model AccountDeletionRequest {
+  id            String    @id @default(cuid())
+  businessId    String
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  requestedById String?
+  reason        String?
+  status        String    @default("PENDING")
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+  resolvedById  String?
+
+  @@index([businessId])
+  @@index([status])
 }
 
 // ----------------------------------------------------------------------------
