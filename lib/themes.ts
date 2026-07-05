@@ -332,6 +332,66 @@ export const THEMES: ThemeSpec[] = [
     cardBorder: "1px solid rgba(20,65,143,0.14)", cardShadow: "0 5px 18px rgba(20,65,143,0.07)",
     headingSerif: false, chipFilled: false, chefCard: true, uppercase: false,
   },
+  {
+    key: "neon",
+    name: "Neon Sokak",
+    description: "Gece sokak lezzetleri — simsiyah, neon pembe",
+    mode: "dark",
+    fonts: {
+      import: gf("family=Unbounded:wght@500;600;700;800&family=Manrope:wght@400;500;600;700"),
+      display: "'Unbounded', system-ui, sans-serif",
+      body: "'Manrope', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#0B0B10", surface: "#14141C", surface2: "#1B1B25", ink: "#F4F2FA",
+      sub: "#9A96AC", faint: "#5F5B70", accent: "#FF2D78", onAccent: "#FFFFFF",
+      line: "rgba(244,242,250,0.10)",
+    },
+    radius: 16, imageShape: "rect", imageRadius: 12, heroStyle: "card",
+    itemStyle: "card", tabStyle: "pill", priceStyle: "pill",
+    cardBorder: "1px solid rgba(244,242,250,0.10)", cardShadow: "0 0 26px rgba(255,45,120,0.12)",
+    headingSerif: false, chipFilled: true, chefCard: true, uppercase: true,
+  },
+  {
+    key: "tebesir",
+    name: "Tebeşir",
+    description: "Kara tahta meyhane — el yazısı, tebeşir sarısı",
+    mode: "dark",
+    fonts: {
+      import: gf("family=Caveat:wght@600;700&family=Karla:wght@400;500;600;700"),
+      display: "'Caveat', cursive",
+      body: "'Karla', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#212729", surface: "#2A3134", surface2: "#313A3D", ink: "#F2EFE2",
+      sub: "#ABB5AE", faint: "#76807A", accent: "#F2C14E", onAccent: "#212729",
+      line: "rgba(242,239,226,0.16)",
+    },
+    radius: 4, imageShape: "rect", imageRadius: 4, heroStyle: "framed",
+    itemStyle: "list-plain", tabStyle: "segmented", priceStyle: "plain",
+    cardBorder: "1px dashed rgba(242,239,226,0.30)", cardShadow: "none",
+    headingSerif: true, chipFilled: false, chefCard: false, uppercase: false,
+  },
+  {
+    key: "kilim",
+    name: "Kilim",
+    description: "Anadolu kök boya — bordo gece, safran vurgu",
+    mode: "dark",
+    fonts: {
+      import: gf("family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700"),
+      display: "'Fraunces', Georgia, serif",
+      body: "'Figtree', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#2E1215", surface: "#3A181C", surface2: "#451D21", ink: "#F5E7D3",
+      sub: "#C09E8B", faint: "#8A6A5E", accent: "#E3A857", onAccent: "#2E1215",
+      line: "rgba(245,231,211,0.14)",
+    },
+    radius: 10, imageShape: "arch", imageRadius: 10, heroStyle: "framed",
+    itemStyle: "list-thumb", tabStyle: "underline", priceStyle: "plain",
+    cardBorder: "1px solid rgba(227,168,87,0.30)", cardShadow: "none",
+    headingSerif: true, chipFilled: true, chefCard: true, uppercase: false,
+  },
 ];
 
 export const DEFAULT_THEME_KEY = "mineral";
