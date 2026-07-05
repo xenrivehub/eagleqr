@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   const since14 = new Date(now - 14 * 86400_000);
   const where: Prisma.ScanEventWhereInput = businessId ? { businessId } : { businessId: "__none__" };
 
-  const [todayScans, todayViews, scans30, views30, arOpens, scanTs14, langRows, topViews] =
+  const [todayScans, todayViews, scans30, views30, arOpens, scanTs14, langRows, topViews, catCount, prodCount, scanAny] =
     await Promise.all([
       prisma.scanEvent.count({ where: { ...where, type: "SCAN", ts: { gte: todayStart } } }),
       prisma.scanEvent.count({ where: { ...where, type: "VIEW", ts: { gte: todayStart } } }),
@@ -42,7 +42,19 @@ export default async function DashboardPage() {
       prisma.scanEvent.findMany({ where: { ...where, type: "SCAN", ts: { gte: since14 } }, select: { ts: true } }),
       prisma.scanEvent.groupBy({ by: ["lang"], where: { ...where, type: "SCAN", lang: { not: null }, ts: { gte: since30 } }, _count: { lang: true } }),
       prisma.scanEvent.groupBy({ by: ["productId"], where: { ...where, type: "VIEW", productId: { not: null }, ts: { gte: since30 } }, _count: { productId: true } }),
+      businessId ? prisma.category.count({ where: { menu: { businessId } } }) : Promise.resolve(0),
+      businessId ? prisma.product.count({ where: { businessId } }) : Promise.resolve(0),
+      businessId ? prisma.scanEvent.count({ where: { businessId, type: "SCAN" } }) : Promise.resolve(0),
     ]);
+
+  // İlk kurulum kontrol listesi (hepsi tamamsa gizlenir)
+  const steps = [
+    { done: catCount > 0, label: "İlk kategorini ekle", href: "/dashboard/menu" },
+    { done: prodCount > 0, label: "İlk ürününü ekle", href: "/dashboard/menu" },
+    { done: scanAny > 0, label: "QR kodunu indir ve paylaş", href: "/dashboard/qr" },
+  ];
+  const setupComplete = steps.every((s) => s.done);
+  const doneCount = steps.filter((s) => s.done).length;
 
   const interest = scans30 > 0 ? Math.round((views30 / scans30) * 100) : 0;
 
@@ -104,6 +116,39 @@ export default async function DashboardPage() {
           Menüyü düzenle
         </Link>
       </div>
+
+      {/* İlk kurulum kontrol listesi */}
+      {!setupComplete && (
+        <section className="mt-7 rounded-2xl border border-brand/30 bg-brand-soft/30 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-semibold text-ink">Başlangıç adımları</h2>
+            <span className="text-sm font-medium text-ink/55">{doneCount}/3 tamamlandı</span>
+          </div>
+          <ol className="mt-4 space-y-2.5">
+            {steps.map((s) => (
+              <li key={s.label}>
+                <Link
+                  href={s.href}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors ${
+                    s.done ? "border-transparent bg-white/50" : "border-ink/10 bg-white hover:border-brand/40"
+                  }`}
+                >
+                  <span
+                    className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                      s.done ? "bg-brand text-ink" : "border border-ink/20 text-transparent"
+                    }`}
+                    aria-hidden
+                  >
+                    ✓
+                  </span>
+                  <span className={`text-sm font-medium ${s.done ? "text-ink/45 line-through" : "text-ink"}`}>{s.label}</span>
+                  {!s.done && <span className="ml-auto text-ink/30" aria-hidden>→</span>}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {/* Stat kutuları */}
       <div className="mt-7 grid grid-cols-2 gap-4 xl:grid-cols-4">
