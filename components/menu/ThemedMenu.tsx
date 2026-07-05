@@ -188,7 +188,7 @@ export default function ThemedMenu({
     const radius = imgRadius(h);
     if (src) {
       // eslint-disable-next-line @next/next/no-img-element
-      return <img src={src} alt={alt} loading="lazy" style={{ width: "100%", height: h, objectFit: "cover", borderRadius: radius, display: "block" }} />;
+      return <img src={src} alt={alt} loading="lazy" decoding="async" style={{ width: "100%", height: h, objectFit: "cover", borderRadius: radius, display: "block" }} />;
     }
     return (
       <div style={{ width: "100%", height: h, borderRadius: radius, background: c.surface2, display: "flex", alignItems: "center", justifyContent: "center", color: c.faint }}>
@@ -408,10 +408,10 @@ export default function ThemedMenu({
     return (
       <section style={{ position: "relative", overflow: "hidden", borderRadius: imgRadius(h), marginBottom: 22, border: t.cardBorder, boxShadow: t.cardShadow }}>
         {cat.videoUrl ? (
-          <video src={cat.videoUrl} poster={cat.imageUrl ?? undefined} autoPlay muted loop playsInline style={{ width: "100%", height: h, objectFit: "cover", display: "block" }} />
+          <video src={cat.videoUrl} poster={cat.imageUrl ?? undefined} autoPlay muted loop playsInline preload="metadata" style={{ width: "100%", height: h, objectFit: "cover", display: "block" }} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cat.imageUrl!} alt="" loading="lazy" style={{ width: "100%", height: h, objectFit: "cover", display: "block" }} />
+          <img src={cat.imageUrl!} alt="" loading="lazy" decoding="async" style={{ width: "100%", height: h, objectFit: "cover", display: "block" }} />
         )}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.74) 100%)" }} />
         <div style={{ position: "absolute", left: 18, right: 18, bottom: 16 }}>
@@ -476,7 +476,7 @@ export default function ThemedMenu({
         : { display: "flex", gap: 14, padding: "18px 0", borderBottom: last ? "none" : `1px solid ${c.line}`, textDecoration: "none", color: c.ink, ...dim };
     return (
       <Link href={href} style={wrapperStyle}>
-        <div style={{ flex: "0 0 78px" }}><ImgFrame src={p.imageUrl} h={78} /></div>
+        <div style={{ flex: "0 0 78px" }}><ImgFrame src={p.imageUrl} h={78} alt={nm(p)} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           {topBadges(p)}
           <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
@@ -556,7 +556,7 @@ export default function ThemedMenu({
                   {deals.map((p) => (
                     <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 170, flex: "0 0 170px", textDecoration: "none", color: c.ink, position: "relative", ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
                       <div style={{ position: "relative" }}>
-                        <ImgFrame src={p.imageUrl} h={108} />
+                        <ImgFrame src={p.imageUrl} h={108} alt={nm(p)} />
                         <div style={{ position: "absolute", top: 8, left: 8 }}>{campaignBadge(p)}</div>
                       </div>
                       <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
@@ -579,7 +579,7 @@ export default function ThemedMenu({
                     const conf = conflicts(p);
                     return (
                     <Link key={p.id} href={`/m/${slug}/urun/${p.id}`} style={{ width: 160, flex: "0 0 160px", textDecoration: "none", color: c.ink, ...(conf.length || p.isSoldOut ? { opacity: 0.5 } : {}), ...(t.chefCard ? { ...cardStyle, padding: 11 } : {}) }}>
-                      <ImgFrame src={p.imageUrl} h={108} />
+                      <ImgFrame src={p.imageUrl} h={108} alt={nm(p)} />
                       {topBadges(p, 8)}
                       <div style={display({ fontSize: 14, fontWeight: 700, marginTop: 10, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" })}>{nm(p)}</div>
                       {conf.length > 0 && <div style={{ fontSize: 10, fontWeight: 700, color: "#e0524a", marginTop: 4 }}>⚠ {conf.join(", ")}</div>}

@@ -250,12 +250,13 @@ export default async function ProductDetailPage({ params }: Params) {
               muted
               loop
               playsInline
+              preload="metadata"
               poster={product.imageUrl ?? undefined}
               className="h-64 w-full object-cover sm:h-80"
             />
           ) : product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.imageUrl} alt={product.name} className="h-64 w-full object-cover sm:h-80" />
+            <img src={product.imageUrl} alt={product.name} decoding="async" className="h-64 w-full object-cover sm:h-80" />
           ) : (
             <div className="flex h-64 w-full items-center justify-center bg-menu-surface text-menu-gold/40 sm:h-80">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden>
@@ -425,7 +426,7 @@ export default async function ProductDetailPage({ params }: Params) {
                 >
                   {r.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.imageUrl} alt="" loading="lazy" className="h-24 w-full object-cover" />
+                    <img src={r.imageUrl} alt={r.name} loading="lazy" decoding="async" className="h-24 w-full object-cover" />
                   ) : (
                     <div className="flex h-24 w-full items-center justify-center bg-menu-bg text-menu-gold/40">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
@@ -462,7 +463,7 @@ export default async function ProductDetailPage({ params }: Params) {
                 >
                   {r.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.imageUrl} alt="" loading="lazy" className="h-24 w-full object-cover" />
+                    <img src={r.imageUrl} alt={r.name} loading="lazy" decoding="async" className="h-24 w-full object-cover" />
                   ) : (
                     <div className="flex h-24 w-full items-center justify-center bg-menu-bg text-menu-gold/40">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
