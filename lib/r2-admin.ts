@@ -25,6 +25,31 @@ export async function listKeys(prefix?: string): Promise<string[]> {
   return keys;
 }
 
+export async function listObjects(
+  prefix?: string,
+): Promise<{ key: string; lastModified: Date | null }[]> {
+  if (!isR2Configured()) return [];
+  const client = getR2Client();
+  const bucket = R2_BUCKET();
+  const out: { key: string; lastModified: Date | null }[] = [];
+  let token: string | undefined;
+  do {
+    const res = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        ContinuationToken: token,
+        MaxKeys: 1000,
+      }),
+    );
+    for (const o of res.Contents ?? []) {
+      if (o.Key) out.push({ key: o.Key, lastModified: o.LastModified ?? null });
+    }
+    token = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (token);
+  return out;
+}
+
 export async function deleteKeys(keys: string[]): Promise<number> {
   if (!keys.length || !isR2Configured()) return 0;
   const client = getR2Client();
