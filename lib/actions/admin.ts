@@ -515,3 +515,67 @@ export async function setBusinessThemeAccess(
     return { success: false, error: "Tema erişimi güncellenemedi." };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Hesap silme istekleri (admin onayı)
+// ---------------------------------------------------------------------------
+
+// Silme isteğini ONAYLA — işletmeyi (cascade) ve R2 dosyalarını kalıcı siler.
+export async function approveAccountDeletion(requestId: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const req = await prisma.accountDeletionRequest.findUnique({
+      where: { id: requestId },
+      select: { id: true, businessId: true, status: true, business: { select: { slug: true } } },
+    });
+    if (!req || req.status !== "PENDING") return { success: false, error: "İstek bulunamadı." };
+
+    // R2'deki işletme dosyalarını temizle (silme başarısız olsa da işlemi sürdür)
+    let r2Deleted = 0;
+    try {
+      const { deletePrefix } = await import("@/lib/r2-admin");
+      r2Deleted = await deletePrefix(`businesses/${req.businessId}/`);
+    } catch {
+      r2Deleted = -1;
+    }
+
+    // İşletmeyi sil — kullanıcılar, menüler, ürünler, istek kaydı cascade ile gider
+    await prisma.business.delete({ where: { id: req.businessId } });
+    await logAudit({
+      action: "business.delete",
+      targetType: "Business",
+      targetId: req.businessId,
+      meta: { slug: req.business.slug, r2Deleted },
+    });
+    revalidatePath("/admin/deletions");
+    revalidatePath("/admin/businesses");
+    revalidatePath("/admin");
+    return { success: true };
+  } catch {
+    return { success: false, error: "İşletme silinemedi." };
+  }
+}
+
+// Silme isteğini REDDET — kayıt REJECTED olur, işletme kalır.
+export async function rejectAccountDeletion(requestId: string): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const session = await auth();
+    const req = await prisma.accountDeletionRequest.findUnique({ where: { id: requestId } });
+    if (!req || req.status !== "PENDING") return { success: false, error: "İstek bulunamadı." };
+    await prisma.accountDeletionRequest.update({
+      where: { id: requestId },
+      data: { status: "REJECTED", resolvedAt: new Date(), resolvedById: session?.user?.id ?? null },
+    });
+    await logAudit({
+      action: "business.deleteReject",
+      targetType: "AccountDeletionRequest",
+      targetId: requestId,
+      meta: { businessId: req.businessId },
+    });
+    revalidatePath("/admin/deletions");
+    return { success: true };
+  } catch {
+    return { success: false, error: "İstek reddedilemedi." };
+  }
+}

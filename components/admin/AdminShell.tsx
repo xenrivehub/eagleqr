@@ -19,6 +19,7 @@ const nav = [
   { href: "/admin/pricing", label: "Fiyatlandırma", icon: "M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" },
   { href: "/admin/pages", label: "Sayfalar", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8M8 9h2" },
   { href: "/admin/navbar", label: "Navbar", icon: "M3 5h18M3 12h18M3 19h18" },
+  { href: "/admin/deletions", label: "Silme İstekleri", icon: "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" },
   { href: "/admin/logs", label: "Denetim Kaydı", icon: "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 7h6m-6 4h4" },
 ];
 
