@@ -492,6 +492,46 @@ export const THEMES: ThemeSpec[] = [
     cardBorder: "1px solid rgba(43,42,38,0.12)", cardShadow: "none",
     headingSerif: true, chipFilled: false, chefCard: false, uppercase: false,
   },
+  {
+    key: "tandir",
+    name: "Tandır",
+    description: "Kebapçı ustası — fırın ağzı kemerler, köz kızılı",
+    mode: "dark",
+    fonts: {
+      import: gf("family=Alegreya:wght@500;600;700;800&family=Alegreya+Sans:wght@400;500;700"),
+      display: "'Alegreya', Georgia, serif",
+      body: "'Alegreya Sans', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#1C0E07", surface: "#271409", surface2: "#331A0C", ink: "#F7E8D6",
+      sub: "#C4A183", faint: "#8A6C50", accent: "#D93A1F", onAccent: "#FFF3E6",
+      line: "rgba(247,232,214,0.14)",
+    },
+    radius: 14, imageShape: "arch", imageRadius: 12, heroStyle: "overlay",
+    itemStyle: "list-thumb", tabStyle: "pill", priceStyle: "plain",
+    cardBorder: "1px solid rgba(247,232,214,0.14)", cardShadow: "0 8px 30px rgba(217,58,31,0.10)",
+    headingSerif: true, chipFilled: true, chefCard: true, uppercase: false,
+  },
+  {
+    key: "firuze",
+    name: "Firuze",
+    description: "Hamam ferahlığı — mermer beyazı, firuze taşı",
+    mode: "light",
+    fonts: {
+      import: gf("family=Prata&family=Albert+Sans:wght@400;500;600;700"),
+      display: "'Prata', Georgia, serif",
+      body: "'Albert Sans', system-ui, sans-serif",
+    },
+    colors: {
+      bg: "#F4F4F1", surface: "#FCFCFA", surface2: "#EBECE7", ink: "#123B3D",
+      sub: "#5E7A7A", faint: "#9AAEAC", accent: "#0FA3A3", onAccent: "#FFFFFF",
+      line: "rgba(18,59,61,0.13)",
+    },
+    radius: 16, imageShape: "rect", imageRadius: 12, heroStyle: "below",
+    itemStyle: "card", tabStyle: "pill", priceStyle: "plain",
+    cardBorder: "1px solid rgba(18,59,61,0.10)", cardShadow: "0 6px 22px rgba(15,163,163,0.08)",
+    headingSerif: true, chipFilled: false, chefCard: true, uppercase: false,
+  },
 ];
 
 export const DEFAULT_THEME_KEY = "mineral";
