@@ -8,6 +8,7 @@ declare module "next-auth" {
   }
 
   interface Session {
+    loginAt?: number; // oturum açılış zamanı (ms) — admin oturum süresi kontrolü
     user: {
       id: string;
       role: Role;
@@ -20,5 +21,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: Role;
     businessId?: string | null;
+    loginAt?: number;
   }
 }

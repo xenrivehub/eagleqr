@@ -6,7 +6,12 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function AdminLoginPage() {
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ expired?: string }>;
+}) {
+  const { expired } = await searchParams;
   return (
     <main className="flex min-h-dvh items-center justify-center bg-ink px-5 py-16">
       <div className="w-full max-w-sm">
@@ -20,6 +25,11 @@ export default function AdminLoginPage() {
           <p className="mt-2 text-sm text-cream/60">
             Yalnızca platform yöneticileri içindir.
           </p>
+          {expired && (
+            <p className="mt-3 rounded-lg bg-brand/15 px-3 py-2 text-xs text-brand">
+              Oturum süresi doldu (1 gün). Lütfen tekrar giriş yapın.
+            </p>
+          )}
         </div>
         <div className="mt-8 rounded-2xl border border-cream/10 bg-cream p-6 shadow-xl sm:p-8">
           <AdminLoginForm />

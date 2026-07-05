@@ -31,7 +31,7 @@ export default async function MenuPdfPage() {
           <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 8px", color: "#1a1a1a" }}>PDF menü kilitli</h1>
           <p style={{ fontSize: 14, lineHeight: 1.6, color: "#6b6b6b", margin: "0 0 20px" }}>
-            Baskıya hazır PDF menü çıktısı Max planında. Açtırmak için iletişime geçin.
+            Baskıya hazır PDF menü çıktısı Pro ve Max planlarında. Açtırmak için iletişime geçin.
           </p>
           <a href="/dashboard/menu" style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a" }}>← Menüye dön</a>
         </div>

@@ -26,6 +26,10 @@ export const authConfig = {
       if (user) {
         token.role = user.role;
         token.businessId = user.businessId ?? null;
+        token.loginAt = Date.now();
+      } else if (!token.loginAt) {
+        // Bu değişiklikten önce açılmış oturumlara bir kez damga bas
+        token.loginAt = Date.now();
       }
       return token;
     },
@@ -35,6 +39,7 @@ export const authConfig = {
         session.user.role = token.role as Role;
         session.user.businessId = (token.businessId as string | null) ?? null;
       }
+      session.loginAt = token.loginAt as number | undefined;
       return session;
     },
   },

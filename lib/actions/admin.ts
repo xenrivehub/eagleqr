@@ -8,6 +8,7 @@ import { THEMES, isThemeFree } from "@/lib/themes";
 import { PLANS, type Plan } from "@/lib/plans";
 import { FEATURE_KEYS } from "@/lib/plan-features";
 import { SEO_KEYS, type SeoSettings } from "@/lib/seo";
+import { logAudit } from "@/lib/audit";
 import type { BusinessStatus, BusinessType } from "@prisma/client";
 
 type ActionResult = { success: true } | { success: false; error: string };
@@ -31,6 +32,7 @@ export async function setBusinessStatus(
       return { success: false, error: "Geçersiz durum." };
     }
     await prisma.business.update({ where: { id }, data: { status } });
+    await logAudit({ action: "business.status", targetType: "Business", targetId: id, meta: { status } });
     revalidatePath("/admin/businesses");
     revalidatePath("/admin");
     return { success: true };
@@ -75,6 +77,7 @@ export async function setBusinessType(
       }
     }
 
+    await logAudit({ action: "business.type", targetType: "Business", targetId: id, meta: { type } });
     revalidatePath("/admin/businesses");
     return { success: true };
   } catch {
@@ -88,6 +91,7 @@ export async function setBusinessPlan(id: string, plan: Plan): Promise<ActionRes
     await requireAdmin();
     if (!PLANS.includes(plan)) return { success: false, error: "Geçersiz plan." };
     await prisma.business.update({ where: { id }, data: { plan } });
+    await logAudit({ action: "business.plan", targetType: "Business", targetId: id, meta: { plan } });
     revalidatePath("/admin/businesses");
     return { success: true };
   } catch {
@@ -112,6 +116,7 @@ export async function setBusinessMediaQuota(
       where: { id },
       data: { videoQuota: v, arQuota: a },
     });
+    await logAudit({ action: "business.quota", targetType: "Business", targetId: id, meta: { videoQuota: v, arQuota: a } });
     revalidatePath("/admin/businesses");
     return { success: true };
   } catch {
@@ -138,6 +143,7 @@ export async function setPlanLimit(
       create: { plan, videoLimit: v, arLimit: a },
       update: { videoLimit: v, arLimit: a },
     });
+    await logAudit({ action: "plan.limit", targetType: "Plan", targetId: plan, meta: { videoLimit: v, arLimit: a } });
     revalidatePath("/admin/plans");
     return { success: true };
   } catch {
@@ -163,6 +169,7 @@ export async function setPlanFeatures(
       create: { plan, features: clean },
       update: { features: clean },
     });
+    await logAudit({ action: "plan.features", targetType: "Plan", targetId: plan, meta: clean });
     revalidatePath("/admin/plans");
     return { success: true };
   } catch {
@@ -500,6 +507,7 @@ export async function setBusinessThemeAccess(
     }
 
     await prisma.business.update({ where: { id }, data });
+    await logAudit({ action: "business.themeAccess", targetType: "Business", targetId: id, meta: { themeKey, allow } });
     revalidatePath("/admin/businesses");
     if (data.themeKey) revalidatePath(`/m/${business.slug}`);
     return { success: true };

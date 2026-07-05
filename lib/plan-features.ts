@@ -92,7 +92,7 @@ export const FEATURE_DEFAULTS: Record<Plan, Record<FeatureKey, boolean>> = {
   PRO: {
     bulkPrice: true,
     campaigns: true,
-    pdfMenu: false,
+    pdfMenu: true,
     ai: true,
     aiTranslation: true,
     advancedAnalytics: true,
